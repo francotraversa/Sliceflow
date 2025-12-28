@@ -28,11 +28,16 @@ func CreateProductUseCase(item types.ProductCreateRequest) error {
 		return fmt.Errorf("the product with SKU %s already exists", item.SKU)
 	}
 
+	if item.Price < 0 {
+		return fmt.Errorf("The price must be positive")
+	}
+
 	product := types.StockItem{
 		SKU:         item.SKU,
 		Name:        item.Name,
 		Description: item.Description,
 		Quantity:    item.Quantity,
+		Price:       item.Price,
 	}
 	if err := db.Create(&product).Error; err != nil {
 		return fmt.Errorf("The Product already exists")

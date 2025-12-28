@@ -1,0 +1,19 @@
+meta {
+  name: Update Product
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/hornero/loged/stock/:sku
+  body: none
+  auth: inherit
+}
+
+params:path {
+  sku: 
+}
+
+settings {
+  encodeUrl: true
+}

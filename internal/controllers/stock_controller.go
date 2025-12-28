@@ -3,7 +3,6 @@ package controller
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	services "github.com/francotraversa/Sliceflow/internal/services/stock"
 	"github.com/francotraversa/Sliceflow/internal/types"
@@ -67,12 +66,10 @@ func GetAllProductsHandler(c echo.Context) error {
 // @Security     ApiKeyAuth
 // @Router       /hornero/loged/stock/{sku} [get]
 func GetIdProductHandler(c echo.Context) error {
-	idParam := c.Param("sku")
-	id64, err := strconv.ParseUint(idParam, 10, 32)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "SKU must be a valid number")
+	sku := c.Param("sku")
+	if sku == "" {
+		return c.JSON(http.StatusBadRequest, "SKU is required")
 	}
-	sku := uint(id64)
 	item, err := services.GetByIdUseCase(sku)
 	if err != nil {
 		return c.JSON(http.StatusConflict, err)
@@ -91,13 +88,11 @@ func GetIdProductHandler(c echo.Context) error {
 // @Security     ApiKeyAuth
 // @Router       /hornero/loged/stock/{sku} [delete]
 func DeleteIdProductHandler(c echo.Context) error {
-	idParam := c.Param("sku")
-	id64, err := strconv.ParseUint(idParam, 10, 32)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "SKU must be a valid number")
+	sku := c.Param("sku")
+	if sku == "" {
+		return c.JSON(http.StatusBadRequest, "SKU is required")
 	}
-	sku := uint(id64)
-	err = services.DeleteByIdUseCase(sku)
+	err := services.DeleteByIdUseCase(sku)
 	if err != nil {
 		return c.JSON(http.StatusConflict, err)
 	}
@@ -119,6 +114,9 @@ func DeleteIdProductHandler(c echo.Context) error {
 // @Router       /hornero/loged/stock/{sku} [put]
 func UpdateByIdProductHandler(c echo.Context) error {
 	sku := c.Param("sku")
+	if sku == "" {
+		return c.JSON(http.StatusBadRequest, "SKU is required")
+	}
 
 	var item types.ProductUpdateRequest
 

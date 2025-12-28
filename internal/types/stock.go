@@ -7,10 +7,10 @@ import (
 )
 
 type StockItem struct {
-	ID          uint           `gorm:"primaryKey" json:"id"`
-	SKU         string         `gorm:"uniqueIndex;not null" json:"sku"`
+	SKU         string         `gorm:"primaryKey;not null" json:"sku"`
 	Name        string         `gorm:"not null" json:"name"`
 	Quantity    int            `gorm:"default:0" json:"quantity"`
+	Price       float64        `gorm:"type:decimal(10,2);default:0" json:"price"`
 	MinQty      float64        `gorm:"default:5" json:"min_qty"`
 	Description string         `gorm:"null" json:"description"`
 	Status      string         `gorm:"size:16;default:'active'" json:"status"`
@@ -48,14 +48,17 @@ type StockMovement struct {
 }
 
 type ProductCreateRequest struct {
-	SKU         string `json:"sku" example:"7791234567890" extensions:"x-order=1"`
-	Name        string `json:"name" example:"PLA PRINT A LOT 1KG AZUL"`
-	Description string `json:"description" example:"Importación Diciembre"`
-	Quantity    int    `json:"Quantity" example:"10"`
+	SKU         string  `json:"sku" example:"7791234567890" extensions:"x-order=1"`
+	Name        string  `json:"name" example:"PLA PRINT A LOT 1KG AZUL"`
+	Description string  `json:"description" example:"Importación Diciembre"`
+	Quantity    int     `json:"Quantity" example:"10"`
+	Price       float64 `json:"price" example:"98.5"`
 }
 
 type ProductUpdateRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Quantity    int    `json:"quantity"`
+	SKU         string  `json:"sku" example:"7791234567890" extensions:"x-order=1"`
+	Name        string  `json:"name" example:"PLA PRINT A LOT 1KG AZUL"`
+	Description string  `json:"description" example:"Importación Diciembre"`
+	Quantity    int     `json:"quantity" example:"10"`
+	Price       float64 `json:"price" example:"98.5"`
 }

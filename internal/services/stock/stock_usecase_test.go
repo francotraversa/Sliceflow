@@ -32,6 +32,7 @@ func TestStockService(t *testing.T) {
 			Name:        "Tornillo Phillips",
 			Description: "1/2 pulgada",
 			Quantity:    100,
+			Price:       90,
 		}
 
 		err := CreateProductUseCase(req)
@@ -60,24 +61,29 @@ func TestStockService(t *testing.T) {
 
 	t.Run("Soft Delete de Producto", func(t *testing.T) {
 		// Creamos uno nuevo para borrar
-		item := types.StockItem{SKU: "DEL-99", Name: "Borrame"}
+		item := types.StockItem{SKU: "DEL-99", Name: "Borrame", Status: "active"}
 		db.Create(&item)
 
-		err := DeleteByIdUseCase(item.ID)
+		// Llamamos al UseCase (Asumiendo que ya lo actualizaste para recibir string)
+		err := DeleteByIdUseCase(item.SKU)
 		if err != nil {
 			t.Fatalf("Error al borrar: %v", err)
 		}
 
-		// 1. Verificar que First() no lo encuentra (Consulta Normal)
+		// 1. Verificar que NO lo encuentra en consulta normal
 		var found types.StockItem
-		result := db.First(&found, item.ID)
+		// CORRECCIÓN: Usamos Where explícito porque SKU es un string
+		result := db.Where("sku = ?", item.SKU).First(&found)
+
 		if result.Error == nil {
 			t.Error("El producto sigue visible en consultas normales")
 		}
 
-		// 2. Verificar que sigue en la DB físicamente (Unscoped)
+		// 2. Verificar que SIGUE en la DB físicamente (Unscoped)
 		var raw types.StockItem
-		db.Unscoped().First(&raw, item.ID)
+		// CORRECCIÓN: Usamos Where explícito también aquí
+		db.Unscoped().Where("sku = ?", item.SKU).First(&raw)
+
 		if !raw.DeletedAt.Valid {
 			t.Error("DeletedAt no fue completado por GORM")
 		}
@@ -89,6 +95,8 @@ func TestStockService(t *testing.T) {
 		db.Create(&item)
 
 		updateReq := types.ProductUpdateRequest{Name: "Nuevo Nombre"}
+
+		// Llamada al UseCase con SKU string
 		_, err := UpdateByIdProductUseCase(item.SKU, updateReq)
 		if err != nil {
 			t.Errorf("Error inesperado al actualizar: %v", err)
@@ -96,15 +104,17 @@ func TestStockService(t *testing.T) {
 
 		// Validamos cambio
 		var found types.StockItem
-		db.First(&found, item.ID)
+		// CORRECCIÓN: Búsqueda explícita por SKU
+		db.Where("sku = ?", item.SKU).First(&found)
+
 		if found.Name != "Nuevo Nombre" {
 			t.Errorf("No se actualizó el nombre. Valor actual: %s", found.Name)
 		}
 
-		// B. Caso Fallido (ID no existe)
-		_, err = UpdateByIdProductUseCase("99999", updateReq)
+		// B. Caso Fallido (SKU no existe)
+		_, err = UpdateByIdProductUseCase("SKU-FALSO-999", updateReq)
 		if err == nil {
-			t.Error("Se esperaba error al actualizar ID inexistente, pero no falló")
+			t.Error("Se esperaba error al actualizar SKU inexistente, pero no falló")
 		}
 	})
 }

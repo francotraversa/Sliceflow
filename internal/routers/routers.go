@@ -27,7 +27,7 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	stock.GET("/list", controller.GetAllProductsHandler)
 	stock.GET("/list/:sku", controller.GetIdProductHandler)
 	stock.PATCH("/updprod/:sku", controller.UpdateByIdProductHandler)
-	stock.DELETE("/delprod", controller.DeleteIdProductHandler)
+	stock.DELETE("/delprod/:sku", controller.DeleteIdProductHandler)
 
 	//----------------------PRIVATE && ROLE----------------------
 	admin := protected.Group("/admin")

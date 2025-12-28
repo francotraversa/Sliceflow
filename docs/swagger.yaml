@@ -11,6 +11,9 @@ definitions:
       name:
         example: PLA PRINT A LOT 1KG AZUL
         type: string
+      price:
+        example: 98.5
+        type: number
       sku:
         example: "7791234567890"
         type: string
@@ -19,11 +22,21 @@ definitions:
   github_com_francotraversa_Sliceflow_internal_types.ProductUpdateRequest:
     properties:
       description:
+        example: Importación Diciembre
         type: string
       name:
+        example: PLA PRINT A LOT 1KG AZUL
         type: string
+      price:
+        example: 98.5
+        type: number
       quantity:
+        example: 10
         type: integer
+      sku:
+        example: "7791234567890"
+        type: string
+        x-order: "1"
     type: object
   github_com_francotraversa_Sliceflow_internal_types.StockItem:
     properties:
@@ -31,12 +44,12 @@ definitions:
         type: string
       description:
         type: string
-      id:
-        type: integer
       min_qty:
         type: number
       name:
         type: string
+      price:
+        type: number
       quantity:
         type: integer
       sku:

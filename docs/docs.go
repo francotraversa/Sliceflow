@@ -577,20 +577,36 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "PLA PRINT A LOT 1KG AZUL"
+                },
+                "price": {
+                    "type": "number",
+                    "example": 98.5
                 }
             }
         },
         "github_com_francotraversa_Sliceflow_internal_types.ProductUpdateRequest": {
             "type": "object",
             "properties": {
+                "sku": {
+                    "type": "string",
+                    "x-order": "1",
+                    "example": "7791234567890"
+                },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Importación Diciembre"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "PLA PRINT A LOT 1KG AZUL"
+                },
+                "price": {
+                    "type": "number",
+                    "example": 98.5
                 },
                 "quantity": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 10
                 }
             }
         },
@@ -603,14 +619,14 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
-                },
                 "min_qty": {
                     "type": "number"
                 },
                 "name": {
                     "type": "string"
+                },
+                "price": {
+                    "type": "number"
                 },
                 "quantity": {
                     "type": "integer"

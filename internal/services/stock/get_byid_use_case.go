@@ -5,7 +5,7 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func GetByIdUseCase(sku uint) (*types.StockItem, error) {
+func GetByIdUseCase(sku string) (*types.StockItem, error) {
 	db := storage.DatabaseInstance{}.Instance()
 	var item types.StockItem
 

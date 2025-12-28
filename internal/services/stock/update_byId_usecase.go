@@ -27,6 +27,9 @@ func UpdateByIdProductUseCase(sku string, req types.ProductUpdateRequest) (*type
 	if req.Quantity != 0 {
 		itemexist.Quantity = req.Quantity
 	}
+	if req.Price > 0 {
+		itemexist.Price = req.Price
+	}
 
 	if err := db.Save(&itemexist).Error; err != nil {
 		return nil, err
