@@ -1,0 +1,418 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Documentación de mi API con Echo.",
+        "title": "API de Sliceflow",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8181",
+    "basePath": "/",
+    "paths": {
+        "/health": {
+            "get": {
+                "description": "Devuelve OK si el servicio está arriba",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Chequear estado",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/auth/login": {
+            "post": {
+                "description": "Autentica al usuario y devuelve un token JWT",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authenticator"
+                ],
+                "summary": "Iniciar sesión",
+                "parameters": [
+                    {
+                        "description": "Credenciales",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.UserLoginCreds"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.TokenResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/loged/admin/alluser": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Obtiene una lista de usuarios filtrada por rol o estado. Solo accesible para ADMIN.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Listar todos los usuarios",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filtrar por rol (admin/user)",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por estado (active/disabled)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.User"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la solicitud",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/loged/admin/deleteuser/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cambia el estado del usuario a 'disabled'. Requiere ser el dueño de la cuenta o ADMIN.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Borrado lógico de usuario",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del usuario a borrar (solo para Admins)",
+                        "name": "id",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The UserID [id] has been deleted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Error message",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/loged/admin/edituser/{id}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Actualiza datos de un usuario. Si se pasa ID en la URL, requiere ser ADMIN. Si no, actualiza al usuario del token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Actualizar usuario",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del usuario a editar (solo para Admins)",
+                        "name": "id",
+                        "in": "path"
+                    },
+                    {
+                        "description": "Datos a actualizar",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.UserUpdateCreds"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The User ID [id] has been updated",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Error message",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/loged/admin/newuser": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Crea un usuario en la base de datos. Requiere rol de ADMIN.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Registrar un nuevo usuario",
+                "parameters": [
+                    {
+                        "description": "Credenciales del usuario",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.UserCreateCreds"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The User [username] has been created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Error message",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/loged/deletemyuser": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cambia el estado del usuario a 'disabled'. Requiere ser el dueño de la cuenta o ADMIN.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Borrado lógico de usuario",
+                "responses": {
+                    "200": {
+                        "description": "The UserID [id] has been deleted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Error message",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/loged/updmyuser": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Actualiza datos de un usuario. Si se pasa ID en la URL, requiere ser ADMIN. Si no, actualiza al usuario del token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Actualizar usuario",
+                "parameters": [
+                    {
+                        "description": "Datos a actualizar",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.UserUpdateCreds"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The User ID [id] has been updated",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Error message",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_francotraversa_Sliceflow_internal_types.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "expires": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_francotraversa_Sliceflow_internal_types.User": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "description": "hash",
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_francotraversa_Sliceflow_internal_types.UserCreateCreds": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "usertest"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "usertest"
+                }
+            }
+        },
+        "github_com_francotraversa_Sliceflow_internal_types.UserLoginCreds": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "hornero3dx"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "hornero3dx"
+                }
+            }
+        },
+        "github_com_francotraversa_Sliceflow_internal_types.UserUpdateCreds": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "description": "Escribí \"Bearer \" seguido de tu token JWT. Ejemplo: \"Bearer eyJhbG...\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

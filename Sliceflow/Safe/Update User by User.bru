@@ -1,0 +1,23 @@
+meta {
+  name: Update User by User
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/hornero/loged/updmyuser
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "username": "usertest",
+    "password": "usertest"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

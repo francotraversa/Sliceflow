@@ -1,0 +1,16 @@
+meta {
+  name: Delete User By User
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/hornero/loged/delmyuser
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

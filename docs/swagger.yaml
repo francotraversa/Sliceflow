@@ -1,0 +1,272 @@
+basePath: /
+definitions:
+  github_com_francotraversa_Sliceflow_internal_types.TokenResponse:
+    properties:
+      expires:
+        type: integer
+      token:
+        type: string
+    type: object
+  github_com_francotraversa_Sliceflow_internal_types.User:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: integer
+      password:
+        description: hash
+        type: string
+      role:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+      username:
+        type: string
+    type: object
+  github_com_francotraversa_Sliceflow_internal_types.UserCreateCreds:
+    properties:
+      password:
+        example: usertest
+        type: string
+      role:
+        example: user
+        type: string
+      username:
+        example: usertest
+        type: string
+    type: object
+  github_com_francotraversa_Sliceflow_internal_types.UserLoginCreds:
+    properties:
+      password:
+        example: hornero3dx
+        type: string
+      username:
+        example: hornero3dx
+        type: string
+    type: object
+  github_com_francotraversa_Sliceflow_internal_types.UserUpdateCreds:
+    properties:
+      password:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8181
+info:
+  contact: {}
+  description: Documentación de mi API con Echo.
+  title: API de Sliceflow
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: Devuelve OK si el servicio está arriba
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Chequear estado
+      tags:
+      - Health
+  /hornero/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Autentica al usuario y devuelve un token JWT
+      parameters:
+      - description: Credenciales
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.UserLoginCreds'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.TokenResponse'
+      summary: Iniciar sesión
+      tags:
+      - Authenticator
+  /hornero/loged/admin/alluser:
+    get:
+      description: Obtiene una lista de usuarios filtrada por rol o estado. Solo accesible
+        para ADMIN.
+      parameters:
+      - description: Filtrar por rol (admin/user)
+        in: query
+        name: role
+        type: string
+      - description: Filtrar por estado (active/disabled)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.User'
+            type: array
+        "400":
+          description: Error en la solicitud
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Listar todos los usuarios
+      tags:
+      - Users
+  /hornero/loged/admin/deleteuser/{id}:
+    delete:
+      description: Cambia el estado del usuario a 'disabled'. Requiere ser el dueño
+        de la cuenta o ADMIN.
+      parameters:
+      - description: ID del usuario a borrar (solo para Admins)
+        in: path
+        name: id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The UserID [id] has been deleted
+          schema:
+            type: string
+        "400":
+          description: Error message
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Borrado lógico de usuario
+      tags:
+      - Users
+  /hornero/loged/admin/edituser/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza datos de un usuario. Si se pasa ID en la URL, requiere
+        ser ADMIN. Si no, actualiza al usuario del token.
+      parameters:
+      - description: ID del usuario a editar (solo para Admins)
+        in: path
+        name: id
+        type: integer
+      - description: Datos a actualizar
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.UserUpdateCreds'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The User ID [id] has been updated
+          schema:
+            type: string
+        "400":
+          description: Error message
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Actualizar usuario
+      tags:
+      - Users
+  /hornero/loged/admin/newuser:
+    post:
+      consumes:
+      - application/json
+      description: Crea un usuario en la base de datos. Requiere rol de ADMIN.
+      parameters:
+      - description: Credenciales del usuario
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.UserCreateCreds'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The User [username] has been created
+          schema:
+            type: string
+        "400":
+          description: Error message
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Registrar un nuevo usuario
+      tags:
+      - Users
+  /hornero/loged/deletemyuser:
+    delete:
+      description: Cambia el estado del usuario a 'disabled'. Requiere ser el dueño
+        de la cuenta o ADMIN.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The UserID [id] has been deleted
+          schema:
+            type: string
+        "400":
+          description: Error message
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Borrado lógico de usuario
+      tags:
+      - Users
+  /hornero/loged/updmyuser:
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza datos de un usuario. Si se pasa ID en la URL, requiere
+        ser ADMIN. Si no, actualiza al usuario del token.
+      parameters:
+      - description: Datos a actualizar
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.UserUpdateCreds'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The User ID [id] has been updated
+          schema:
+            type: string
+        "400":
+          description: Error message
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Actualizar usuario
+      tags:
+      - Users
+securityDefinitions:
+  ApiKeyAuth:
+    description: 'Escribí "Bearer " seguido de tu token JWT. Ejemplo: "Bearer eyJhbG..."'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
