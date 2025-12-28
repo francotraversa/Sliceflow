@@ -1,11 +1,11 @@
 meta {
-  name: Update User by User
+  name: Create User
   type: http
-  seq: 4
+  seq: 1
 }
 
-patch {
-  url: {{baseUrl}}/hornero/loged/updmyuser
+post {
+  url: {{baseUrl}}/hornero/loged/admin/newuser
   body: json
   auth: inherit
 }

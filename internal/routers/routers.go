@@ -14,12 +14,20 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	api := e.Group("/hornero")
 	auth := api.Group("/auth")
 	auth.POST("/login", controller.LoginHandler)
-
 	//----------------------PRIVATE------------------------------
 	protected := api.Group("/loged")
 	protected.Use(echojwt.WithConfig(jwtCfg))
-	protected.PATCH("/updmyuser", controller.UpdateUserHandler)
-	protected.DELETE("/delmyuser", controller.DeleteUserHandler)
+	//----------------------USER---------------------------------
+	user := protected.Group("/user")
+	user.PATCH("/updmyuser", controller.UpdateUserHandler)
+	user.DELETE("/delmyuser", controller.DeleteUserHandler)
+	//----------------------STOCK--------------------------------
+	stock := protected.Group("/stock")
+	stock.POST("/addprod", controller.CreateProductHandler)
+	stock.GET("/list", controller.GetAllProductsHandler)
+	stock.GET("/list/:sku", controller.GetIdProductHandler)
+	stock.PATCH("/updprod/:sku", controller.UpdateByIdProductHandler)
+	stock.DELETE("/delprod", controller.DeleteIdProductHandler)
 
 	//----------------------PRIVATE && ROLE----------------------
 	admin := protected.Group("/admin")

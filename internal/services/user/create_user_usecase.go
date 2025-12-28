@@ -4,48 +4,48 @@ import (
 	"fmt"
 	"strings"
 
+	storage "github.com/francotraversa/Sliceflow/internal/database"
+	userStorage "github.com/francotraversa/Sliceflow/internal/database/user_utils"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func CreateUserUseCase(userCreds types.UserCreateCreds) error {
-	// 1. Obtenemos la DB de la instancia global que ya está conectada
-	db := database.DBInstance.DB
+func CreateUserUseCase(user types.UserCreateCreds) error {
+	db := storage.DatabaseInstance{}.Instance()
 
-	if userCreds.Username == "" || userCreds.Password == "" {
-		return fmt.Errorf("username or password field is empty")
+	if user.Username == "" || user.Password == "" {
+		return fmt.Errorf("Username or password field is empty")
 	}
-	if len(userCreds.Password) < 6 {
+	if len(user.Password) < 6 {
 		return fmt.Errorf("short password (min 6)")
 	}
 
-	if userCreds.Role == "" {
-		userCreds.Role = "user"
+	if user.Role == "" {
+		user.Role = "user"
 	} else {
-		userCreds.Role = strings.ToLower(strings.TrimSpace(userCreds.Role))
-		if userCreds.Role != "user" && userCreds.Role != "admin" {
+		if user.Role == "user" || user.Role == "admin" {
+			user.Role = strings.ToLower(strings.TrimSpace(user.Role))
+		} else {
 			return fmt.Errorf("invalid user role")
 		}
 	}
 
-	// 2. Usamos el nuevo paquete 'user' (alias userDB o el que prefieras)
-	// Pasamos db como primer argumento para evitar el import cycle
-	usercheck := user_utils.FindUserByUsername(db, userCreds.Username)
+	usercheck := userStorage.FindUserByUsername(storage.DBInstance.DB, user.Username)
 
 	if usercheck != nil {
-		return fmt.Errorf("the user already exists")
+		return fmt.Errorf("The user already exists")
 	}
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte(userCreds.Password), bcrypt.DefaultCost)
+	hash, _ := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 
 	u := types.User{
-		Username: userCreds.Username,
+		Username: user.Username,
 		Password: string(hash),
-		Role:     userCreds.Role,
+		Role:     user.Role,
 	}
-
 	if err := db.Create(&u).Error; err != nil {
-		return fmt.Errorf("error creando usuario")
+		return fmt.Errorf("Error creando usuario")
 	}
 	return nil
+
 }

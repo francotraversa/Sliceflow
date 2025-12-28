@@ -7,14 +7,16 @@ import (
 )
 
 type StockItem struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
-	SKU       string         `gorm:"uniqueIndex;not null" json:"sku"`
-	Name      string         `gorm:"not null" json:"name"`
-	Unit      string         `gorm:"default:'unit'" json:"unit"` // kg, unit, m
-	MinQty    float64        `gorm:"default:0" json:"min_qty"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	ID          uint           `gorm:"primaryKey" json:"id"`
+	SKU         string         `gorm:"uniqueIndex;not null" json:"sku"`
+	Name        string         `gorm:"not null" json:"name"`
+	Quantity    int            `gorm:"default:0" json:"quantity"`
+	MinQty      float64        `gorm:"default:5" json:"min_qty"`
+	Description string         `gorm:"null" json:"description"`
+	Status      string         `gorm:"size:16;default:'active'" json:"status"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 type StockLocation struct {
@@ -43,4 +45,17 @@ type StockMovement struct {
 	Reason     string    `json:"reason"`
 	CreatedBy  uint      `json:"created_by"`
 	CreatedAt  time.Time `json:"created_at"`
+}
+
+type ProductCreateRequest struct {
+	SKU         string `json:"sku" example:"7791234567890" extensions:"x-order=1"`
+	Name        string `json:"name" example:"PLA PRINT A LOT 1KG AZUL"`
+	Description string `json:"description" example:"Importación Diciembre"`
+	Quantity    int    `json:"Quantity" example:"10"`
+}
+
+type ProductUpdateRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Quantity    int    `json:"quantity"`
 }

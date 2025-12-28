@@ -9,7 +9,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// setupTest limpia e inicializa una DB en memoria para cada test
 func setupTest(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	if err != nil {
@@ -17,12 +16,9 @@ func setupTest(t *testing.T) *gorm.DB {
 	}
 	db.AutoMigrate(&types.User{})
 
-	// Inyectamos la DB de sqlite en el singleton para que el UseCase la use
 	storage.OverrideDatabaseInstance(db)
 	return db
 }
-
-// --- TEST DE BORRADO LÓGICO ---
 
 func TestDeleteUserUseCase(t *testing.T) {
 	db := setupTest(t)
@@ -50,8 +46,6 @@ func TestDeleteUserUseCase(t *testing.T) {
 		}
 	})
 }
-
-// --- TEST DE ACTUALIZACIÓN ---
 
 func TestUpdateUserUseCase(t *testing.T) {
 	db := setupTest(t)
@@ -82,12 +76,9 @@ func TestUpdateUserUseCase(t *testing.T) {
 	})
 }
 
-// --- TEST DE LISTADO Y FILTRO ---
-
 func TestGetAllUserUseCase(t *testing.T) {
 	db := setupTest(t)
 
-	// Sembrar usuarios
 	db.Create(&types.User{Username: "admin1", Role: "admin", Status: "active"})
 	db.Create(&types.User{Username: "user1", Role: "user", Status: "active"})
 	db.Create(&types.User{Username: "user2", Role: "user", Status: "disabled"})
@@ -103,7 +94,6 @@ func TestGetAllUserUseCase(t *testing.T) {
 	})
 
 	t.Run("Listar Todos (sin filtro)", func(t *testing.T) {
-		// Al pasar "" debería traer los 3 usuarios creados
 		users, err := GetAllUserUserUseCase("admin", "")
 		if err != nil {
 			t.Fatalf("Error: %v", err)

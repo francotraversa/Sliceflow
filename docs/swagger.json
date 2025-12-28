@@ -277,6 +277,234 @@
                 }
             }
         },
+        "/hornero/loged/stock/list": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Obtiene la lista completa de productos en stock que no han sido borrados.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stock"
+                ],
+                "summary": "Listar todos los productos",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.StockItem"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Error al obtener productos",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/loged/stock/product": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Registra un producto en el catálogo usando el SKU (código de barras) y nombre.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stock"
+                ],
+                "summary": "Crear un nuevo producto",
+                "parameters": [
+                    {
+                        "description": "Datos del producto a crear",
+                        "name": "product",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.ProductCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product has been created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Json o error de validación",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "El SKU ya existe",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/loged/stock/{sku}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Busca un producto específico usando su ID numérico de base de datos.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stock"
+                ],
+                "summary": "Obtener producto por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del producto",
+                        "name": "sku",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.StockItem"
+                        }
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "Producto no encontrado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Edita nombre, descripción, status o stock mínimo de un producto existente.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stock"
+                ],
+                "summary": "Actualizar datos de un producto",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del producto",
+                        "name": "sku",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos a actualizar",
+                        "name": "product",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.ProductUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product updated successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación o ID inválido",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Producto no encontrado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Realiza un soft-delete del producto usando su ID.",
+                "tags": [
+                    "Stock"
+                ],
+                "summary": "Baja lógica de producto",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del producto",
+                        "name": "sku",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Product has been deleted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "Error al eliminar",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/hornero/loged/updmyuser": {
             "patch": {
                 "security": [
@@ -324,6 +552,74 @@
         }
     },
     "definitions": {
+        "github_com_francotraversa_Sliceflow_internal_types.ProductCreateRequest": {
+            "type": "object",
+            "properties": {
+                "sku": {
+                    "type": "string",
+                    "x-order": "1",
+                    "example": "7791234567890"
+                },
+                "Quantity": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Importación Diciembre"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "PLA PRINT A LOT 1KG AZUL"
+                }
+            }
+        },
+        "github_com_francotraversa_Sliceflow_internal_types.ProductUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_francotraversa_Sliceflow_internal_types.StockItem": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "min_qty": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "sku": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_francotraversa_Sliceflow_internal_types.TokenResponse": {
             "type": "object",
             "properties": {

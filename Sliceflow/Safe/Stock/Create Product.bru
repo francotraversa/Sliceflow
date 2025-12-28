@@ -1,0 +1,25 @@
+meta {
+  name: Create Product
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/hornero/loged/stock/addprod
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "sku": "0736694242893",
+    "name": "PLA PRINT A LOT 1KG AZUL",
+    "description": "PRUEBA PRINT A LOT",
+    "unit": "10"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

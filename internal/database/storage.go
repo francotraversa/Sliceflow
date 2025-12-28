@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	userStorage "github.com/francotraversa/Sliceflow/internal/database/user_utils"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -41,9 +42,10 @@ func (database DatabaseInstance) NewDataBase() {
 	log.Println("DB CONNECTED")
 
 	db.AutoMigrate(&types.User{})
-	if err := EnsureHardcodedUser(db); err != nil {
+	if err := userStorage.EnsureHardcodedUser(db); err != nil {
 		log.Fatalf("seed harcoded user error %s", err)
 	}
+	db.AutoMigrate(&types.StockItem{})
 	DBInstance.DB = db
 }
 

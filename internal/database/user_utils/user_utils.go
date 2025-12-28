@@ -1,12 +1,11 @@
-package storage
+package userStorage
 
 import (
 	"github.com/francotraversa/Sliceflow/internal/types"
+	"gorm.io/gorm"
 )
 
-func FindUserByUsername(username string) *types.User {
-	db := DatabaseInstance{}.Instance()
-
+func FindUserByUsername(db *gorm.DB, username string) *types.User {
 	user := types.User{}
 	result := db.Limit(1).Find(&user, "username = ?", username)
 	if result.Error == nil && result.RowsAffected > 0 {
@@ -15,20 +14,16 @@ func FindUserByUsername(username string) *types.User {
 	return nil
 }
 
-func FindUserByUserId(id uint) *types.User {
-	db := DatabaseInstance{}.Instance()
+func FindUserByUserId(db *gorm.DB, id uint) *types.User {
 	var user types.User
-
 	if err := db.First(&user, id).Error; err != nil {
 		return nil
 	}
 	return &user
 }
 
-func FindUsersByRole(role string) []types.User {
-	db := DatabaseInstance{}.Instance()
+func FindUsersByRole(db *gorm.DB, role string) []types.User {
 	var users []types.User
-
 	query := db.Model(&types.User{})
 
 	if role != "" {
