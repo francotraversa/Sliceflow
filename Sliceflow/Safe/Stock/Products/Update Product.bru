@@ -1,0 +1,26 @@
+meta {
+  name: Update Product
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/hornero/loged/stock/updprod/COCA-LATA
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Coca Cola 354ml (Pack)",
+    "description": "Pack x6 unidades",
+    "min_qty": 20,
+    "price" : 25.65,
+    "status": "active"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

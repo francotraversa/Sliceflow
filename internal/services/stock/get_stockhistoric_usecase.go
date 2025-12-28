@@ -19,6 +19,10 @@ func GetStockHistoryUseCase(filter types.HistoryFilter) ([]types.StockMovement, 
 		query = query.Where("created_at >= ?", filter.StartDate+" 00:00:00")
 	}
 
+	if filter.Type != "" {
+		query = query.Where("type = ?", filter.Type)
+	}
+
 	if filter.EndDate != "" {
 		query = query.Where("created_at <= ?", filter.EndDate+" 23:59:59")
 	}

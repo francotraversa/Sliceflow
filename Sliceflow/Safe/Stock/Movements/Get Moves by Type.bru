@@ -1,0 +1,20 @@
+meta {
+  name: Get Moves by Type
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/hornero/loged/stock/movement/historic?type=OUT
+  body: none
+  auth: inherit
+}
+
+params:query {
+  type: OUT
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

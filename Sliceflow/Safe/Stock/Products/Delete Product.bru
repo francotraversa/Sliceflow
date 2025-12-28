@@ -1,19 +1,16 @@
 meta {
   name: Delete Product
   type: http
-  seq: 4
+  seq: 1
 }
 
 delete {
-  url:  {{baseUrl}}/hornero/loged/stock/delprod/:sku
+  url: {{baseUrl}}/hornero/loged/stock/delprod/COCA-LATA
   body: none
   auth: inherit
 }
 
-params:path {
-  sku: 
-}
-
 settings {
   encodeUrl: true
+  timeout: 0
 }

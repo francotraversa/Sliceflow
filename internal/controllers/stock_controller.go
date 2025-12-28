@@ -190,3 +190,16 @@ func GetStockHistoryHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, history)
 }
+
+// GetDashboardHandler godoc
+// @Summary      Obtener métricas del negocio
+// @Tags         Dashboard
+// @Success      200  {object}  types.DashboardResponse
+// @Router       /hornero/loged/dashboard [get]
+func GetDashboardHandler(c echo.Context) error {
+	stats, err := services.GetDashboardStatsUseCase()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, &stats)
+}

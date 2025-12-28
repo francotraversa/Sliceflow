@@ -17,6 +17,10 @@ definitions:
         enum:
         - IN
         - OUT
+        - RETURN
+        - LOSS
+        - SCRAP
+        - ADJUST
         type: string
       user_id:
         description: Viene del token/contexto
@@ -25,6 +29,32 @@ definitions:
     - quantity
     - sku
     - type
+    type: object
+  github_com_francotraversa_Sliceflow_internal_types.DashboardResponse:
+    properties:
+      active_users:
+        type: integer
+      low_stock_count:
+        description: Cuántos productos están en alerta
+        type: integer
+      low_stock_items:
+        description: La lista de esos productos
+        items:
+          $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.StockItem'
+        type: array
+      movements_today:
+        type: integer
+      top_selling_items:
+        description: Los 5 más vendidos
+        items:
+          $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.TopProduct'
+        type: array
+      total_items:
+        description: Cantidad de productos en catálogo
+        type: integer
+      total_value:
+        description: Cuánta plata hay parada en el depósito
+        type: number
     type: object
   github_com_francotraversa_Sliceflow_internal_types.ProductCreateRequest:
     properties:
@@ -118,6 +148,15 @@ definitions:
         type: integer
       token:
         type: string
+    type: object
+  github_com_francotraversa_Sliceflow_internal_types.TopProduct:
+    properties:
+      name:
+        type: string
+      sku:
+        type: string
+      total_sold:
+        type: integer
     type: object
   github_com_francotraversa_Sliceflow_internal_types.User:
     properties:
@@ -326,6 +365,16 @@ paths:
       summary: Registrar un nuevo usuario
       tags:
       - Users
+  /hornero/loged/dashboard:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.DashboardResponse'
+      summary: Obtener métricas del negocio
+      tags:
+      - Dashboard
   /hornero/loged/deletemyuser:
     delete:
       description: Cambia el estado del usuario a 'disabled'. Requiere ser el dueño

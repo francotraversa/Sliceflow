@@ -1,0 +1,20 @@
+meta {
+  name: Get Moves by SKU
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/hornero/loged/stock/movement/historic?sku=COCA-LATA2
+  body: none
+  auth: inherit
+}
+
+params:query {
+  sku: COCA-LATA2
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

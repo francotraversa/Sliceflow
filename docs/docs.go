@@ -252,6 +252,22 @@ const docTemplate = `{
                 }
             }
         },
+        "/hornero/loged/dashboard": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Obtener métricas del negocio",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.DashboardResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/hornero/loged/deletemyuser": {
             "delete": {
                 "security": [
@@ -689,12 +705,53 @@ const docTemplate = `{
                     "type": "string",
                     "enum": [
                         "IN",
-                        "OUT"
+                        "OUT",
+                        "RETURN",
+                        "LOSS",
+                        "SCRAP",
+                        "ADJUST"
                     ]
                 },
                 "user_id": {
                     "description": "Viene del token/contexto",
                     "type": "integer"
+                }
+            }
+        },
+        "github_com_francotraversa_Sliceflow_internal_types.DashboardResponse": {
+            "type": "object",
+            "properties": {
+                "active_users": {
+                    "type": "integer"
+                },
+                "low_stock_count": {
+                    "description": "Cuántos productos están en alerta",
+                    "type": "integer"
+                },
+                "low_stock_items": {
+                    "description": "La lista de esos productos",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.StockItem"
+                    }
+                },
+                "movements_today": {
+                    "type": "integer"
+                },
+                "top_selling_items": {
+                    "description": "Los 5 más vendidos",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.TopProduct"
+                    }
+                },
+                "total_items": {
+                    "description": "Cantidad de productos en catálogo",
+                    "type": "integer"
+                },
+                "total_value": {
+                    "description": "Cuánta plata hay parada en el depósito",
+                    "type": "number"
                 }
             }
         },
@@ -829,6 +886,20 @@ const docTemplate = `{
                 },
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "github_com_francotraversa_Sliceflow_internal_types.TopProduct": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "sku": {
+                    "type": "string"
+                },
+                "total_sold": {
+                    "type": "integer"
                 }
             }
         },

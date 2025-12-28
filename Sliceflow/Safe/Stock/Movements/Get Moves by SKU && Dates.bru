@@ -1,0 +1,22 @@
+meta {
+  name: Get Moves by SKU && Dates
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/hornero/loged/stock/movement/historic?sku=COCA-LATA2&start_date=2025-12-01&end_date=2025-12-31
+  body: none
+  auth: inherit
+}
+
+params:query {
+  sku: COCA-LATA2
+  start_date: 2025-12-01
+  end_date: 2025-12-31
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

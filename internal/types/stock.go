@@ -67,8 +67,8 @@ type ProductUpdateRequest struct {
 
 type CreateMovementRequest struct {
 	SKU        string `json:"sku" validate:"required"`
-	Quantity   int    `json:"quantity" validate:"required,gt=0"`     // Siempre positivo, el Tipo define si suma o resta
-	Type       string `json:"type" validate:"required,oneof=IN OUT"` // Solo permitimos IN o OUT
+	Quantity   int    `json:"quantity" validate:"required,gt=0"`                              // Siempre positivo, el Tipo define si suma o resta
+	Type       string `json:"type" validate:"required,oneof=IN OUT RETURN LOSS SCRAP ADJUST"` // Solo permitimos IN o OUT
 	Reason     string `json:"reason"`
 	UserID     uint   `json:"user_id"`     // Viene del token/contexto
 	LocationID uint   `json:"location_id"` // Opcional por ahora
@@ -78,4 +78,22 @@ type HistoryFilter struct {
 	SKU       string `query:"sku"`
 	StartDate string `query:"start_date"` // Formato esperado: YYYY-MM-DD
 	EndDate   string `query:"end_date"`   // Formato esperado: YYYY-MM-DD
+	Type      string `query:"type"`
+}
+
+type TopProduct struct {
+	SKU       string `json:"sku"`
+	Name      string `json:"name"`
+	TotalSold int    `json:"total_sold"`
+}
+
+// DashboardResponse es el objeto gigante que recibe el frontend
+type DashboardResponse struct {
+	TotalItems      int64        `json:"total_items"`     // Cantidad de productos en catálogo
+	TotalValue      float64      `json:"total_value"`     // Cuánta plata hay parada en el depósito
+	LowStockCount   int64        `json:"low_stock_count"` // Cuántos productos están en alerta
+	MovementsToday  int64        `json:"movements_today"`
+	ActiveUsers     int64        `json:"active_users"`
+	LowStockItems   []StockItem  `json:"low_stock_items"`   // La lista de esos productos
+	TopSellingItems []TopProduct `json:"top_selling_items"` // Los 5 más vendidos
 }

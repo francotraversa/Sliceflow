@@ -32,6 +32,7 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	movement := stock.Group("/movement")
 	movement.POST("/addmov", controller.AddMovementHandler)
 	movement.GET("/historic", controller.GetStockHistoryHandler)
+	movement.GET("/dashboard", controller.GetDashboardHandler)
 
 	//----------------------PRIVATE && ROLE----------------------
 	admin := protected.Group("/admin")
