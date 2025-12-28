@@ -46,6 +46,7 @@ func (database DatabaseInstance) NewDataBase() {
 		log.Fatalf("seed harcoded user error %s", err)
 	}
 	db.AutoMigrate(&types.StockItem{})
+	db.AutoMigrate(&types.StockMovement{})
 	DBInstance.DB = db
 }
 

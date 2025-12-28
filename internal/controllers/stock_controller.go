@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/francotraversa/Sliceflow/internal/auth"
 	services "github.com/francotraversa/Sliceflow/internal/services/stock"
 	"github.com/francotraversa/Sliceflow/internal/types"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -30,7 +32,7 @@ func CreateProductHandler(c echo.Context) error {
 
 	err := services.CreateProductUseCase(item)
 	if err != nil {
-		return c.JSON(http.StatusConflict, err)
+		return c.JSON(http.StatusConflict, err.Error())
 	}
 	return c.JSON(http.StatusOK, "Product has been created")
 
@@ -48,7 +50,7 @@ func CreateProductHandler(c echo.Context) error {
 func GetAllProductsHandler(c echo.Context) error {
 	items, err := services.GetAllProductsUseCase()
 	if err != nil {
-		return c.JSON(http.StatusConflict, err)
+		return c.JSON(http.StatusConflict, err.Error())
 	}
 	return c.JSON(http.StatusOK, items)
 
@@ -72,7 +74,7 @@ func GetIdProductHandler(c echo.Context) error {
 	}
 	item, err := services.GetByIdUseCase(sku)
 	if err != nil {
-		return c.JSON(http.StatusConflict, err)
+		return c.JSON(http.StatusConflict, err.Error())
 	}
 	return c.JSON(http.StatusOK, item)
 }
@@ -94,7 +96,7 @@ func DeleteIdProductHandler(c echo.Context) error {
 	}
 	err := services.DeleteByIdUseCase(sku)
 	if err != nil {
-		return c.JSON(http.StatusConflict, err)
+		return c.JSON(http.StatusConflict, err.Error())
 	}
 	return c.JSON(http.StatusOK, "The Product has been delated")
 }
@@ -126,7 +128,65 @@ func UpdateByIdProductHandler(c echo.Context) error {
 
 	product, err := services.UpdateByIdProductUseCase(sku, item)
 	if err != nil {
-		return c.JSON(http.StatusConflict, err)
+		return c.JSON(http.StatusConflict, err.Error())
 	}
 	return c.JSON(http.StatusOK, fmt.Sprintf("The Product %s has been updated", product.SKU))
+}
+
+// AddMovementHandler godoc
+// @Summary      Registrar entrada o salida de stock
+// @Description  Genera un movimiento y actualiza el stock automáticamente.
+// @Tags         Stock
+// @Accept       json
+// @Produce      json
+// @Param        movement body types.CreateMovementRequest true "Datos del movimiento"
+// @Success      201      {string} string "Movement created successfully"
+// @Failure      400      {string} string "Error de validación o Stock insuficiente"
+// @Router       /hornero/loged/stock/movement [post]
+func AddMovementHandler(c echo.Context) error {
+	var mov types.CreateMovementRequest
+
+	if err := c.Bind(&mov); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid Json")
+	}
+	token := c.Get("user").(*jwt.Token)
+	claims := token.Claims.(*auth.JwtCustomClaims)
+	mov.UserID = claims.UserId
+
+	err := services.AddStockMovementUseCase(mov)
+	if err != nil {
+		return c.JSON(http.StatusConflict, err.Error())
+	}
+
+	return c.JSON(http.StatusCreated, "Movement registered successfully")
+
+}
+
+// GetStockHistoryHandler godoc
+// @Summary      Obtener historial con filtros
+// @Description  Permite filtrar movimientos por SKU, fecha de inicio y fecha de fin.
+// @Tags         Stock
+// @Accept       json
+// @Produce      json
+// @Param        sku         query     string  false  "SKU del producto"
+// @Param        start_date  query     string  false  "Fecha inicio (YYYY-MM-DD)"
+// @Param        end_date    query     string  false  "Fecha fin (YYYY-MM-DD)"
+// @Success      200         {array}   types.StockMovement
+// @Failure      400         {object}  map[string]string
+// @Failure      500         {object}  map[string]string
+// @Router       /hornero/loged/stock/history [get]
+func GetStockHistoryHandler(c echo.Context) error {
+	var filter types.HistoryFilter
+
+	if err := c.Bind(&filter); err != nil {
+		// Mantenemos la consistencia JSON que arreglamos antes
+		return c.JSON(http.StatusBadRequest, "Invalid query parameters")
+	}
+
+	history, err := services.GetStockHistoryUseCase(filter)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, history)
 }

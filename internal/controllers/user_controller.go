@@ -81,7 +81,7 @@ func UpdateUserHandler(c echo.Context) error {
 
 	err := services.UpdateUserUseCase(targetID, requesterID, requesterRole, updateData)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, fmt.Sprintf("The User ID %d has been updated", targetID))
@@ -117,7 +117,7 @@ func DeleteUserHandler(c echo.Context) error {
 
 	err := services.DeleteUserUseCase(targetID, requesterID, requesterRole)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, fmt.Sprintf("The UserID %d has been deleted", targetID))
 }
@@ -141,7 +141,7 @@ func GetAllUserHandler(c echo.Context) error {
 
 	users, err := services.GetAllUserUserUseCase(claims.Role, filterRole)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, users)

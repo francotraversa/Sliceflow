@@ -1,0 +1,26 @@
+meta {
+  name: Add Movement (OUT)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/hornero/loged/stock/movement/addmov
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "sku": "COCA-LATA",
+    "quantity": 50,
+    "type": "IN",
+    "reason": "Compra a Proveedor Mayorista",
+    "location_id": 1
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

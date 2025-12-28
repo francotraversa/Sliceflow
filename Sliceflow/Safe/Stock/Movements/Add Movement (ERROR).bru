@@ -1,0 +1,25 @@
+meta {
+  name: Add Movement (ERROR)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/hornero/loged/stock/movement/addmov
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "sku": "COCA-LATA",
+    "quantity": 5,
+    "type": "OUT",
+    "reason": "Venta a Proveedor Mayorista"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

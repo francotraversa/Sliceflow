@@ -21,13 +21,17 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	user := protected.Group("/user")
 	user.PATCH("/updmyuser", controller.UpdateUserHandler)
 	user.DELETE("/delmyuser", controller.DeleteUserHandler)
-	//----------------------STOCK--------------------------------
+	//---------------------STOCK PRODUCTS-------------------------
 	stock := protected.Group("/stock")
 	stock.POST("/addprod", controller.CreateProductHandler)
 	stock.GET("/list", controller.GetAllProductsHandler)
 	stock.GET("/list/:sku", controller.GetIdProductHandler)
 	stock.PATCH("/updprod/:sku", controller.UpdateByIdProductHandler)
 	stock.DELETE("/delprod/:sku", controller.DeleteIdProductHandler)
+	//----------------------STOCK MOVEMENT-----------------------
+	movement := stock.Group("/movement")
+	movement.POST("/addmov", controller.AddMovementHandler)
+	movement.GET("/historic", controller.GetStockHistoryHandler)
 
 	//----------------------PRIVATE && ROLE----------------------
 	admin := protected.Group("/admin")

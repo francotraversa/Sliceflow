@@ -283,6 +283,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/hornero/loged/stock/history": {
+            "get": {
+                "description": "Permite filtrar movimientos por SKU, fecha de inicio y fecha de fin.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stock"
+                ],
+                "summary": "Obtener historial con filtros",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SKU del producto",
+                        "name": "sku",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Fecha inicio (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Fecha fin (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.StockMovement"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/hornero/loged/stock/list": {
             "get": {
                 "security": [
@@ -310,6 +374,46 @@ const docTemplate = `{
                     },
                     "409": {
                         "description": "Error al obtener productos",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/loged/stock/movement": {
+            "post": {
+                "description": "Genera un movimiento y actualiza el stock automáticamente.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stock"
+                ],
+                "summary": "Registrar entrada o salida de stock",
+                "parameters": [
+                    {
+                        "description": "Datos del movimiento",
+                        "name": "movement",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.CreateMovementRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Movement created successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación o Stock insuficiente",
                         "schema": {
                             "type": "string"
                         }
@@ -558,6 +662,42 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "github_com_francotraversa_Sliceflow_internal_types.CreateMovementRequest": {
+            "type": "object",
+            "required": [
+                "quantity",
+                "sku",
+                "type"
+            ],
+            "properties": {
+                "location_id": {
+                    "description": "Opcional por ahora",
+                    "type": "integer"
+                },
+                "quantity": {
+                    "description": "Siempre positivo, el Tipo define si suma o resta",
+                    "type": "integer"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "sku": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Solo permitimos IN o OUT",
+                    "type": "string",
+                    "enum": [
+                        "IN",
+                        "OUT"
+                    ]
+                },
+                "user_id": {
+                    "description": "Viene del token/contexto",
+                    "type": "integer"
+                }
+            }
+        },
         "github_com_francotraversa_Sliceflow_internal_types.ProductCreateRequest": {
             "type": "object",
             "properties": {
@@ -638,6 +778,45 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_francotraversa_Sliceflow_internal_types.StockMovement": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "qty_after": {
+                    "description": "Cuánto quedó (110)",
+                    "type": "integer"
+                },
+                "qty_before": {
+                    "description": "Cuánto había (100)",
+                    "type": "integer"
+                },
+                "qty_delta": {
+                    "description": "Cuánto cambió (+10, -5)",
+                    "type": "integer"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "stock_sku": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "IN, OUT, ADJUST",
                     "type": "string"
                 }
             }
