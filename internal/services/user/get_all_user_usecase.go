@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	storage "github.com/francotraversa/Sliceflow/internal/database"
+	userStorage "github.com/francotraversa/Sliceflow/internal/database/user_utils"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
@@ -18,7 +19,7 @@ func GetAllUserUserUseCase(requesterRole string, filterRole string) ([]types.Use
 		return nil, fmt.Errorf("invalid filter role: use 'admin' or 'user'")
 	}
 
-	usersDB := storage.FindUsersByRole(filterRole)
+	usersDB := userStorage.FindUsersByRole(storage.DBInstance.DB, filterRole)
 
 	var response []types.User
 	for _, u := range usersDB {

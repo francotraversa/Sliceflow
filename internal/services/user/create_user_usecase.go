@@ -4,47 +4,48 @@ import (
 	"fmt"
 	"strings"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func CreateUserUseCase(user types.UserCreateCreds) error {
-	db := storage.DatabaseInstance{}.Instance()
+func CreateUserUseCase(userCreds types.UserCreateCreds) error {
+	// 1. Obtenemos la DB de la instancia global que ya está conectada
+	db := database.DBInstance.DB
 
-	if user.Username == "" || user.Password == "" {
-		return fmt.Errorf("Username or password field is empty")
+	if userCreds.Username == "" || userCreds.Password == "" {
+		return fmt.Errorf("username or password field is empty")
 	}
-	if len(user.Password) < 6 {
+	if len(userCreds.Password) < 6 {
 		return fmt.Errorf("short password (min 6)")
 	}
 
-	if user.Role == "" {
-		user.Role = "user"
+	if userCreds.Role == "" {
+		userCreds.Role = "user"
 	} else {
-		if user.Role == "user" || user.Role == "admin" {
-			user.Role = strings.ToLower(strings.TrimSpace(user.Role))
-		} else {
+		userCreds.Role = strings.ToLower(strings.TrimSpace(userCreds.Role))
+		if userCreds.Role != "user" && userCreds.Role != "admin" {
 			return fmt.Errorf("invalid user role")
 		}
 	}
 
-	usercheck := storage.FindUserByUsername(user.Username)
+	// 2. Usamos el nuevo paquete 'user' (alias userDB o el que prefieras)
+	// Pasamos db como primer argumento para evitar el import cycle
+	usercheck := user_utils.FindUserByUsername(db, userCreds.Username)
 
 	if usercheck != nil {
-		return fmt.Errorf("The user already exists")
+		return fmt.Errorf("the user already exists")
 	}
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	hash, _ := bcrypt.GenerateFromPassword([]byte(userCreds.Password), bcrypt.DefaultCost)
 
 	u := types.User{
-		Username: user.Username,
+		Username: userCreds.Username,
 		Password: string(hash),
-		Role:     user.Role,
+		Role:     userCreds.Role,
 	}
+
 	if err := db.Create(&u).Error; err != nil {
-		return fmt.Errorf("Error creando usuario")
+		return fmt.Errorf("error creando usuario")
 	}
 	return nil
-
 }

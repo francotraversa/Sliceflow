@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	storage "github.com/francotraversa/Sliceflow/internal/database"
+	userStorage "github.com/francotraversa/Sliceflow/internal/database/user_utils"
 )
 
 func DeleteUserUseCase(targetID uint, requesterID uint, requesterRole string) error {
@@ -13,7 +14,7 @@ func DeleteUserUseCase(targetID uint, requesterID uint, requesterRole string) er
 		return fmt.Errorf("no tienes permiso para deshabilitar esta cuenta")
 	}
 
-	currentUser := storage.FindUserByUserId(targetID)
+	currentUser := userStorage.FindUserByUserId(storage.DBInstance.DB, targetID)
 	if currentUser == nil {
 		return fmt.Errorf("usuario no encontrado")
 	}
