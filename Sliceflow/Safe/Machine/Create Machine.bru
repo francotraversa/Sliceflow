@@ -1,0 +1,23 @@
+meta {
+  name: Create Machine
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/hornero/loged/machine/addmac
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Ender K1MAX - Sector B",
+    "type": "FDM"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

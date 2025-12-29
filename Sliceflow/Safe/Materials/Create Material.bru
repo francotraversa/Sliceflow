@@ -1,0 +1,25 @@
+meta {
+  name: Create Material
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/hornero/loged/materials/addmat
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "PETG Negro Grilon",
+    "type": "Filamento",
+    "description": "Bobina de 1kg, temp 200-220C",
+    "brand" : "GRILON3"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,16 @@
+meta {
+  name: Delete Machine
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/hornero/loged/machine/delmac/1
+  body: json
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

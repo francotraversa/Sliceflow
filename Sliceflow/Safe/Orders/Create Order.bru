@@ -1,0 +1,33 @@
+meta {
+  name: Create Order
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/hornero/loged/orders/order
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "client_name": "TechSolutions SA",
+    "product_details": "Gabinete Prototipo V1",
+    "total_pieces": 50,
+    "material_id": 2, 
+    "priority": "P1",
+    "notes": "Urgente, entregar antes del viernes.",
+    "estimated_hours": 4,
+    "estimated_minutes": 30,
+    "deadline": "2025-12-30",
+    "operator_id": 1,
+    "machine_id": 2,
+    "price": 45000.00
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

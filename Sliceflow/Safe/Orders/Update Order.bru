@@ -1,0 +1,35 @@
+meta {
+  name: Update Order
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/hornero/loged/orders/updord/1
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "client_name": "TechSolutions SA",
+    "product_details": "Gabinete Prototipo V1",
+    "total_pieces": 50,
+    "done_pieces": 55,           
+    "status": "in-progress",
+    "material_id": 2,
+    "priority": "P1",
+    "notes": "Producción iniciada.",
+    "estimated_hours": 4,
+    "estimated_minutes": 30,
+    "deadline": "2025-12-30",
+    "operator_id": 1,
+    "machine_id": 2,
+    "price": 45000.00
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

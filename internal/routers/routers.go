@@ -30,10 +30,27 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	stock.DELETE("/delprod/:sku", controller.DeleteIdProductHandler)
 	//----------------------STOCK MOVEMENT-----------------------
 	movement := stock.Group("/movement")
-	movement.POST("/addmov", controller.AddMovementHandler)
+	movement.POST("/addmov", controller.CreateMovementHandler)
 	movement.GET("/historic", controller.GetStockHistoryHandler)
 	movement.GET("/dashboard", controller.GetDashboardHandler)
-
+	//----------------------MATERIAL---------------------------
+	production := protected.Group("/materials")
+	production.POST("/addmat", controller.CreateMaterialHandler)
+	production.PATCH("/updmat/:id", controller.UpdateMaterialHandler)
+	production.DELETE("/delmat/:id", controller.DeleteMaterialHandler)
+	production.GET("/list", controller.GetMaterialsHandler)
+	//----------------------MACHINE-------------------------------
+	machine := protected.Group("/machine")
+	machine.POST("/addmac", controller.CreateMachineHandler)
+	machine.PATCH("/updmac/:id", controller.UpdateMachineHandler)
+	machine.GET("/list", controller.GetMachinesHandler)
+	machine.DELETE("/delmac/:id", controller.DeleteMachineHandler)
+	//----------------------ORDERS------------------------------
+	orders := protected.Group("/orders")
+	orders.POST("/order", controller.CreateOrderHandler)
+	orders.GET("/list", controller.GetOrdersHandler)
+	orders.PATCH("/updord/:id", controller.UpdateOrderHandler)
+	orders.GET("/dashboard", controller.GetPrincipalDashboardHandler)
 	//----------------------PRIVATE && ROLE----------------------
 	admin := protected.Group("/admin")
 	admin.Use(middlewares.RequireRole("admin"))

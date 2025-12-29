@@ -1,5 +1,25 @@
 basePath: /
 definitions:
+  github_com_francotraversa_Sliceflow_internal_types.CreateMachineDTO:
+    properties:
+      name:
+        description: 'Ej: "Prusa i3 MK3S+"'
+        type: string
+      type:
+        description: 'Ej: "FDM", "SLS"'
+        type: string
+    type: object
+  github_com_francotraversa_Sliceflow_internal_types.CreateMaterialDTO:
+    properties:
+      brand:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+    type: object
   github_com_francotraversa_Sliceflow_internal_types.CreateMovementRequest:
     properties:
       location_id:
@@ -30,6 +50,40 @@ definitions:
     - sku
     - type
     type: object
+  github_com_francotraversa_Sliceflow_internal_types.CreateOrderDTO:
+    properties:
+      client_name:
+        type: string
+      deadline:
+        description: String "YYYY-MM-DD"
+        type: string
+      estimated_hours:
+        description: input horas
+        type: integer
+      estimated_minutes:
+        description: input minutos
+        type: integer
+      machine_id:
+        description: Puede ser null (sin asignar)
+        type: integer
+      material_id:
+        description: <--- El ID del combo box
+        type: integer
+      notes:
+        type: string
+      operator_id:
+        description: El ID del usuario logueado o seleccionado
+        type: integer
+      price:
+        type: number
+      priority:
+        description: '"P1", "P2", "P3"'
+        type: string
+      product_details:
+        type: string
+      total_pieces:
+        type: integer
+    type: object
   github_com_francotraversa_Sliceflow_internal_types.DashboardResponse:
     properties:
       active_users:
@@ -55,6 +109,27 @@ definitions:
       total_value:
         description: Cuánta plata hay parada en el depósito
         type: number
+    type: object
+  github_com_francotraversa_Sliceflow_internal_types.Material:
+    properties:
+      brand:
+        description: 'Ej: "Marca Grilon, temperatura 200°C"'
+        type: string
+      created_at:
+        type: string
+      description:
+        description: 'Ej: "Marca Grilon, temperatura 200°C"'
+        type: string
+      id:
+        type: integer
+      name:
+        description: 'Ej: "PLA Negro"'
+        type: string
+      type:
+        description: 'Ej: "Filamento", "Resina"'
+        type: string
+      updated_at:
+        type: string
     type: object
   github_com_francotraversa_Sliceflow_internal_types.ProductCreateRequest:
     properties:
@@ -156,6 +231,61 @@ definitions:
       sku:
         type: string
       total_sold:
+        type: integer
+    type: object
+  github_com_francotraversa_Sliceflow_internal_types.UpdateMachineDTO:
+    properties:
+      name:
+        type: string
+      status:
+        description: '"idle", "printing", "maintenance"'
+        type: string
+      type:
+        type: string
+    type: object
+  github_com_francotraversa_Sliceflow_internal_types.UpdateMaterialDTO:
+    properties:
+      brand:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+    type: object
+  github_com_francotraversa_Sliceflow_internal_types.UpdateOrderDTO:
+    properties:
+      client_name:
+        type: string
+      deadline:
+        description: '"YYYY-MM-DD"'
+        type: string
+      done_pieces:
+        description: '<--- Nuevo: Para actualizar el progreso (barra de carga)'
+        type: integer
+      estimated_hours:
+        type: integer
+      estimated_minutes:
+        type: integer
+      machine_id:
+        type: integer
+      material_id:
+        type: integer
+      notes:
+        type: string
+      operator_id:
+        type: integer
+      price:
+        type: number
+      priority:
+        type: string
+      product_details:
+        type: string
+      status:
+        description: '"pending", "in-progress", "completed", "paused"'
+        type: string
+      total_pieces:
         type: integer
     type: object
   github_com_francotraversa_Sliceflow_internal_types.User:
@@ -275,7 +405,7 @@ paths:
           schema:
             type: string
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Listar todos los usuarios
       tags:
       - Users
@@ -300,7 +430,7 @@ paths:
           schema:
             type: string
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Borrado lógico de usuario
       tags:
       - Users
@@ -333,7 +463,7 @@ paths:
           schema:
             type: string
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Actualizar usuario
       tags:
       - Users
@@ -361,20 +491,10 @@ paths:
           schema:
             type: string
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Registrar un nuevo usuario
       tags:
       - Users
-  /hornero/loged/dashboard:
-    get:
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.DashboardResponse'
-      summary: Obtener métricas del negocio
-      tags:
-      - Dashboard
   /hornero/loged/deletemyuser:
     delete:
       description: Cambia el estado del usuario a 'disabled'. Requiere ser el dueño
@@ -391,10 +511,262 @@ paths:
           schema:
             type: string
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Borrado lógico de usuario
       tags:
       - Users
+  /hornero/loged/machine/addmac:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Datos Máquina
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.CreateMachineDTO'
+      produces:
+      - application/json
+      responses: {}
+      summary: Crear nueva impresora 3D
+      tags:
+      - Machines
+  /hornero/loged/machine/delmac/{id}:
+    delete:
+      description: Saca la máquina del listado de disponibles.
+      parameters:
+      - description: ID de la Máquina
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Eliminar una impresora (Borrado lógico)
+      tags:
+      - Machines
+  /hornero/loged/machine/list:
+    get:
+      produces:
+      - application/json
+      responses: {}
+      summary: Listar impresoras
+      tags:
+      - Machines
+  /hornero/loged/machine/updmac/{id}:
+    put:
+      parameters:
+      - description: ID Máquina
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Datos Nuevos
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.UpdateMachineDTO'
+      responses: {}
+      summary: Actualizar impresora
+      tags:
+      - Machines
+  /hornero/loged/materials/addmat:
+    post:
+      consumes:
+      - application/json
+      description: Registra un insumo (Filamento, Resina, etc) para usar en las órdenes
+        de producción.
+      parameters:
+      - description: Datos del Material
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.CreateMaterialDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Crear un nuevo material
+      tags:
+      - Production
+  /hornero/loged/materials/delmat/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Marca un insumo como eliminado. No lo borra físicamente de la DB.
+      parameters:
+      - description: ID del Material
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Eliminar un material (Borrado Lógico)
+      tags:
+      - Production
+  /hornero/loged/materials/list:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene la lista de insumos disponibles (excluye eliminados).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.Material'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Listar todos los materiales activos
+      tags:
+      - Production
+  /hornero/loged/materials/updmat/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Modifica los datos de un insumo por su ID.
+      parameters:
+      - description: ID del Material
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Nuevos datos
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.UpdateMaterialDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Actualizar un material existente
+      tags:
+      - Production
+  /hornero/loged/orders/dashboard:
+    get:
+      description: Muestra métricas y órdenes. Si es admin ve revenue, si no, ve $0.
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Dashboard Principal (Role-Based)
+      tags:
+      - Production
+  /hornero/loged/orders/list:
+    get:
+      produces:
+      - application/json
+      responses: {}
+      summary: Listar Órdenes Activas
+      tags:
+      - Orders
+  /hornero/loged/orders/order:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Formulario Orden
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.CreateOrderDTO'
+      produces:
+      - application/json
+      responses: {}
+      summary: Crear Orden de Trabajo
+      tags:
+      - Orders
+  /hornero/loged/orders/updord/{id}:
+    put:
+      description: Permite editar detalles, asignar máquina o actualizar progreso
+        (piezas hechas).
+      parameters:
+      - description: ID de la Orden
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Datos Nuevos
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.UpdateOrderDTO'
+      responses: {}
+      summary: Actualizar Orden de Trabajo
+      tags:
+      - Orders
   /hornero/loged/stock/{sku}:
     delete:
       description: Realiza un soft-delete del producto usando su ID.
@@ -418,7 +790,7 @@ paths:
           schema:
             type: string
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Baja lógica de producto
       tags:
       - Stock
@@ -446,7 +818,7 @@ paths:
           schema:
             type: string
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Obtener producto por ID
       tags:
       - Stock
@@ -483,7 +855,7 @@ paths:
           schema:
             type: string
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Actualizar datos de un producto
       tags:
       - Stock
@@ -548,7 +920,7 @@ paths:
           schema:
             type: string
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Listar todos los productos
       tags:
       - Stock
@@ -578,6 +950,18 @@ paths:
       summary: Registrar entrada o salida de stock
       tags:
       - Stock
+  /hornero/loged/stock/movement/dashboard:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.DashboardResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener métricas del negocio
+      tags:
+      - Dashboard
   /hornero/loged/stock/product:
     post:
       consumes:
@@ -607,7 +991,7 @@ paths:
           schema:
             type: string
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Crear un nuevo producto
       tags:
       - Stock
@@ -636,12 +1020,12 @@ paths:
           schema:
             type: string
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Actualizar usuario
       tags:
       - Users
 securityDefinitions:
-  ApiKeyAuth:
+  BearerAuth:
     description: 'Escribí "Bearer " seguido de tu token JWT. Ejemplo: "Bearer eyJhbG..."'
     in: header
     name: Authorization

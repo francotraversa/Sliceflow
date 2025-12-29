@@ -1,0 +1,16 @@
+meta {
+  name: Get Machines
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/hornero/loged/machine/list
+  body: json
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

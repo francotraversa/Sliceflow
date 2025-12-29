@@ -1,0 +1,24 @@
+meta {
+  name: Update Material by ID
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/hornero/loged/materials/updmat/1
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "PLA Blanco Grilon (Premium)",
+    "type": "Filamento",
+    "description": "Se cambió la descripción"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,24 @@
+meta {
+  name: Update Machine
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/hornero/loged/machine/updmac/1
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Ender 3 V2 - Sector B (Mantenimiento)",
+    "type": "FDM",
+    "status": "maintenance"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

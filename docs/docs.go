@@ -73,7 +73,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Obtiene una lista de usuarios filtrada por rol o estado. Solo accesible para ADMIN.",
@@ -121,7 +121,7 @@ const docTemplate = `{
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Cambia el estado del usuario a 'disabled'. Requiere ser el dueño de la cuenta o ADMIN.",
@@ -160,7 +160,7 @@ const docTemplate = `{
             "patch": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Actualiza datos de un usuario. Si se pasa ID en la URL, requiere ser ADMIN. Si no, actualiza al usuario del token.",
@@ -211,7 +211,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Crea un usuario en la base de datos. Requiere rol de ADMIN.",
@@ -252,27 +252,11 @@ const docTemplate = `{
                 }
             }
         },
-        "/hornero/loged/dashboard": {
-            "get": {
-                "tags": [
-                    "Dashboard"
-                ],
-                "summary": "Obtener métricas del negocio",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.DashboardResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/hornero/loged/deletemyuser": {
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Cambia el estado del usuario a 'disabled'. Requiere ser el dueño de la cuenta o ADMIN.",
@@ -297,6 +281,386 @@ const docTemplate = `{
                         }
                     }
                 }
+            }
+        },
+        "/hornero/loged/machine/addmac": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Machines"
+                ],
+                "summary": "Crear nueva impresora 3D",
+                "parameters": [
+                    {
+                        "description": "Datos Máquina",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.CreateMachineDTO"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/hornero/loged/machine/delmac/{id}": {
+            "delete": {
+                "description": "Saca la máquina del listado de disponibles.",
+                "tags": [
+                    "Machines"
+                ],
+                "summary": "Eliminar una impresora (Borrado lógico)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la Máquina",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/loged/machine/list": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Machines"
+                ],
+                "summary": "Listar impresoras",
+                "responses": {}
+            }
+        },
+        "/hornero/loged/machine/updmac/{id}": {
+            "put": {
+                "tags": [
+                    "Machines"
+                ],
+                "summary": "Actualizar impresora",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID Máquina",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos Nuevos",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.UpdateMachineDTO"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/hornero/loged/materials/addmat": {
+            "post": {
+                "description": "Registra un insumo (Filamento, Resina, etc) para usar en las órdenes de producción.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Production"
+                ],
+                "summary": "Crear un nuevo material",
+                "parameters": [
+                    {
+                        "description": "Datos del Material",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.CreateMaterialDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/loged/materials/delmat/{id}": {
+            "delete": {
+                "description": "Marca un insumo como eliminado. No lo borra físicamente de la DB.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Production"
+                ],
+                "summary": "Eliminar un material (Borrado Lógico)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del Material",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/loged/materials/list": {
+            "get": {
+                "description": "Obtiene la lista de insumos disponibles (excluye eliminados).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Production"
+                ],
+                "summary": "Listar todos los materiales activos",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.Material"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/loged/materials/updmat/{id}": {
+            "put": {
+                "description": "Modifica los datos de un insumo por su ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Production"
+                ],
+                "summary": "Actualizar un material existente",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del Material",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Nuevos datos",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.UpdateMaterialDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/loged/orders/dashboard": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Muestra métricas y órdenes. Si es admin ve revenue, si no, ve $0.",
+                "tags": [
+                    "Production"
+                ],
+                "summary": "Dashboard Principal (Role-Based)",
+                "responses": {}
+            }
+        },
+        "/hornero/loged/orders/list": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Listar Órdenes Activas",
+                "responses": {}
+            }
+        },
+        "/hornero/loged/orders/order": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Crear Orden de Trabajo",
+                "parameters": [
+                    {
+                        "description": "Formulario Orden",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.CreateOrderDTO"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/hornero/loged/orders/updord/{id}": {
+            "put": {
+                "description": "Permite editar detalles, asignar máquina o actualizar progreso (piezas hechas).",
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Actualizar Orden de Trabajo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la Orden",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Datos Nuevos",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.UpdateOrderDTO"
+                        }
+                    }
+                ],
+                "responses": {}
             }
         },
         "/hornero/loged/stock/history": {
@@ -367,7 +731,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Obtiene la lista completa de productos en stock que no han sido borrados.",
@@ -437,11 +801,32 @@ const docTemplate = `{
                 }
             }
         },
+        "/hornero/loged/stock/movement/dashboard": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Obtener métricas del negocio",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.DashboardResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/hornero/loged/stock/product": {
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Registra un producto en el catálogo usando el SKU (código de barras) y nombre.",
@@ -492,7 +877,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Busca un producto específico usando su ID numérico de base de datos.",
@@ -536,7 +921,7 @@ const docTemplate = `{
             "put": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Edita nombre, descripción, status o stock mínimo de un producto existente.",
@@ -592,7 +977,7 @@ const docTemplate = `{
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Realiza un soft-delete del producto usando su ID.",
@@ -635,7 +1020,7 @@ const docTemplate = `{
             "patch": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Actualiza datos de un usuario. Si se pasa ID en la URL, requiere ser ADMIN. Si no, actualiza al usuario del token.",
@@ -678,6 +1063,36 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "github_com_francotraversa_Sliceflow_internal_types.CreateMachineDTO": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "Ej: \"Prusa i3 MK3S+\"",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Ej: \"FDM\", \"SLS\"",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_francotraversa_Sliceflow_internal_types.CreateMaterialDTO": {
+            "type": "object",
+            "properties": {
+                "brand": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_francotraversa_Sliceflow_internal_types.CreateMovementRequest": {
             "type": "object",
             "required": [
@@ -718,6 +1133,54 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_francotraversa_Sliceflow_internal_types.CreateOrderDTO": {
+            "type": "object",
+            "properties": {
+                "client_name": {
+                    "type": "string"
+                },
+                "deadline": {
+                    "description": "String \"YYYY-MM-DD\"",
+                    "type": "string"
+                },
+                "estimated_hours": {
+                    "description": "input horas",
+                    "type": "integer"
+                },
+                "estimated_minutes": {
+                    "description": "input minutos",
+                    "type": "integer"
+                },
+                "machine_id": {
+                    "description": "Puede ser null (sin asignar)",
+                    "type": "integer"
+                },
+                "material_id": {
+                    "description": "\u003c--- El ID del combo box",
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "operator_id": {
+                    "description": "El ID del usuario logueado o seleccionado",
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "priority": {
+                    "description": "\"P1\", \"P2\", \"P3\"",
+                    "type": "string"
+                },
+                "product_details": {
+                    "type": "string"
+                },
+                "total_pieces": {
+                    "type": "integer"
+                }
+            }
+        },
         "github_com_francotraversa_Sliceflow_internal_types.DashboardResponse": {
             "type": "object",
             "properties": {
@@ -752,6 +1215,36 @@ const docTemplate = `{
                 "total_value": {
                     "description": "Cuánta plata hay parada en el depósito",
                     "type": "number"
+                }
+            }
+        },
+        "github_com_francotraversa_Sliceflow_internal_types.Material": {
+            "type": "object",
+            "properties": {
+                "brand": {
+                    "description": "Ej: \"Marca Grilon, temperatura 200°C\"",
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Ej: \"Marca Grilon, temperatura 200°C\"",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Ej: \"PLA Negro\"",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Ej: \"Filamento\", \"Resina\"",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -903,6 +1396,88 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_francotraversa_Sliceflow_internal_types.UpdateMachineDTO": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "\"idle\", \"printing\", \"maintenance\"",
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_francotraversa_Sliceflow_internal_types.UpdateMaterialDTO": {
+            "type": "object",
+            "properties": {
+                "brand": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_francotraversa_Sliceflow_internal_types.UpdateOrderDTO": {
+            "type": "object",
+            "properties": {
+                "client_name": {
+                    "type": "string"
+                },
+                "deadline": {
+                    "description": "\"YYYY-MM-DD\"",
+                    "type": "string"
+                },
+                "done_pieces": {
+                    "description": "\u003c--- Nuevo: Para actualizar el progreso (barra de carga)",
+                    "type": "integer"
+                },
+                "estimated_hours": {
+                    "type": "integer"
+                },
+                "estimated_minutes": {
+                    "type": "integer"
+                },
+                "machine_id": {
+                    "type": "integer"
+                },
+                "material_id": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "operator_id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "product_details": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "\"pending\", \"in-progress\", \"completed\", \"paused\"",
+                    "type": "string"
+                },
+                "total_pieces": {
+                    "type": "integer"
+                }
+            }
+        },
         "github_com_francotraversa_Sliceflow_internal_types.User": {
             "type": "object",
             "properties": {
@@ -976,7 +1551,7 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
-        "ApiKeyAuth": {
+        "BearerAuth": {
             "description": "Escribí \"Bearer \" seguido de tu token JWT. Ejemplo: \"Bearer eyJhbG...\"",
             "type": "apiKey",
             "name": "Authorization",

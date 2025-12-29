@@ -21,7 +21,7 @@ import (
 // @Success      200      {string}  string                      "Product has been created"
 // @Failure      400      {string}  string                      "Invalid Json o error de validación"
 // @Failure      409      {string}  string                      "El SKU ya existe"
-// @Security     ApiKeyAuth
+// @Security BearerAuth
 // @Router       /hornero/loged/stock/product [post]
 func CreateProductHandler(c echo.Context) error {
 	var item types.ProductCreateRequest
@@ -45,7 +45,7 @@ func CreateProductHandler(c echo.Context) error {
 // @Produce      json
 // @Success      200      {array}   types.StockItem
 // @Failure      409      {string}  string                      "Error al obtener productos"
-// @Security     ApiKeyAuth
+// @Security BearerAuth
 // @Router       /hornero/loged/stock/list [get]
 func GetAllProductsHandler(c echo.Context) error {
 	items, err := services.GetAllProductsUseCase()
@@ -65,7 +65,7 @@ func GetAllProductsHandler(c echo.Context) error {
 // @Success      200      {object}  types.StockItem
 // @Failure      400      {string}  string                      "ID inválido"
 // @Failure      409      {string}  string                      "Producto no encontrado"
-// @Security     ApiKeyAuth
+// @Security BearerAuth
 // @Router       /hornero/loged/stock/{sku} [get]
 func GetIdProductHandler(c echo.Context) error {
 	sku := c.Param("sku")
@@ -87,7 +87,7 @@ func GetIdProductHandler(c echo.Context) error {
 // @Success      200      {string}  string                      "The Product has been deleted"
 // @Failure      400      {string}  string                      "ID inválido"
 // @Failure      409      {string}  string                      "Error al eliminar"
-// @Security     ApiKeyAuth
+// @Security BearerAuth
 // @Router       /hornero/loged/stock/{sku} [delete]
 func DeleteIdProductHandler(c echo.Context) error {
 	sku := c.Param("sku")
@@ -112,7 +112,7 @@ func DeleteIdProductHandler(c echo.Context) error {
 // @Success      200      {string}  string                      "Product updated successfully"
 // @Failure      400      {string}  string                      "Error de validación o ID inválido"
 // @Failure      404      {string}  string                      "Producto no encontrado"
-// @Security     ApiKeyAuth
+// @Security BearerAuth
 // @Router       /hornero/loged/stock/{sku} [put]
 func UpdateByIdProductHandler(c echo.Context) error {
 	sku := c.Param("sku")
@@ -143,7 +143,7 @@ func UpdateByIdProductHandler(c echo.Context) error {
 // @Success      201      {string} string "Movement created successfully"
 // @Failure      400      {string} string "Error de validación o Stock insuficiente"
 // @Router       /hornero/loged/stock/movement [post]
-func AddMovementHandler(c echo.Context) error {
+func CreateMovementHandler(c echo.Context) error {
 	var mov types.CreateMovementRequest
 
 	if err := c.Bind(&mov); err != nil {
@@ -194,8 +194,9 @@ func GetStockHistoryHandler(c echo.Context) error {
 // GetDashboardHandler godoc
 // @Summary      Obtener métricas del negocio
 // @Tags         Dashboard
+// @Security     BearerAuth
 // @Success      200  {object}  types.DashboardResponse
-// @Router       /hornero/loged/dashboard [get]
+// @Router       /hornero/loged/stock/movement/dashboard [get]
 func GetDashboardHandler(c echo.Context) error {
 	stats, err := services.GetDashboardStatsUseCase()
 	if err != nil {

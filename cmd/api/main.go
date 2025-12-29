@@ -26,9 +26,9 @@ type CustomClaims struct {
 // @host            localhost:8181
 // @BasePath        /
 
-// @securityDefinitions.apikey ApiKeyAuth
+// @securityDefinitions.apikey BearerAuth
 // @in                         header
-// @name                       Authorization
+// @name 					   Authorization
 // @description                Escribí "Bearer " seguido de tu token JWT. Ejemplo: "Bearer eyJhbG..."
 func main() {
 	enviroment.LoadEnviroment("dev")

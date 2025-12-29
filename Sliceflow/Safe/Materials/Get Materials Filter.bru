@@ -1,0 +1,20 @@
+meta {
+  name: Get Materials Filter
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/hornero/loged/materials/list?name=PETG
+  body: none
+  auth: inherit
+}
+
+params:query {
+  name: PETG
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

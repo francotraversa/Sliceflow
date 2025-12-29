@@ -18,7 +18,7 @@ import (
 // @Tags         Users
 // @Accept       json
 // @Produce      json
-// @Security     ApiKeyAuth
+// @Security BearerAuth
 // @Param        user  body      types.UserCreateCreds  true  "Credenciales del usuario"
 // @Success      200   {string}  string                 "The User [username] has been created"
 // @Failure      400   {string}  string                 "Error message"
@@ -41,7 +41,7 @@ func CreateUserHandler(c echo.Context) error {
 // @Tags         Users
 // @Accept       json
 // @Produce      json
-// @Security     ApiKeyAuth
+// @Security BearerAuth
 // @Param        id    path      int                    false "ID del usuario a editar (solo para Admins)"
 // @Param        user  body      types.UserUpdateCreds  true  "Datos a actualizar"
 // @Success      200   {string}  string                 "The User ID [id] has been updated"
@@ -92,7 +92,7 @@ func UpdateUserHandler(c echo.Context) error {
 // @Description  Cambia el estado del usuario a 'disabled'. Requiere ser el dueño de la cuenta o ADMIN.
 // @Tags         Users
 // @Produce      json
-// @Security     ApiKeyAuth
+// @Security BearerAuth
 // @Param        id    path      int                    false "ID del usuario a borrar (solo para Admins)"
 // @Success      200   {string}  string                 "The UserID [id] has been deleted"
 // @Failure      400   {string}  string                 "Error message"
@@ -127,7 +127,7 @@ func DeleteUserHandler(c echo.Context) error {
 // @Description  Obtiene una lista de usuarios filtrada por rol o estado. Solo accesible para ADMIN.
 // @Tags         Users
 // @Produce      json
-// @Security     ApiKeyAuth
+// @Security BearerAuth
 // @Param        role    query     string  false  "Filtrar por rol (admin/user)"
 // @Param        status  query     string  false  "Filtrar por estado (active/disabled)"
 // @Success      200     {array}   types.User
