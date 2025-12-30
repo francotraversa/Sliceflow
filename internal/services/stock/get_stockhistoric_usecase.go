@@ -1,13 +1,22 @@
 package services
 
 import (
+	"fmt"
+
 	storage "github.com/francotraversa/Sliceflow/internal/database"
+	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func GetStockHistoryUseCase(filter types.HistoryFilter) ([]types.StockMovement, error) {
+func GetStockHistoryUseCase(filter types.HistoryFilter) (*[]types.StockMovement, error) {
 	db := storage.DatabaseInstance{}.Instance()
+	cacheKey := fmt.Sprintf("historic:list:%s:%s", filter.SKU, filter.Type)
+
 	var movements []types.StockMovement
+
+	if services.GetCache(cacheKey, &movements) {
+		return &movements, nil
+	}
 
 	query := db.Model(&types.StockMovement{})
 
@@ -32,6 +41,6 @@ func GetStockHistoryUseCase(filter types.HistoryFilter) ([]types.StockMovement, 
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
-	return movements, nil
+	services.SetCache(cacheKey, &movements)
+	return &movements, nil
 }

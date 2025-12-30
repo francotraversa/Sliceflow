@@ -56,25 +56,28 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		}
 		db.Create(&initialOrder)
 
-		// 2. Preparar DTO de Actualización
-		// Simulamos que el operario hizo 5 piezas y cambió la nota
+		clientName := "Cliente Nuevo"
+		totalPieces := 10
+		donePieces := 5
+		status := "in-progress"
+		priority := "P1"
+		notes := "Avanzando rápido"
+		operatorID := 1
+		estimatedMinutes := 120
+		price := 5000.0
+
 		updateDTO := types.UpdateOrderDTO{
-			ClientName:  "Cliente Nuevo", // Cambio de nombre
-			TotalPieces: 10,
-			DonePieces:  5,             // <--- Progreso
-			Status:      "in-progress", // <--- Cambio estado
-			MaterialID:  matID,
-			Priority:    "P1",
-			Notes:       "Avanzando rápido",
-			OperatorID:  1,
-			// Probamos recalculo de tiempo
-			EstimatedHours:   2, // 2 horas
-			EstimatedMinutes: 0, // 0 minutos -> Total debería ser 120
-
-			Deadline: "2025-12-31",
-			Price:    5000.0,
-
-			MachineID: &macID, // Asignamos máquina
+			ClientName:       &clientName,
+			TotalPieces:      &totalPieces,
+			DonePieces:       &donePieces,
+			Status:           &status,
+			MaterialID:       &matID,
+			Priority:         &priority,
+			Notes:            &notes,
+			OperatorID:       &operatorID,
+			EstimatedMinutes: &estimatedMinutes,
+			Price:            &price,
+			MachineID:        &macID,
 		}
 
 		// 3. Ejecutar Update
@@ -126,12 +129,16 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		db.Create(&order)
 
 		// Actualizamos diciendo que hizo las 10
+		totalPieces := 10
+		donePieces := 10
+		operatorID := 1
+		status := "in-progress"
 		dto := types.UpdateOrderDTO{
-			TotalPieces: 10,
-			DonePieces:  10, // <--- TERMINÓ TODO
-			MaterialID:  matID,
-			OperatorID:  1,
-			Status:      "in-progress", // El front manda esto, pero el back debería corregirlo
+			TotalPieces: &totalPieces,
+			DonePieces:  &donePieces, // <--- TERMINÓ TODO
+			MaterialID:  &matID,
+			OperatorID:  &operatorID,
+			Status:      &status, // El front manda esto, pero el back debería corregirlo
 		}
 
 		err := UpdateOrderUseCase(int(order.ID), dto)

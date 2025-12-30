@@ -8,6 +8,7 @@ import (
 	storage "github.com/francotraversa/Sliceflow/internal/database"
 	machineutils "github.com/francotraversa/Sliceflow/internal/database/machine_utils"
 	materialutils "github.com/francotraversa/Sliceflow/internal/database/material_utils"
+	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
@@ -68,5 +69,8 @@ func CreateOrderUseCase(dto types.CreateOrderDTO) error {
 	if err := db.Create(&newOrder).Error; err != nil {
 		return fmt.Errorf("The Order already exists")
 	}
+	services.InvalidateCache("orders:list:*")
+	services.PublishEvent("dashboard_updates", `{"type": "ORDER_CREATED", "message": "NEW ORDER CREATED"}`)
+
 	return nil
 }

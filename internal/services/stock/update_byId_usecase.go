@@ -5,6 +5,7 @@ import (
 
 	storage "github.com/francotraversa/Sliceflow/internal/database"
 	"github.com/francotraversa/Sliceflow/internal/database/stock_utils"
+	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
@@ -21,6 +22,7 @@ func UpdateByIdProductUseCase(sku string, req types.ProductUpdateRequest) (*type
 	if req.Name != "" {
 		itemexist.Name = req.Name
 	}
+
 	if req.Description != "" {
 		itemexist.Description = req.Description
 	}
@@ -34,5 +36,8 @@ func UpdateByIdProductUseCase(sku string, req types.ProductUpdateRequest) (*type
 	if err := db.Save(&itemexist).Error; err != nil {
 		return nil, err
 	}
+	services.InvalidateCache("stock:list:all")
+	services.PublishEvent("dashboard_updates", `{"type": "PRODUCT_UPDATED", "message": "PRODUCT UPDATED"}`)
+
 	return itemexist, nil
 }

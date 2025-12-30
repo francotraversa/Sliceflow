@@ -67,24 +67,20 @@ type CreateOrderDTO struct {
 }
 
 type UpdateOrderDTO struct {
-	ClientName     string `json:"client_name"`
-	ProductDetails string `json:"product_details"`
-	TotalPieces    int    `json:"total_pieces"`
-	DonePieces     int    `json:"done_pieces"` // <--- Nuevo: Para actualizar el progreso (barra de carga)
+	ClientName       *string  `json:"client_name"`
+	ProductDetails   *string  `json:"product_details"`
+	TotalPieces      *int     `json:"total_pieces"`
+	DonePieces       *int     `json:"done_pieces"`
+	Priority         *string  `json:"priority"` // O int, segun como lo tengas
+	Notes            *string  `json:"notes"`
+	Status           *string  `json:"status"`
+	Price            *float64 `json:"price"`
+	EstimatedHours   *int     `json:"estimated_hours"`
+	EstimatedMinutes *int     `json:"estimated_minutes"`
+	Deadline         *string  `json:"deadline"`
 
-	MaterialID int `json:"material_id"`
-
-	Priority string `json:"priority"`
-	Notes    string `json:"notes"`
-
-	EstimatedHours   int `json:"estimated_hours"`
-	EstimatedMinutes int `json:"estimated_minutes"`
-
-	Deadline string `json:"deadline"` // "YYYY-MM-DD"
-
-	Status string `json:"status"` // "pending", "in-progress", "completed", "paused"
-
-	OperatorID int     `json:"operator_id"`
-	MachineID  *int    `json:"machine_id"`
-	Price      float64 `json:"price"`
+	// Relaciones (Foreign Keys)
+	OperatorID *int `json:"operator_id"`
+	MaterialID *int `json:"material_id"`
+	MachineID  *int `json:"machine_id"`
 }

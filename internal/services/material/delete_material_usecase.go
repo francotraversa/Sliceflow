@@ -3,6 +3,7 @@ package services
 import (
 	storage "github.com/francotraversa/Sliceflow/internal/database"
 	materialutils "github.com/francotraversa/Sliceflow/internal/database/material_utils"
+	services "github.com/francotraversa/Sliceflow/internal/services/common"
 )
 
 func DeleteMaterialUseCase(id int) error {
@@ -11,5 +12,6 @@ func DeleteMaterialUseCase(id int) error {
 	if err != nil {
 		return err
 	}
+	services.InvalidateCache("materials:list:*")
 	return db.Delete(&material).Error
 }

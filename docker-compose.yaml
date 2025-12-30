@@ -1,0 +1,61 @@
+services:
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=appdb_prod
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+
+
+  # (Opcional) pgAdmin web
+  pgadmin:
+    image: dpage/pgadmin4:8
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      TZ: America/Argentina/Buenos_Aires
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    networks:
+     - backend
+
+  redis:
+    image: redis:alpine
+    container_name: sliceflow_redis
+    ports:
+      - "6379:6379" # Lo exponemos para que puedas verlo desde tu PC también
+    volumes:
+      - redis_data:/data # Persistencia de datos
+    networks:
+      - backend
+
+  sliceflow:
+    build:
+      context: .           
+      dockerfile: dockerfile      
+    container_name: sliceflow
+    env_file: ".env.dev"
+    environment:
+      - REDIS_HOST=redis
+    ports:
+      - "1000:8181"
+    networks:
+     - backend
+
+
+volumes:
+  pgdata:
+  redis_data:
+
+networks:
+  backend:

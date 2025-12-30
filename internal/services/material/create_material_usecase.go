@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	storage "github.com/francotraversa/Sliceflow/internal/database"
+	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"gorm.io/gorm"
 )
@@ -31,5 +32,6 @@ func CreateMaterialUseCase(new types.CreateMaterialDTO) error {
 	if err := db.Create(&newMaterial).Error; err != nil {
 		return fmt.Errorf("The Product already exists")
 	}
+	services.InvalidateCache("materials:list:*")
 	return nil
 }

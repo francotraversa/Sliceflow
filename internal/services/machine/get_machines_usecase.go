@@ -1,13 +1,22 @@
 package services
 
 import (
+	"fmt"
+
 	storage "github.com/francotraversa/Sliceflow/internal/database"
+	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
 func GetAllMachinesUseCase(filter types.MachineFilter) (*[]types.Machine, error) {
 	db := storage.DatabaseInstance{}.Instance()
+	cacheKey := fmt.Sprintf("machine:list:%s:%s", filter.Status, filter.Type)
+
 	var machines []types.Machine
+
+	if services.GetCache(cacheKey, &machines) {
+		return &machines, nil
+	}
 
 	query := db.Model(&types.Machine{})
 
@@ -21,5 +30,6 @@ func GetAllMachinesUseCase(filter types.MachineFilter) (*[]types.Machine, error)
 	if err := query.Find(&machines).Error; err != nil {
 		return nil, err
 	}
+	services.SetCache(cacheKey, &machines)
 	return &machines, nil
 }

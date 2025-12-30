@@ -5,6 +5,7 @@ import (
 
 	storage "github.com/francotraversa/Sliceflow/internal/database"
 	machineutils "github.com/francotraversa/Sliceflow/internal/database/machine_utils"
+	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
@@ -24,5 +25,6 @@ func UpdateMachineUseCase(id int, dto types.UpdateMachineDTO) error {
 	if err := db.Save(machine).Error; err != nil {
 		return fmt.Errorf("The Machine was not updated")
 	}
+	services.InvalidateCache("machine:list:*")
 	return nil
 }

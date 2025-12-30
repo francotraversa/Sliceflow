@@ -5,6 +5,7 @@ import (
 
 	_ "github.com/francotraversa/Sliceflow/docs"
 	"github.com/francotraversa/Sliceflow/internal/auth"
+	redis "github.com/francotraversa/Sliceflow/internal/cache"
 	storage "github.com/francotraversa/Sliceflow/internal/database"
 	enviroment "github.com/francotraversa/Sliceflow/internal/enviroment"
 	"github.com/francotraversa/Sliceflow/internal/routers"
@@ -33,6 +34,12 @@ type CustomClaims struct {
 func main() {
 	enviroment.LoadEnviroment("dev")
 	storage.DatabaseInstance{}.NewDataBase()
+	redisHost := os.Getenv("REDIS_HOST")
+
+	if redisHost == "" {
+		redisHost = "localhost"
+	}
+	redis.InitRedis(redisHost, "6379", "")
 	e := echo.New()
 	swagger.RegisterSwagger(e)
 

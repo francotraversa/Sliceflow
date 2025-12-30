@@ -44,7 +44,7 @@ func CreateUserUseCase(user types.UserCreateCreds) error {
 		Role:     user.Role,
 	}
 	if err := db.Create(&u).Error; err != nil {
-		return fmt.Errorf("Error creando usuario")
+		return fmt.Errorf("Error creating user")
 	}
 	return nil
 

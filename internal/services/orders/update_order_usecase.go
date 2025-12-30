@@ -5,6 +5,7 @@ import (
 	"time"
 
 	storage "github.com/francotraversa/Sliceflow/internal/database"
+	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
@@ -18,34 +19,77 @@ func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO) error {
 	}
 
 	// 2. Actualizar Datos Básicos
-	order.ClientName = dto.ClientName
-	order.ProductDetails = dto.ProductDetails
-	order.TotalPieces = dto.TotalPieces
-	order.DonePieces = dto.DonePieces // Actualizar progreso
-	order.Priority = dto.Priority
-	order.Notes = dto.Notes
-	order.Status = dto.Status
-	order.OperatorID = dto.OperatorID
-	order.Price = dto.Price
+	if dto.ClientName != nil {
+		order.ClientName = *dto.ClientName
+	}
 
-	// 3. Actualizar Relaciones (Validar si existen es opcional pero recomendado)
-	order.MaterialID = dto.MaterialID
-	order.MachineID = dto.MachineID
+	if dto.ProductDetails != nil {
+		order.ProductDetails = *dto.ProductDetails
+	}
+
+	if dto.TotalPieces != nil {
+		order.TotalPieces = *dto.TotalPieces
+	}
+
+	if dto.DonePieces != nil {
+		order.DonePieces = *dto.DonePieces
+	}
+
+	if dto.Priority != nil {
+		order.Priority = *dto.Priority
+	}
+
+	if dto.Notes != nil {
+		order.Notes = *dto.Notes
+	}
+
+	if dto.Status != nil {
+		order.Status = *dto.Status
+	}
+
+	if dto.Price != nil {
+		order.Price = *dto.Price
+	}
+
+	// --- RELACIONES ---
+
+	if dto.OperatorID != nil {
+		// Aquí podrías validar si el operador existe antes de asignar
+		order.OperatorID = *dto.OperatorID
+	}
+
+	if dto.MaterialID != nil {
+		// Si mandaron material_id, lo actualizamos. Si no, queda el viejo.
+		order.MaterialID = *dto.MaterialID
+	}
+
+	if dto.MachineID != nil {
+		// Si mandaron machine_id, lo actualizamos. Si no, queda la vieja.
+		order.MachineID = dto.MachineID
+	}
 
 	// 4. Recalcular Tiempo (si mandaron datos)
-	totalMinutes := (dto.EstimatedHours * 60) + dto.EstimatedMinutes
-	order.EstimatedMinutes = totalMinutes
+	if dto.EstimatedHours != nil || dto.EstimatedMinutes != nil {
+		hours := 0
+		minutes := 0
+		if dto.EstimatedHours != nil {
+			hours = *dto.EstimatedHours
+		}
 
-	// 5. Parsear Fecha Límite
-	if dto.Deadline != "" {
-		parsedDeadline, err := time.Parse("2006-01-02", dto.Deadline)
+		if dto.EstimatedMinutes != nil {
+			minutes = *dto.EstimatedMinutes
+		}
+
+		order.EstimatedMinutes = (hours * 60) + minutes
+	}
+
+	if dto.Deadline != nil && *dto.Deadline != "" {
+		parsedDeadline, err := time.Parse("2006-01-02", *dto.Deadline)
 		if err == nil {
 			order.Deadline = parsedDeadline
 		}
 	}
 
-	// 6. Lógica de Estado Automático (Opcional)
-	// Ejemplo: Si completó todas las piezas, pasar a 'completed'
 	if order.DonePieces >= order.TotalPieces && order.TotalPieces > 0 {
 		order.Status = "completed"
 	}
@@ -54,5 +98,8 @@ func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO) error {
 	if err := db.Save(order).Error; err != nil {
 		return fmt.Errorf("The Order was not updated")
 	}
+	services.InvalidateCache("orders:list:*")
+	services.PublishEvent("dashboard_updates", `{"type": "ORDER_UPDATED", "message": "ORDER UPDATED"}`)
+
 	return nil
 }

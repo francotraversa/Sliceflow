@@ -193,11 +193,11 @@ func TestGetStockHistory(t *testing.T) {
 			t.Fatalf("Error: %v", err)
 		}
 
-		if len(results) != 3 {
-			t.Errorf("Esperaba 3 movimientos para SKU A, obtuvo %d", len(results))
+		if len(*results) != 3 {
+			t.Errorf("Esperaba 3 movimientos para SKU A, obtuvo %d", len(*results))
 		}
 		// Verificar que no venga nada de B
-		for _, m := range results {
+		for _, m := range *results {
 			if m.StockSKU != skuA {
 				t.Errorf("Se filtró mal el SKU: %s", m.StockSKU)
 			}
@@ -214,8 +214,8 @@ func TestGetStockHistory(t *testing.T) {
 		}
 
 		// Esperamos: 2 de A + 1 de B = 3 Total. (El de Febrero queda fuera)
-		if len(results) != 3 {
-			t.Errorf("Esperaba 3 movimientos en Enero, obtuvo %d", len(results))
+		if len(*results) != 3 {
+			t.Errorf("Esperaba 3 movimientos en Enero, obtuvo %d", len(*results))
 		}
 	})
 
@@ -232,8 +232,8 @@ func TestGetStockHistory(t *testing.T) {
 		}
 
 		// Esperamos: Solo los 2 de A en Enero.
-		if len(results) != 2 {
-			t.Errorf("Esperaba 2 movimientos combinados, obtuvo %d", len(results))
+		if len(*results) != 2 {
+			t.Errorf("Esperaba 2 movimientos combinados, obtuvo %d", len(*results))
 		}
 	})
 }

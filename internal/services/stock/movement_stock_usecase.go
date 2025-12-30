@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	storage "github.com/francotraversa/Sliceflow/internal/database"
+	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -81,6 +82,7 @@ func AddStockMovementUseCase(req types.CreateMovementRequest) error {
 		if err := tx.Model(&item).Select("Quantity").Updates(&item).Error; err != nil {
 			return err // Dispara Rollback
 		}
+		services.InvalidateCache("historic:list:*")
 
 		return nil
 	})

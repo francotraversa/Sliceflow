@@ -6,6 +6,7 @@ import (
 
 	storage "github.com/francotraversa/Sliceflow/internal/database"
 	"github.com/francotraversa/Sliceflow/internal/database/stock_utils"
+	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
@@ -42,5 +43,7 @@ func CreateProductUseCase(item types.ProductCreateRequest) error {
 	if err := db.Create(&product).Error; err != nil {
 		return fmt.Errorf("The Product already exists")
 	}
+	services.InvalidateCache("stock:list:all")
+	services.PublishEvent("dashboard_updates", `{"type": "PRODUCT_CREATED", "message": "PRODUCT CREATED"}`)
 	return nil
 }

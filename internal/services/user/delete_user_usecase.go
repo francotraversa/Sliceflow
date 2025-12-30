@@ -11,12 +11,12 @@ func DeleteUserUseCase(targetID uint, requesterID uint, requesterRole string) er
 	db := storage.DatabaseInstance{}.Instance()
 
 	if requesterID != targetID && requesterRole != "admin" {
-		return fmt.Errorf("no tienes permiso para deshabilitar esta cuenta")
+		return fmt.Errorf("You do not have permission to disable this account.")
 	}
 
 	currentUser := userStorage.FindUserByUserId(storage.DBInstance.DB, targetID)
 	if currentUser == nil {
-		return fmt.Errorf("usuario no encontrado")
+		return fmt.Errorf("User not found")
 	}
 
 	if currentUser.Status == "disabled" {
