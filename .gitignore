@@ -1,3 +1,2 @@
 # Env / secrets
-.env
-.env.*
+.env.dev
