@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
-	"github.com/francotraversa/Sliceflow/internal/database/stock_utils"
+	"github.com/francotraversa/Sliceflow/internal/infra/database/stock_utils"
+	db_utils "github.com/francotraversa/Sliceflow/internal/infra/database/utils"
 	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
 func CreateProductUseCase(item types.ProductCreateRequest) error {
-	db := storage.DatabaseInstance{}.Instance()
-
 	item.SKU = strings.ToUpper(strings.TrimSpace(item.SKU))
 	item.Name = strings.TrimSpace(item.Name)
 
@@ -40,8 +38,8 @@ func CreateProductUseCase(item types.ProductCreateRequest) error {
 		Quantity:    item.Quantity,
 		Price:       item.Price,
 	}
-	if err := db.Create(&product).Error; err != nil {
-		return fmt.Errorf("The Product already exists")
+	if err := db_utils.Create(&product); err != nil {
+		return fmt.Errorf("Error Create Product")
 	}
 	services.InvalidateCache("stock:list:all")
 	services.PublishEvent("dashboard_updates", `{"type": "PRODUCT_CREATED", "message": "PRODUCT CREATED"}`)

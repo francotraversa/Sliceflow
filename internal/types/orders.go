@@ -47,6 +47,7 @@ type ProductionOrder struct {
 	Price float64 `gorm:"type:decimal(12,2)" json:"price"`
 }
 type CreateOrderDTO struct {
+	ID             uint   `json:"id"`
 	ClientName     string `json:"client_name"`
 	ProductDetails string `json:"product_details"`
 	TotalPieces    int    `json:"total_pieces"`

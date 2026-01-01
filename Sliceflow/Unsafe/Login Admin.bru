@@ -1,0 +1,34 @@
+meta {
+  name: Login Admin
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/hornero/auth/login
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "username": "hornero3dx",
+    "password": "hornero3dx"
+  }
+}
+
+script:post-response {
+  // Obtenemos el cuerpo de la respuesta
+  const data = res.getBody();
+  
+  // Como tu JSON tiene la clave "token", usamos data.token
+  if (data.token) {
+    bru.setEnvVar("jwt_token", data.token);
+    console.log("Token capturado: " + data.token.substring(0, 10) + "...");
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

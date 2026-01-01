@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	redis "github.com/francotraversa/Sliceflow/internal/cache"
+	redis "github.com/francotraversa/Sliceflow/internal/infra/cache"
 )
 
 var ctx = context.Background()

@@ -3,7 +3,7 @@ package services
 import (
 	"testing"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
+	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

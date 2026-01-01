@@ -3,7 +3,7 @@ package stock_utils
 import (
 	"errors"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
+	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"gorm.io/gorm"
 )

@@ -3,15 +3,14 @@ package services
 import (
 	"fmt"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
-	materialutils "github.com/francotraversa/Sliceflow/internal/database/material_utils"
+	materialutils "github.com/francotraversa/Sliceflow/internal/infra/database/material_utils"
+	db_utils "github.com/francotraversa/Sliceflow/internal/infra/database/utils"
 	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
 func UpdateMaterialUseCase(id int, mat types.UpdateMaterialDTO) error {
-	db := storage.DatabaseInstance{}.Instance()
-	material, err := materialutils.GetMaterialbyID(id, db)
+	material, err := materialutils.GetMaterialbyID(id)
 	if err != nil {
 		return err
 	}
@@ -19,9 +18,8 @@ func UpdateMaterialUseCase(id int, mat types.UpdateMaterialDTO) error {
 	material.Type = mat.Type
 	material.Description = mat.Description
 	material.Brand = mat.Brand
-
-	if err := db.Save(material).Error; err != nil {
-		return fmt.Errorf("The Product was not updated")
+	if err := db_utils.Save(material); err != nil {
+		return fmt.Errorf("Error update Material %s", mat.Name)
 	}
 	services.InvalidateCache("materials:list:*")
 	return nil

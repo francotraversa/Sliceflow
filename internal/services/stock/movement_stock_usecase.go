@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
+	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
 	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"gorm.io/gorm"

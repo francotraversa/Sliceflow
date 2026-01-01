@@ -8,8 +8,7 @@ import (
 	"time"
 
 	"github.com/francotraversa/Sliceflow/internal/auth"
-	storage "github.com/francotraversa/Sliceflow/internal/database"
-	userStorage "github.com/francotraversa/Sliceflow/internal/database/user_utils"
+	userStorage "github.com/francotraversa/Sliceflow/internal/infra/database/user_utils"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"github.com/francotraversa/Sliceflow/internal/utils"
 )
@@ -19,7 +18,7 @@ func AuthUseCase(userCread types.UserLoginCreds) (*types.TokenResponse, error) {
 		return nil, fmt.Errorf("Insufficient parameters")
 	}
 
-	User := userStorage.FindUserByUsername(storage.DBInstance.DB, strings.ToLower(strings.TrimSpace(userCread.Username)))
+	User := userStorage.FindUserByUsername(strings.ToLower(strings.TrimSpace(userCread.Username)))
 	if User == nil {
 		return nil, fmt.Errorf("Invalid username or password")
 	}

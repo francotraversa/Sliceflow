@@ -2,30 +2,30 @@ package services
 
 import (
 	"fmt"
-	"strings"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
+	machineutils "github.com/francotraversa/Sliceflow/internal/infra/database/machine_utils"
+	db_utils "github.com/francotraversa/Sliceflow/internal/infra/database/utils"
 	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
-	"gorm.io/gorm"
 )
 
 func CreateMachineUseCase(dto types.CreateMachineDTO) error {
-	db := storage.DatabaseInstance{}.Instance()
-	var existing types.Machine
-	err := db.Where("LOWER(name) = ?", strings.ToLower(dto.Name)).First(&existing).Error
-	if err == nil {
-		return fmt.Errorf("A machine with that name already exists.")
-	} else if err != gorm.ErrRecordNotFound {
+	machine, err := machineutils.GetMachine(dto)
+	if err != nil {
 		return err
 	}
+
+	if machine != nil {
+		return fmt.Errorf("The machine %s already exists", dto.Name)
+	}
+
 	newMachine := types.Machine{
 		Name:   dto.Name,
 		Type:   dto.Type,
 		Status: "idle",
 	}
-	if err := db.Create(&newMachine).Error; err != nil {
-		return fmt.Errorf("The Machine already exists")
+	if err := db_utils.Create(&newMachine); err != nil {
+		return fmt.Errorf("Error Creating Machine")
 	}
 	services.InvalidateCache("machine:list:*")
 	return nil

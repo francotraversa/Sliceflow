@@ -1060,6 +1060,41 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/hornero/ws/dashboard": {
+            "get": {
+                "description": "Establece una conexión WebSocket persistente. Escucha eventos de Redis (canal \"dashboard_updates\") y los envía al cliente en tiempo real.\n\u003cbr\u003e **Eventos esperados:** ` + "`" + `REFRESH_ORDERS` + "`" + `, ` + "`" + `MACHINE_UPDATED` + "`" + `, etc.\n\u003cbr\u003e **Nota:** Swagger UI no soporta probar WebSockets nativamente. Usar Bruno, Postman o PieSocket.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard Realtime"
+                ],
+                "summary": "Conexión WebSocket para Dashboard",
+                "responses": {
+                    "101": {
+                        "description": "Switching Protocols (Conexión Establecida)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Error al actualizar protocolo (Upgrade failed)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1149,6 +1184,9 @@ const docTemplate = `{
                 },
                 "estimated_minutes": {
                     "description": "input minutos",
+                    "type": "integer"
+                },
+                "id": {
                     "type": "integer"
                 },
                 "machine_id": {
@@ -1435,11 +1473,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deadline": {
-                    "description": "\"YYYY-MM-DD\"",
                     "type": "string"
                 },
                 "done_pieces": {
-                    "description": "\u003c--- Nuevo: Para actualizar el progreso (barra de carga)",
                     "type": "integer"
                 },
                 "estimated_hours": {
@@ -1458,19 +1494,20 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "operator_id": {
+                    "description": "Relaciones (Foreign Keys)",
                     "type": "integer"
                 },
                 "price": {
                     "type": "number"
                 },
                 "priority": {
+                    "description": "O int, segun como lo tengas",
                     "type": "string"
                 },
                 "product_details": {
                     "type": "string"
                 },
                 "status": {
-                    "description": "\"pending\", \"in-progress\", \"completed\", \"paused\"",
                     "type": "string"
                 },
                 "total_pieces": {
@@ -1563,7 +1600,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8181",
+	Host:             "localhost:1000",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "API de Sliceflow",

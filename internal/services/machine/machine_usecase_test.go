@@ -3,7 +3,7 @@ package services
 import (
 	"testing"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
+	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -99,10 +99,13 @@ func TestMachineCRUD(t *testing.T) {
 
 		// Update
 		id := 1
+		editada := "Editada"
+		sla := "SLA"
+		maintenance := "maintenance"
 		updateDTO := types.UpdateMachineDTO{
-			Name:   "Editada",
-			Type:   "SLA",
-			Status: "maintenance", // Probamos cambiar estado manualmente
+			Name:   &editada,
+			Type:   &sla,
+			Status: &maintenance, // Probamos cambiar estado manualmente
 		}
 
 		err := UpdateMachineUseCase(id, updateDTO)

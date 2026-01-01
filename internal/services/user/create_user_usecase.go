@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
-	userStorage "github.com/francotraversa/Sliceflow/internal/database/user_utils"
+	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
+	userStorage "github.com/francotraversa/Sliceflow/internal/infra/database/user_utils"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -30,7 +30,7 @@ func CreateUserUseCase(user types.UserCreateCreds) error {
 		}
 	}
 
-	usercheck := userStorage.FindUserByUsername(storage.DBInstance.DB, user.Username)
+	usercheck := userStorage.FindUserByUsername(user.Username)
 
 	if usercheck != nil {
 		return fmt.Errorf("The user already exists")

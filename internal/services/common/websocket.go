@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	redis "github.com/francotraversa/Sliceflow/internal/cache"
+	redis "github.com/francotraversa/Sliceflow/internal/infra/cache"
 )
 
 func PublishEvent(channel string, message string) {

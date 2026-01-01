@@ -4,21 +4,20 @@ import (
 	"fmt"
 	"strings"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
-	userStorage "github.com/francotraversa/Sliceflow/internal/database/user_utils"
+	userStorage "github.com/francotraversa/Sliceflow/internal/infra/database/user_utils"
+	db_utils "github.com/francotraversa/Sliceflow/internal/infra/database/utils"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"github.com/francotraversa/Sliceflow/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func UpdateUserUseCase(targetID uint, requesterID uint, requesterRole string, data types.UserUpdateCreds) error {
-	db := storage.DatabaseInstance{}.Instance()
 
 	if requesterID != targetID && requesterRole != "admin" {
 		return fmt.Errorf("permission denied: you can only update your own profile")
 	}
 
-	currentUser := userStorage.FindUserByUserId(storage.DBInstance.DB, targetID)
+	currentUser := userStorage.FindUserByUserId(targetID)
 	if currentUser == nil {
 		return fmt.Errorf("user with ID %d not found", targetID)
 	}
@@ -27,7 +26,7 @@ func UpdateUserUseCase(targetID uint, requesterID uint, requesterRole string, da
 
 	newUsername := strings.ToLower(strings.TrimSpace(data.Username))
 	if newUsername != "" && newUsername != currentUser.Username {
-		userConflict := userStorage.FindUserByUsername(storage.DBInstance.DB, newUsername)
+		userConflict := userStorage.FindUserByUsername(newUsername)
 		if userConflict != nil {
 			return fmt.Errorf("the username '%s' is already taken", newUsername)
 		}
@@ -66,7 +65,7 @@ func UpdateUserUseCase(targetID uint, requesterID uint, requesterRole string, da
 		return nil
 	}
 
-	if err := db.Save(&currentUser).Error; err != nil {
+	if err := db_utils.Save(currentUser); err != nil {
 		return fmt.Errorf("failed to update user in database")
 	}
 

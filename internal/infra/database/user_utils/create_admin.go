@@ -7,12 +7,14 @@ import (
 	"os"
 	"strings"
 
+	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-func EnsureHardcodedUser(db *gorm.DB) error {
+func EnsureHardcodedUser() error {
+	db := storage.DatabaseInstance{}.Instance()
 	userAdmin := os.Getenv("USERADMIN")
 	passAdmin := os.Getenv("PASSWORDADMIN")
 	roleAdmin := os.Getenv("ROLEADMIN")

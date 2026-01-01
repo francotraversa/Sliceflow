@@ -28,7 +28,7 @@ type CreateMachineDTO struct {
 
 // DTO para Actualizar (Incluye Status)
 type UpdateMachineDTO struct {
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Status string `json:"status"` // "idle", "printing", "maintenance"
+	Name   *string `json:"name"`
+	Type   *string `json:"type"`
+	Status *string `json:"status"` // "idle", "printing", "maintenance"
 }

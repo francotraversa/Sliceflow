@@ -1,14 +1,18 @@
 package main
 
 import (
+	"log"
 	"os"
+	"time"
 
 	_ "github.com/francotraversa/Sliceflow/docs"
 	"github.com/francotraversa/Sliceflow/internal/auth"
-	redis "github.com/francotraversa/Sliceflow/internal/cache"
-	storage "github.com/francotraversa/Sliceflow/internal/database"
 	enviroment "github.com/francotraversa/Sliceflow/internal/enviroment"
+	redis "github.com/francotraversa/Sliceflow/internal/infra/cache"
+	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
+	userStorage "github.com/francotraversa/Sliceflow/internal/infra/database/user_utils"
 	"github.com/francotraversa/Sliceflow/internal/routers"
+	services "github.com/francotraversa/Sliceflow/internal/services/rutines"
 	"github.com/francotraversa/Sliceflow/internal/swagger"
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -24,7 +28,7 @@ type CustomClaims struct {
 // @title           API de Sliceflow
 // @version         1.0
 // @description     Documentación de mi API con Echo.
-// @host            localhost:8181
+// @host            localhost:1000
 // @BasePath        /
 
 // @securityDefinitions.apikey BearerAuth
@@ -34,15 +38,17 @@ type CustomClaims struct {
 func main() {
 	enviroment.LoadEnviroment("dev")
 	storage.DatabaseInstance{}.NewDataBase()
-	redisHost := os.Getenv("REDIS_HOST")
+	if err := userStorage.EnsureHardcodedUser(); err != nil {
+		log.Fatalf("Error creando usuario hardcodeado: %v", err)
+	}
 
+	redisHost := os.Getenv("REDIS_HOST")
 	if redisHost == "" {
 		redisHost = "localhost"
 	}
 	redis.InitRedis(redisHost, "6379", "")
-	e := echo.New()
-	swagger.RegisterSwagger(e)
 
+	e := echo.New()
 	e.Use(middleware.Recover())
 
 	jwtCfg := echojwt.Config{
@@ -52,8 +58,21 @@ func main() {
 		SigningKey:    []byte(os.Getenv("JWT_SECRET")),
 		SigningMethod: "HS256",
 	}
-
+	swagger.RegisterSwagger(e)
 	routers.RegisterRouters(e, jwtCfg)
+
+	// ---------------------------------------------------------
+	// 🤖 GOROUTINE
+	// ---------------------------------------------------------
+	go func() {
+		time.Sleep(1 * time.Minute)
+		ticker := time.NewTicker(1 * time.Hour)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			services.CheckAndSetPriorities()
+		}
+	}()
 
 	port := os.Getenv("PORT")
 	e.Logger.Fatal(e.Start(":" + port))

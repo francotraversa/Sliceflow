@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	redis "github.com/francotraversa/Sliceflow/internal/cache"
+	redis "github.com/francotraversa/Sliceflow/internal/infra/cache"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )
@@ -16,7 +16,18 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// WebSocketHandler mantiene la conexión abierta y envía updates
+// WebSocketHandler godoc
+// @Summary      Conexión WebSocket para Dashboard
+// @Description  Establece una conexión WebSocket persistente. Escucha eventos de Redis (canal "dashboard_updates") y los envía al cliente en tiempo real.
+// @Description  <br> **Eventos esperados:** `REFRESH_ORDERS`, `MACHINE_UPDATED`, etc.
+// @Description  <br> **Nota:** Swagger UI no soporta probar WebSockets nativamente. Usar Bruno, Postman o PieSocket.
+// @Tags         Dashboard Realtime
+// @Accept       json
+// @Produce      json
+// @Success      101  {string}  string  "Switching Protocols (Conexión Establecida)"
+// @Failure      400  {string}  string  "Error al actualizar protocolo (Upgrade failed)"
+// @Failure      500  {string}  string  "Error interno del servidor"
+// @Router       /hornero/ws/dashboard [get]
 func WebSocketHandler(c echo.Context) error {
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {

@@ -3,7 +3,7 @@ package services
 import (
 	"time"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
+	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 

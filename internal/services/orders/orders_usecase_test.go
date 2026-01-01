@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
+	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -65,6 +65,7 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		operatorID := 1
 		estimatedMinutes := 120
 		price := 5000.0
+		deadlineString := "2025-12-31"
 
 		updateDTO := types.UpdateOrderDTO{
 			ClientName:       &clientName,
@@ -78,6 +79,7 @@ func TestUpdateOrderUseCase(t *testing.T) {
 			EstimatedMinutes: &estimatedMinutes,
 			Price:            &price,
 			MachineID:        &macID,
+			Deadline:         &deadlineString,
 		}
 
 		// 3. Ejecutar Update

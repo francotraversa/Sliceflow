@@ -3,8 +3,8 @@ package services
 import (
 	"fmt"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
-	userStorage "github.com/francotraversa/Sliceflow/internal/database/user_utils"
+	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
+	userStorage "github.com/francotraversa/Sliceflow/internal/infra/database/user_utils"
 )
 
 func DeleteUserUseCase(targetID uint, requesterID uint, requesterRole string) error {
@@ -14,7 +14,7 @@ func DeleteUserUseCase(targetID uint, requesterID uint, requesterRole string) er
 		return fmt.Errorf("You do not have permission to disable this account.")
 	}
 
-	currentUser := userStorage.FindUserByUserId(storage.DBInstance.DB, targetID)
+	currentUser := userStorage.FindUserByUserId(targetID)
 	if currentUser == nil {
 		return fmt.Errorf("User not found")
 	}

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
+	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
+	db_utils "github.com/francotraversa/Sliceflow/internal/infra/database/utils"
 	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
@@ -94,8 +95,7 @@ func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO) error {
 		order.Status = "completed"
 	}
 
-	// 7. Guardar cambios
-	if err := db.Save(order).Error; err != nil {
+	if err := db_utils.Save(&order); err != nil {
 		return fmt.Errorf("The Order was not updated")
 	}
 	services.InvalidateCache("orders:list:*")

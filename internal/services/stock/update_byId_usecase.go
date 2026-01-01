@@ -3,14 +3,13 @@ package services
 import (
 	"fmt"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
-	"github.com/francotraversa/Sliceflow/internal/database/stock_utils"
+	"github.com/francotraversa/Sliceflow/internal/infra/database/stock_utils"
+	db_utils "github.com/francotraversa/Sliceflow/internal/infra/database/utils"
 	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
 func UpdateByIdProductUseCase(sku string, req types.ProductUpdateRequest) (*types.StockItem, error) {
-	db := storage.DatabaseInstance{}.Instance()
 	itemexist, err := stock_utils.CheckProductExistsBySKU(sku)
 
 	if itemexist == nil {
@@ -29,12 +28,12 @@ func UpdateByIdProductUseCase(sku string, req types.ProductUpdateRequest) (*type
 	if req.Quantity != 0 {
 		itemexist.Quantity = req.Quantity
 	}
-	if req.Price > 0 {
+	if req.Price >= 0 {
 		itemexist.Price = req.Price
 	}
 
-	if err := db.Save(&itemexist).Error; err != nil {
-		return nil, err
+	if err := db_utils.Save(itemexist); err != nil {
+		return nil, fmt.Errorf("Error update %s", itemexist.SKU)
 	}
 	services.InvalidateCache("stock:list:all")
 	services.PublishEvent("dashboard_updates", `{"type": "PRODUCT_UPDATED", "message": "PRODUCT UPDATED"}`)

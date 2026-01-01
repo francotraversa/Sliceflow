@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
+	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"

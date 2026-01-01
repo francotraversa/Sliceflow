@@ -5,23 +5,30 @@ import (
 	"fmt"
 	"time"
 
-	storage "github.com/francotraversa/Sliceflow/internal/database"
-	machineutils "github.com/francotraversa/Sliceflow/internal/database/machine_utils"
-	materialutils "github.com/francotraversa/Sliceflow/internal/database/material_utils"
+	machineutils "github.com/francotraversa/Sliceflow/internal/infra/database/machine_utils"
+	materialutils "github.com/francotraversa/Sliceflow/internal/infra/database/material_utils"
+	ordersutils "github.com/francotraversa/Sliceflow/internal/infra/database/orders_utils"
+	db_utils "github.com/francotraversa/Sliceflow/internal/infra/database/utils"
 	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
 func CreateOrderUseCase(dto types.CreateOrderDTO) error {
-	db := storage.DatabaseInstance{}.Instance()
-
-	// 1. Validar que el Material exista (Integridad referencial)
-	_, err := materialutils.GetMaterialbyID(dto.MaterialID, db)
+	order, err := ordersutils.CheckOrder(dto)
 	if err != nil {
 		return err
 	}
 
-	_, err = machineutils.GetMachinebyID(*dto.MachineID, db)
+	if order != nil {
+		return fmt.Errorf("The Order %d already exists", dto.ID)
+	}
+	// 1. Validar que el Material exista (Integridad referencial)
+	_, err = materialutils.GetMaterialbyID(dto.MaterialID)
+	if err != nil {
+		return err
+	}
+
+	_, err = machineutils.GetMachinebyID(*dto.MachineID)
 	if err != nil {
 		return err
 	}
@@ -66,8 +73,9 @@ func CreateOrderUseCase(dto types.CreateOrderDTO) error {
 	}
 
 	// 7. Guardar
-	if err := db.Create(&newOrder).Error; err != nil {
-		return fmt.Errorf("The Order already exists")
+
+	if err := db_utils.Create(&newOrder); err != nil {
+		return fmt.Errorf("Error Creating Machine")
 	}
 	services.InvalidateCache("orders:list:*")
 	services.PublishEvent("dashboard_updates", `{"type": "ORDER_CREATED", "message": "NEW ORDER CREATED"}`)
