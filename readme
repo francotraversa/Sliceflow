@@ -1,32 +1,124 @@
-# 🚀 Sliceflow | Intelligent Manufacturing Execution System (MES)
+# Sliceflow Backend (Go + Clean Arch + Postgres)
 
-![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=for-the-badge&logo=go)
-![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-316192?style=for-the-badge&logo=postgresql)
-![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
-![Architecture](https://img.shields.io/badge/Architecture-Clean%2FHexagonal-green?style=for-the-badge)
+README Manufacturing Execution System (MES) for 3D printing farms (FDM/SLS) written in Go following Clean Architecture + GORM + PostgreSQL + Redis. It includes intelligent background workers and role-based security.
 
-**Sliceflow** is a high-performance backend API engineered to modernize the management of 3D Printing Farms (FDM & SLS). Unlike traditional CRUD apps, Sliceflow acts as an **intelligent agent**, automating prioritization, monitoring stock, and enforcing security policies in real-time.
+# Summary
 
-Built with **Golang**, designed with **Clean Architecture**, and containerized for immediate deployment.
+This service centralizes production control. It manages the lifecycle of production orders, material inventory control, and machine monitoring. It exposes a secure REST API and features a "Brain" (Worker) that automatically prioritizes tasks based on deadlines.
 
----
+> 📢 **Includes Swagger Documentation & Bruno Collection for API testing.**
 
-## 🏗️ Architecture & Design
+# Typical Flow:
 
-The project follows a strict **Hexagonal Architecture (Ports & Adapters)** to ensure scalability, testability, and separation of concerns.
+1. The operator or admin authenticates and obtains a JWT token.
+2. The admin or user creates production orders.
+3. The "Worker" (background process) monitors deadlines and upgrades priority (P1/P2) if the deadline is approaching.
+4. The Dashboard endpoint shows real-time data (censoring prices for non-admins).
 
-### 📂 Project Structure
-```text
-Sliceflow/
-├── cmd/api/            # Application Entry Point & Server Config
-├── internal/
-│   ├── handlers/       # HTTP Transport Layer (Inputs/Outputs)
-│   ├── services/       # Core Business Logic & Use Cases
-│   │   ├── orders/     # Order Lifecycle & "The Brain" Worker
-│   │   ├── users/      # Authentication & Authorization
-│   │   └── common/     # Generic Repositories (Go 1.18+)
-│   ├── infra/          # Infrastructure Adapters (DB, Cache)
-│   ├── types/          # Domain Models & DTOs
-│   └── utils/          # Shared Utilities (Hashing, Validators)
-└── docker-compose.yml  # Orchestration
+# Features
+
+✅ **Smart Worker:** Auto-prioritization of orders (<24hs urgent) and detection of "Zombie" (stalled) orders.
+
+✅ **Data Security:** Automatic censorship of financial fields (`Revenue`, `Price`) for standard operators.
+
+✅ **Stock Management:** Material validation before prioritizing an order.
+
+✅ **High Performance Caching:** Redis implementation for heavy read endpoints (Dashboard).
+
+✅ **Swagger UI:** Full API documentation available at `/swagger/index.html`.
+
+✅ **Bruno Support:** API Collection included for easy testing.
+
+✅ **Docker Compose:** Ready-to-use environment with DB and Cache.
+
+# Tech Stack
+
+  Language: Go ≥ 1.21.
+
+  Architecture: Hexagonal (Clean Architecture).
+
+  GORM: GORM (PostgreSQL).
+
+  Cache: Redis.
+
+  Database: PostgreSQL.
+
+  Containers: Docker / Docker Compose.
+
+# Setup
+
+  Requirements
+    Go ≥ 1.21.
+    Docker Desktop (with WSL2 enabled on Windows).
+    Git.
+
+# Environment Variables
+
+Copy `.env.example` to `.env.dev` and complete:
+
+PORT=8181.
+
+JWT_SECRET=<your_secure_secret>.
+TTL=1440 (Token life in minutes).
+
+REDIS_ADDR=redis:6379.
+
+DB (if using Docker Compose):
+POSTGRES_HOST=db, POSTGRES_USER=postgres, POSTGRES_PASSWORD=postgres, POSTGRES_DB=sliceflow_db, POSTGRES_PORT=5432.
+
+Local without Docker: POSTGRES_HOST=localhost - POSTGRES_PORT=5432.
+
+# Quick Start (Docker)
+
+1) Prepare the environment
+
+  Copy the environment variables.
+  Ensure ports 8080 and 5432 are free.
+
+2) Start everything
+  `docker-compose up --build -d`
+
+  The API runs inside the container at :8080.
+
+3) Useful commands
+  `docker-compose down` # stop everything.
+  `docker-compose logs -f api` # view logs (including Smart Worker logs).
+
+# Run Local (without Docker)
+  `go mod tidy`
+  `go run cmd/api/main.go`
+  http://localhost:8080
+
+# API Documentation & Tools
+
+### 📘 Swagger UI
+Once the server is running, visit:
+`http://localhost:8080/swagger/index.html`
+
+### 🐶 Bruno Collection
+You will find a folder named `bruno_collection` (or `docs/bruno`) in the root of this repository. Open **Bruno**, click "Open Collection", and select that folder to load all pre-configured requests.
+
+# Auth Flow
+
+Login with username -> JWT.
+
+Send `Authorization: Bearer <token>` to protected endpoints.
+
+Roles:
+- `admin`: Sees everything (including revenue/prices).
+- `user`: Sees orders and machines (prices hidden/zeroed).
+
+## Main Endpoints
+
+**Base URL:** `http://localhost:8080`
+> Use `{{token}}` (Bearer) for protected endpoints.
+
+### Login
+- **URL:** `/auth/login`
+- **Method:** `POST`
+- **Body:**
+```json
+{
+  "username": "admin",
+  "password": "admin"
+}
