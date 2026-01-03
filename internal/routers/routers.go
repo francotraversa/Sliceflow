@@ -16,7 +16,7 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	auth := api.Group("/auth")
 	auth.POST("/login", controller.LoginHandler)
 	//----------------------PRIVATE------------------------------
-	protected := api.Group("/loged")
+	protected := api.Group("/authed")
 	protected.Use(echojwt.WithConfig(jwtCfg))
 	//----------------------USER---------------------------------
 	user := protected.Group("/user")

@@ -5,15 +5,15 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/hornero/loged/admin/newuser
+  url: {{baseUrl}}/hornero/authed/admin/newuser
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "username": "usertest",
-    "password": "usertest"
+    "username": "usertest1",
+    "password": "usertest1"
   }
 }
 

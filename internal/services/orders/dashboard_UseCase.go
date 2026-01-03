@@ -48,7 +48,7 @@ func GetDashboardDataUseCase(userRole string) (*types.ProductionDashboardRespons
 	if isAdmin {
 		var totalRevenue float64
 		for _, o := range activeOrders {
-			totalRevenue += o.Price
+			totalRevenue += *o.Price
 		}
 		response.TotalRevenueFDM = totalRevenue
 
@@ -65,7 +65,7 @@ func GetDashboardDataUseCase(userRole string) (*types.ProductionDashboardRespons
 		copy(censoredOrders, activeOrders)
 
 		for i := range censoredOrders {
-			censoredOrders[i].Price = 0
+			censoredOrders[i].Price = nil
 		}
 		response.Orders = censoredOrders
 	}

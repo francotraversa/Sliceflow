@@ -44,10 +44,10 @@ type ProductionOrder struct {
 	MachineID *int    `gorm:"index" json:"machine_id"`
 	Machine   Machine `gorm:"foreignKey:MachineID" json:"machine,omitempty"`
 
-	Price float64 `gorm:"type:decimal(12,2)" json:"price"`
+	Price *float64 `gorm:"type:decimal(12,2)" json:"price,omitempty"`
 }
 type CreateOrderDTO struct {
-	ID             uint   `json:"id"`
+	ID             *uint  `json:"id"`
 	ClientName     string `json:"client_name"`
 	ProductDetails string `json:"product_details"`
 	TotalPieces    int    `json:"total_pieces"`

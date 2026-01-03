@@ -49,23 +49,20 @@ func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO) error {
 	}
 
 	if dto.Price != nil {
-		order.Price = *dto.Price
+		order.Price = dto.Price
 	}
 
 	// --- RELACIONES ---
 
 	if dto.OperatorID != nil {
-		// Aquí podrías validar si el operador existe antes de asignar
 		order.OperatorID = *dto.OperatorID
 	}
 
 	if dto.MaterialID != nil {
-		// Si mandaron material_id, lo actualizamos. Si no, queda el viejo.
 		order.MaterialID = *dto.MaterialID
 	}
 
 	if dto.MachineID != nil {
-		// Si mandaron machine_id, lo actualizamos. Si no, queda la vieja.
 		order.MachineID = dto.MachineID
 	}
 

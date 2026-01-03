@@ -63,7 +63,7 @@
                 }
             }
         },
-        "/hornero/loged/admin/alluser": {
+        "/hornero/authed/admin/alluser": {
             "get": {
                 "security": [
                     {
@@ -111,7 +111,7 @@
                 }
             }
         },
-        "/hornero/loged/admin/deleteuser/{id}": {
+        "/hornero/authed/admin/deleteuser/{id}": {
             "delete": {
                 "security": [
                     {
@@ -150,7 +150,7 @@
                 }
             }
         },
-        "/hornero/loged/admin/edituser/{id}": {
+        "/hornero/authed/admin/edituser/{id}": {
             "patch": {
                 "security": [
                     {
@@ -201,7 +201,7 @@
                 }
             }
         },
-        "/hornero/loged/admin/newuser": {
+        "/hornero/authed/admin/newuser": {
             "post": {
                 "security": [
                     {
@@ -246,7 +246,7 @@
                 }
             }
         },
-        "/hornero/loged/deletemyuser": {
+        "/hornero/authed/deletemyuser": {
             "delete": {
                 "security": [
                     {
@@ -277,7 +277,7 @@
                 }
             }
         },
-        "/hornero/loged/machine/addmac": {
+        "/hornero/authed/machine/addmac": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -303,7 +303,7 @@
                 "responses": {}
             }
         },
-        "/hornero/loged/machine/delmac/{id}": {
+        "/hornero/authed/machine/delmac/{id}": {
             "delete": {
                 "description": "Saca la máquina del listado de disponibles.",
                 "tags": [
@@ -341,7 +341,7 @@
                 }
             }
         },
-        "/hornero/loged/machine/list": {
+        "/hornero/authed/machine/list": {
             "get": {
                 "produces": [
                     "application/json"
@@ -353,7 +353,7 @@
                 "responses": {}
             }
         },
-        "/hornero/loged/machine/updmac/{id}": {
+        "/hornero/authed/machine/updmac/{id}": {
             "put": {
                 "tags": [
                     "Machines"
@@ -380,7 +380,7 @@
                 "responses": {}
             }
         },
-        "/hornero/loged/materials/addmat": {
+        "/hornero/authed/materials/addmat": {
             "post": {
                 "description": "Registra un insumo (Filamento, Resina, etc) para usar en las órdenes de producción.",
                 "consumes": [
@@ -426,7 +426,7 @@
                 }
             }
         },
-        "/hornero/loged/materials/delmat/{id}": {
+        "/hornero/authed/materials/delmat/{id}": {
             "delete": {
                 "description": "Marca un insumo como eliminado. No lo borra físicamente de la DB.",
                 "consumes": [
@@ -479,7 +479,7 @@
                 }
             }
         },
-        "/hornero/loged/materials/list": {
+        "/hornero/authed/materials/list": {
             "get": {
                 "description": "Obtiene la lista de insumos disponibles (excluye eliminados).",
                 "consumes": [
@@ -514,7 +514,7 @@
                 }
             }
         },
-        "/hornero/loged/materials/updmat/{id}": {
+        "/hornero/authed/materials/updmat/{id}": {
             "put": {
                 "description": "Modifica los datos de un insumo por su ID.",
                 "consumes": [
@@ -576,7 +576,7 @@
                 }
             }
         },
-        "/hornero/loged/orders/dashboard": {
+        "/hornero/authed/orders/dashboard": {
             "get": {
                 "security": [
                     {
@@ -591,7 +591,7 @@
                 "responses": {}
             }
         },
-        "/hornero/loged/orders/list": {
+        "/hornero/authed/orders/list": {
             "get": {
                 "produces": [
                     "application/json"
@@ -603,7 +603,7 @@
                 "responses": {}
             }
         },
-        "/hornero/loged/orders/order": {
+        "/hornero/authed/orders/order": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -629,7 +629,7 @@
                 "responses": {}
             }
         },
-        "/hornero/loged/orders/updord/{id}": {
+        "/hornero/authed/orders/updord/{id}": {
             "put": {
                 "description": "Permite editar detalles, asignar máquina o actualizar progreso (piezas hechas).",
                 "tags": [
@@ -657,7 +657,7 @@
                 "responses": {}
             }
         },
-        "/hornero/loged/stock/history": {
+        "/hornero/authed/stock/history": {
             "get": {
                 "description": "Permite filtrar movimientos por SKU, fecha de inicio y fecha de fin.",
                 "consumes": [
@@ -721,7 +721,7 @@
                 }
             }
         },
-        "/hornero/loged/stock/list": {
+        "/hornero/authed/stock/list": {
             "get": {
                 "security": [
                     {
@@ -755,7 +755,7 @@
                 }
             }
         },
-        "/hornero/loged/stock/movement": {
+        "/hornero/authed/stock/movement": {
             "post": {
                 "description": "Genera un movimiento y actualiza el stock automáticamente.",
                 "consumes": [
@@ -795,7 +795,7 @@
                 }
             }
         },
-        "/hornero/loged/stock/movement/dashboard": {
+        "/hornero/authed/stock/movement/dashboard": {
             "get": {
                 "security": [
                     {
@@ -816,7 +816,7 @@
                 }
             }
         },
-        "/hornero/loged/stock/product": {
+        "/hornero/authed/stock/product": {
             "post": {
                 "security": [
                     {
@@ -867,7 +867,7 @@
                 }
             }
         },
-        "/hornero/loged/stock/{sku}": {
+        "/hornero/authed/stock/{sku}": {
             "get": {
                 "security": [
                     {
@@ -1010,7 +1010,7 @@
                 }
             }
         },
-        "/hornero/loged/updmyuser": {
+        "/hornero/authed/updmyuser": {
             "patch": {
                 "security": [
                     {

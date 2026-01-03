@@ -18,7 +18,7 @@ func CheckAndSetPriorities() {
 	var orders []types.ProductionOrder
 
 	if err := db.Find(&orders).Error; err != nil {
-		fmt.Println("❌ Error getting Orders in Rutines:", err)
+		fmt.Println("Error getting Orders in Rutines:", err)
 		return
 	}
 

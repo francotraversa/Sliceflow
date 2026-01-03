@@ -22,17 +22,17 @@ import (
 // @Param        user  body      types.UserCreateCreds  true  "Credenciales del usuario"
 // @Success      200   {string}  string                 "The User [username] has been created"
 // @Failure      400   {string}  string                 "Error message"
-// @Router       /hornero/loged/admin/newuser [post]
+// @Router       /hornero/authed/admin/newuser [post]
 func CreateUserHandler(c echo.Context) error {
 	var UserCreateCreds types.UserCreateCreds
 	if err := c.Bind(&UserCreateCreds); err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid JSON")
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 	err := services.CreateUserUseCase(UserCreateCreds)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
-	return c.JSON(http.StatusOK, fmt.Sprintf("The User %s has been created", UserCreateCreds.Username))
+	return c.JSON(http.StatusCreated, types.Response{Message: fmt.Sprintf("The User %s has been created", UserCreateCreds.Username)})
 }
 
 // UpdateUserHandler godoc
@@ -46,16 +46,16 @@ func CreateUserHandler(c echo.Context) error {
 // @Param        user  body      types.UserUpdateCreds  true  "Datos a actualizar"
 // @Success      200   {string}  string                 "The User ID [id] has been updated"
 // @Failure      400   {string}  string                 "Error message"
-// @Router       /hornero/loged/updmyuser [patch]
-// @Router       /hornero/loged/admin/edituser/{id} [patch]
+// @Router       /hornero/authed/updmyuser [patch]
+// @Router       /hornero/authed/admin/edituser/{id} [patch]
 func UpdateUserHandler(c echo.Context) error {
 	token, ok := c.Get("user").(*jwt.Token)
 	if !ok {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "invalid or missing token"})
+		return c.JSON(http.StatusUnauthorized, types.Error{Error: "invalid or missing token"})
 	}
 	claims, ok := token.Claims.(*auth.JwtCustomClaims)
 	if !ok {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to parse custom claims"})
+		return c.JSON(http.StatusInternalServerError, types.Error{Error: "failed to parse custom claims"})
 	}
 
 	requesterID := claims.UserId
@@ -67,7 +67,7 @@ func UpdateUserHandler(c echo.Context) error {
 	if idParam != "" {
 		id, err := strconv.ParseUint(idParam, 10, 32)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid user ID format in URL"})
+			return c.JSON(http.StatusInternalServerError, types.Error{Error: "invalid user ID format in URL"})
 		}
 		targetID = uint(id)
 	} else {
@@ -76,15 +76,15 @@ func UpdateUserHandler(c echo.Context) error {
 
 	var updateData types.UserUpdateCreds
 	if err := c.Bind(&updateData); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid JSON body"})
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "invalid JSON body"})
 	}
 
 	err := services.UpdateUserUseCase(targetID, requesterID, requesterRole, updateData)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, fmt.Sprintf("The User ID %d has been updated", targetID))
+	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The User %s has been updated", updateData.Username)})
 }
 
 // DeleteUserHandler godoc
@@ -96,8 +96,8 @@ func UpdateUserHandler(c echo.Context) error {
 // @Param        id    path      int                    false "ID del usuario a borrar (solo para Admins)"
 // @Success      200   {string}  string                 "The UserID [id] has been deleted"
 // @Failure      400   {string}  string                 "Error message"
-// @Router       /hornero/loged/deletemyuser [delete]
-// @Router       /hornero/loged/admin/deleteuser/{id} [delete]
+// @Router       /hornero/authed/deletemyuser [delete]
+// @Router       /hornero/authed/admin/deleteuser/{id} [delete]
 func DeleteUserHandler(c echo.Context) error {
 	token := c.Get("user").(*jwt.Token)
 	claims := token.Claims.(*auth.JwtCustomClaims)
@@ -117,9 +117,9 @@ func DeleteUserHandler(c echo.Context) error {
 
 	err := services.DeleteUserUseCase(targetID, requesterID, requesterRole)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
-	return c.JSON(http.StatusOK, fmt.Sprintf("The UserID %d has been deleted", targetID))
+	return c.JSON(http.StatusOK, types.Response{Message: fmt.Sprintf("The UserID %d has been deleted", targetID)})
 }
 
 // GetAllUserHandler godoc
@@ -132,7 +132,7 @@ func DeleteUserHandler(c echo.Context) error {
 // @Param        status  query     string  false  "Filtrar por estado (active/disabled)"
 // @Success      200     {array}   types.User
 // @Failure      400     {string}  string  "Error en la solicitud"
-// @Router       /hornero/loged/admin/alluser [get]
+// @Router       /hornero/authed/admin/alluser [get]
 func GetAllUserHandler(c echo.Context) error {
 	token := c.Get("user").(*jwt.Token)
 	claims := token.Claims.(*auth.JwtCustomClaims)
@@ -141,7 +141,7 @@ func GetAllUserHandler(c echo.Context) error {
 
 	users, err := services.GetAllUserUserUseCase(claims.Role, filterRole)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, users)

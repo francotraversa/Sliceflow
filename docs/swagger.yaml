@@ -379,7 +379,7 @@ paths:
       summary: Iniciar sesión
       tags:
       - Authenticator
-  /hornero/loged/admin/alluser:
+  /hornero/authed/admin/alluser:
     get:
       description: Obtiene una lista de usuarios filtrada por rol o estado. Solo accesible
         para ADMIN.
@@ -410,7 +410,7 @@ paths:
       summary: Listar todos los usuarios
       tags:
       - Users
-  /hornero/loged/admin/deleteuser/{id}:
+  /hornero/authed/admin/deleteuser/{id}:
     delete:
       description: Cambia el estado del usuario a 'disabled'. Requiere ser el dueño
         de la cuenta o ADMIN.
@@ -435,7 +435,7 @@ paths:
       summary: Borrado lógico de usuario
       tags:
       - Users
-  /hornero/loged/admin/edituser/{id}:
+  /hornero/authed/admin/edituser/{id}:
     patch:
       consumes:
       - application/json
@@ -468,7 +468,7 @@ paths:
       summary: Actualizar usuario
       tags:
       - Users
-  /hornero/loged/admin/newuser:
+  /hornero/authed/admin/newuser:
     post:
       consumes:
       - application/json
@@ -496,7 +496,7 @@ paths:
       summary: Registrar un nuevo usuario
       tags:
       - Users
-  /hornero/loged/deletemyuser:
+  /hornero/authed/deletemyuser:
     delete:
       description: Cambia el estado del usuario a 'disabled'. Requiere ser el dueño
         de la cuenta o ADMIN.
@@ -516,7 +516,7 @@ paths:
       summary: Borrado lógico de usuario
       tags:
       - Users
-  /hornero/loged/machine/addmac:
+  /hornero/authed/machine/addmac:
     post:
       consumes:
       - application/json
@@ -533,7 +533,7 @@ paths:
       summary: Crear nueva impresora 3D
       tags:
       - Machines
-  /hornero/loged/machine/delmac/{id}:
+  /hornero/authed/machine/delmac/{id}:
     delete:
       description: Saca la máquina del listado de disponibles.
       parameters:
@@ -558,7 +558,7 @@ paths:
       summary: Eliminar una impresora (Borrado lógico)
       tags:
       - Machines
-  /hornero/loged/machine/list:
+  /hornero/authed/machine/list:
     get:
       produces:
       - application/json
@@ -566,7 +566,7 @@ paths:
       summary: Listar impresoras
       tags:
       - Machines
-  /hornero/loged/machine/updmac/{id}:
+  /hornero/authed/machine/updmac/{id}:
     put:
       parameters:
       - description: ID Máquina
@@ -584,7 +584,7 @@ paths:
       summary: Actualizar impresora
       tags:
       - Machines
-  /hornero/loged/materials/addmat:
+  /hornero/authed/materials/addmat:
     post:
       consumes:
       - application/json
@@ -615,7 +615,7 @@ paths:
       summary: Crear un nuevo material
       tags:
       - Production
-  /hornero/loged/materials/delmat/{id}:
+  /hornero/authed/materials/delmat/{id}:
     delete:
       consumes:
       - application/json
@@ -650,7 +650,7 @@ paths:
       summary: Eliminar un material (Borrado Lógico)
       tags:
       - Production
-  /hornero/loged/materials/list:
+  /hornero/authed/materials/list:
     get:
       consumes:
       - application/json
@@ -673,7 +673,7 @@ paths:
       summary: Listar todos los materiales activos
       tags:
       - Production
-  /hornero/loged/materials/updmat/{id}:
+  /hornero/authed/materials/updmat/{id}:
     put:
       consumes:
       - application/json
@@ -714,7 +714,7 @@ paths:
       summary: Actualizar un material existente
       tags:
       - Production
-  /hornero/loged/orders/dashboard:
+  /hornero/authed/orders/dashboard:
     get:
       description: Muestra métricas y órdenes. Si es admin ve revenue, si no, ve $0.
       responses: {}
@@ -723,7 +723,7 @@ paths:
       summary: Dashboard Principal (Role-Based)
       tags:
       - Production
-  /hornero/loged/orders/list:
+  /hornero/authed/orders/list:
     get:
       produces:
       - application/json
@@ -731,7 +731,7 @@ paths:
       summary: Listar Órdenes Activas
       tags:
       - Orders
-  /hornero/loged/orders/order:
+  /hornero/authed/orders/order:
     post:
       consumes:
       - application/json
@@ -748,7 +748,7 @@ paths:
       summary: Crear Orden de Trabajo
       tags:
       - Orders
-  /hornero/loged/orders/updord/{id}:
+  /hornero/authed/orders/updord/{id}:
     put:
       description: Permite editar detalles, asignar máquina o actualizar progreso
         (piezas hechas).
@@ -768,7 +768,7 @@ paths:
       summary: Actualizar Orden de Trabajo
       tags:
       - Orders
-  /hornero/loged/stock/{sku}:
+  /hornero/authed/stock/{sku}:
     delete:
       description: Realiza un soft-delete del producto usando su ID.
       parameters:
@@ -860,7 +860,7 @@ paths:
       summary: Actualizar datos de un producto
       tags:
       - Stock
-  /hornero/loged/stock/history:
+  /hornero/authed/stock/history:
     get:
       consumes:
       - application/json
@@ -903,7 +903,7 @@ paths:
       summary: Obtener historial con filtros
       tags:
       - Stock
-  /hornero/loged/stock/list:
+  /hornero/authed/stock/list:
     get:
       description: Obtiene la lista completa de productos en stock que no han sido
         borrados.
@@ -925,7 +925,7 @@ paths:
       summary: Listar todos los productos
       tags:
       - Stock
-  /hornero/loged/stock/movement:
+  /hornero/authed/stock/movement:
     post:
       consumes:
       - application/json
@@ -951,7 +951,7 @@ paths:
       summary: Registrar entrada o salida de stock
       tags:
       - Stock
-  /hornero/loged/stock/movement/dashboard:
+  /hornero/authed/stock/movement/dashboard:
     get:
       responses:
         "200":
@@ -963,7 +963,7 @@ paths:
       summary: Obtener métricas del negocio
       tags:
       - Dashboard
-  /hornero/loged/stock/product:
+  /hornero/authed/stock/product:
     post:
       consumes:
       - application/json
@@ -996,7 +996,7 @@ paths:
       summary: Crear un nuevo producto
       tags:
       - Stock
-  /hornero/loged/updmyuser:
+  /hornero/authed/updmyuser:
     patch:
       consumes:
       - application/json

@@ -1,11 +1,11 @@
 meta {
   name: Update User by User
   type: http
-  seq: 1
+  seq: 5
 }
 
 patch {
-  url: {{baseUrl}}/hornero/loged/updmyuser
+  url: {{baseUrl}}/hornero/authed/updmyuser
   body: json
   auth: inherit
 }

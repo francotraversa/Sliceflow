@@ -1,11 +1,11 @@
 meta {
   name: Update User by Admin
   type: http
-  seq: 1
+  seq: 4
 }
 
 patch {
-  url: {{baseUrl}}/hornero/loged/edituser/2
+  url: {{baseUrl}}/hornero/authed/edituser/2
   body: json
   auth: inherit
 }

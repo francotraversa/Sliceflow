@@ -8,7 +8,7 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func GetAllUserUserUseCase(requesterRole string, filterRole string) ([]types.User, error) {
+func GetAllUserUserUseCase(requesterRole string, filterRole string) (*[]types.User, error) {
 	if requesterRole != "admin" {
 		return nil, fmt.Errorf("permission denied: only admins can access the user list")
 	}
@@ -23,12 +23,14 @@ func GetAllUserUserUseCase(requesterRole string, filterRole string) ([]types.Use
 	var response []types.User
 	for _, u := range usersDB {
 		response = append(response, types.User{
-			ID:       u.ID,
-			Username: u.Username,
-			Role:     u.Role,
-			Status:   u.Status,
+			ID:        u.ID,
+			Username:  u.Username,
+			Role:      u.Role,
+			Status:    u.Status,
+			CreatedAt: u.CreatedAt,
+			UpdatedAt: u.UpdatedAt,
 		})
 	}
 
-	return response, nil
+	return &response, nil
 }

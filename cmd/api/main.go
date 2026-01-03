@@ -30,7 +30,6 @@ type CustomClaims struct {
 // @description     Documentación de mi API con Echo.
 // @host            localhost:1000
 // @BasePath        /
-
 // @securityDefinitions.apikey BearerAuth
 // @in                         header
 // @name 					   Authorization

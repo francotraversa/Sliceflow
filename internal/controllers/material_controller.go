@@ -19,18 +19,19 @@ import (
 // @Param        request body   types.CreateMaterialDTO  true  "Datos del Material"
 // @Success      201     {object}  map[string]string
 // @Failure      400     {object}  map[string]string
-// @Router       /hornero/loged/materials/addmat [post]
+// @Router       /hornero/authed/materials/addmat [post]
 func CreateMaterialHandler(c echo.Context) error {
 	var newmaterial types.CreateMaterialDTO
 
 	if err := c.Bind(&newmaterial); err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid Json")
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 	if err := services.CreateMaterialUseCase(newmaterial); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, "The material has been created")
+	return c.JSON(http.StatusCreated, types.Response{Message: fmt.Sprintf("The material %s has been created", newmaterial.Name)})
+
 }
 
 // UpdateMaterialHandler godoc
@@ -44,21 +45,21 @@ func CreateMaterialHandler(c echo.Context) error {
 // @Success      200     {object}  map[string]string
 // @Failure      400     {object}  map[string]string
 // @Failure      404     {object}  map[string]string
-// @Router       /hornero/loged/materials/updmat/{id} [put]
+// @Router       /hornero/authed/materials/updmat/{id} [put]
 func UpdateMaterialHandler(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid Param")
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Param"})
 	}
 	var mat types.UpdateMaterialDTO
 	if err := c.Bind(&mat); err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid Json")
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 	if err := services.UpdateMaterialUseCase(id, mat); err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
-	return c.JSON(http.StatusOK, fmt.Sprintf("The material %s has been updated", mat.Name))
+	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The material %s has been updated", mat.Name)})
 }
 
 // DeleteMaterialHandler godoc
@@ -71,21 +72,22 @@ func UpdateMaterialHandler(c echo.Context) error {
 // @Success      200  {object}  map[string]string
 // @Failure      400  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
-// @Router       /hornero/loged/materials/delmat/{id} [delete]
+// @Router       /hornero/authed/materials/delmat/{id} [delete]
 func DeleteMaterialHandler(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid Param")
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 	var mat types.UpdateMaterialDTO
 	if err := c.Bind(&mat); err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid Json")
 	}
 	if err := services.DeleteMaterialUseCase(id); err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
-	return c.JSON(http.StatusOK, fmt.Sprintf("The material %s has been deleted", mat.Name))
+	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The material %s has been deleted", mat.Name)})
+
 }
 
 // GetMaterialsHandler godoc
@@ -96,16 +98,16 @@ func DeleteMaterialHandler(c echo.Context) error {
 // @Produce      json
 // @Success      200  {array}   types.Material
 // @Failure      500  {object}  map[string]string
-// @Router      /hornero/loged/materials/list [get]
+// @Router      /hornero/authed/materials/list [get]
 func GetMaterialsHandler(c echo.Context) error {
 	var filter types.MaterialFilter
 
 	if err := c.Bind(&filter); err != nil {
-		return c.JSON(http.StatusBadRequest, "Filters don't work")
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Filters don't work"})
 	}
 	materials, err := services.GetAllMaterialsUseCase(filter)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, &materials)

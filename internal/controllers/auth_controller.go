@@ -20,11 +20,11 @@ import (
 func LoginHandler(c echo.Context) error {
 	var userCread types.UserLoginCreds
 	if err := c.Bind(&userCread); err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid JSON")
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 	token, err := services.AuthUseCase(userCread)
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusOK, token)
 

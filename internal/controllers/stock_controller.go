@@ -22,19 +22,19 @@ import (
 // @Failure      400      {string}  string                      "Invalid Json o error de validación"
 // @Failure      409      {string}  string                      "El SKU ya existe"
 // @Security BearerAuth
-// @Router       /hornero/loged/stock/product [post]
+// @Router       /hornero/authed/stock/product [post]
 func CreateProductHandler(c echo.Context) error {
 	var item types.ProductCreateRequest
 
 	if err := c.Bind(&item); err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid Json")
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 
 	err := services.CreateProductUseCase(item)
 	if err != nil {
-		return c.JSON(http.StatusConflict, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
-	return c.JSON(http.StatusOK, "Product has been created")
+	return c.JSON(http.StatusCreated, types.Response{Message: fmt.Sprintf("The product %s has been created", item.Name)})
 
 }
 
@@ -46,11 +46,11 @@ func CreateProductHandler(c echo.Context) error {
 // @Success      200      {array}   types.StockItem
 // @Failure      409      {string}  string                      "Error al obtener productos"
 // @Security BearerAuth
-// @Router       /hornero/loged/stock/list [get]
+// @Router       /hornero/authed/stock/list [get]
 func GetAllProductsHandler(c echo.Context) error {
 	items, err := services.GetAllProductsUseCase()
 	if err != nil {
-		return c.JSON(http.StatusConflict, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusOK, items)
 
@@ -66,15 +66,16 @@ func GetAllProductsHandler(c echo.Context) error {
 // @Failure      400      {string}  string                      "ID inválido"
 // @Failure      409      {string}  string                      "Producto no encontrado"
 // @Security BearerAuth
-// @Router       /hornero/loged/stock/{sku} [get]
+// @Router       /hornero/authed/stock/{sku} [get]
 func GetIdProductHandler(c echo.Context) error {
 	sku := c.Param("sku")
 	if sku == "" {
-		return c.JSON(http.StatusBadRequest, "SKU is required")
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "SKU is required"})
+
 	}
 	item, err := services.GetByIdUseCase(sku)
 	if err != nil {
-		return c.JSON(http.StatusConflict, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusOK, item)
 }
@@ -88,17 +89,17 @@ func GetIdProductHandler(c echo.Context) error {
 // @Failure      400      {string}  string                      "ID inválido"
 // @Failure      409      {string}  string                      "Error al eliminar"
 // @Security BearerAuth
-// @Router       /hornero/loged/stock/{sku} [delete]
+// @Router       /hornero/authed/stock/{sku} [delete]
 func DeleteIdProductHandler(c echo.Context) error {
 	sku := c.Param("sku")
 	if sku == "" {
-		return c.JSON(http.StatusBadRequest, "SKU is required")
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "SKU is required"})
 	}
 	err := services.DeleteByIdUseCase(sku)
 	if err != nil {
-		return c.JSON(http.StatusConflict, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
-	return c.JSON(http.StatusOK, "The Product has been delated")
+	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The product %s has been deleted", sku)})
 }
 
 // UpdateProductHandler godoc
@@ -113,24 +114,24 @@ func DeleteIdProductHandler(c echo.Context) error {
 // @Failure      400      {string}  string                      "Error de validación o ID inválido"
 // @Failure      404      {string}  string                      "Producto no encontrado"
 // @Security BearerAuth
-// @Router       /hornero/loged/stock/{sku} [put]
+// @Router       /hornero/authed/stock/{sku} [put]
 func UpdateByIdProductHandler(c echo.Context) error {
 	sku := c.Param("sku")
 	if sku == "" {
-		return c.JSON(http.StatusBadRequest, "SKU is required")
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "SKU is required"})
 	}
 
 	var item types.ProductUpdateRequest
 
 	if err := c.Bind(&item); err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid Json")
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 
 	product, err := services.UpdateByIdProductUseCase(sku, item)
 	if err != nil {
-		return c.JSON(http.StatusConflict, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
-	return c.JSON(http.StatusOK, fmt.Sprintf("The Product %s has been updated", product.SKU))
+	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The Product %s has been updated", product.Name)})
 }
 
 // AddMovementHandler godoc
@@ -142,12 +143,12 @@ func UpdateByIdProductHandler(c echo.Context) error {
 // @Param        movement body types.CreateMovementRequest true "Datos del movimiento"
 // @Success      201      {string} string "Movement created successfully"
 // @Failure      400      {string} string "Error de validación o Stock insuficiente"
-// @Router       /hornero/loged/stock/movement [post]
+// @Router       /hornero/authed/stock/movement [post]
 func CreateMovementHandler(c echo.Context) error {
 	var mov types.CreateMovementRequest
 
 	if err := c.Bind(&mov); err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid Json")
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 	token := c.Get("user").(*jwt.Token)
 	claims := token.Claims.(*auth.JwtCustomClaims)
@@ -155,10 +156,9 @@ func CreateMovementHandler(c echo.Context) error {
 
 	err := services.AddStockMovementUseCase(mov)
 	if err != nil {
-		return c.JSON(http.StatusConflict, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
-
-	return c.JSON(http.StatusCreated, "Movement registered successfully")
+	return c.JSON(http.StatusCreated, types.Response{Message: ("The Movement has been registered successfully")})
 
 }
 
@@ -174,18 +174,18 @@ func CreateMovementHandler(c echo.Context) error {
 // @Success      200         {array}   types.StockMovement
 // @Failure      400         {object}  map[string]string
 // @Failure      500         {object}  map[string]string
-// @Router       /hornero/loged/stock/history [get]
+// @Router       /hornero/authed/stock/history [get]
 func GetStockHistoryHandler(c echo.Context) error {
 	var filter types.HistoryFilter
 
 	if err := c.Bind(&filter); err != nil {
-		// Mantenemos la consistencia JSON que arreglamos antes
-		return c.JSON(http.StatusBadRequest, "Invalid query parameters")
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid query parameters"})
+
 	}
 
 	history, err := services.GetStockHistoryUseCase(filter)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, history)
@@ -196,11 +196,11 @@ func GetStockHistoryHandler(c echo.Context) error {
 // @Tags         Dashboard
 // @Security     BearerAuth
 // @Success      200  {object}  types.DashboardResponse
-// @Router       /hornero/loged/stock/movement/dashboard [get]
+// @Router       /hornero/authed/stock/movement/dashboard [get]
 func GetDashboardHandler(c echo.Context) error {
 	stats, err := services.GetDashboardStatsUseCase()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusOK, &stats)
 }

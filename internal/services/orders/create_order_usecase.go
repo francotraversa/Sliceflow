@@ -69,7 +69,7 @@ func CreateOrderUseCase(dto types.CreateOrderDTO) error {
 
 		OperatorID: dto.OperatorID,
 		MachineID:  machineID, // Puntero (puede ser nil)
-		Price:      dto.Price,
+		Price:      &dto.Price,
 	}
 
 	// 7. Guardar

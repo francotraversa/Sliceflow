@@ -88,8 +88,8 @@ func TestGetAllUserUseCase(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Error: %v", err)
 		}
-		if len(users) != 1 || users[0].Username != "admin1" {
-			t.Errorf("Filtro de admin falló. Obtenidos: %d", len(users))
+		if len(*users) != 1 || (*users)[0].Username != "admin1" {
+			t.Errorf("Filtro de admin falló. Obtenidos: %d", len(*users))
 		}
 	})
 
@@ -98,8 +98,8 @@ func TestGetAllUserUseCase(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Error: %v", err)
 		}
-		if len(users) != 3 {
-			t.Errorf("Se esperaban 3 usuarios, se obtuvieron %d", len(users))
+		if len(*users) != 3 {
+			t.Errorf("Se esperaban 3 usuarios, se obtuvieron %d", len(*users))
 		}
 	})
 }
