@@ -1518,7 +1518,7 @@ const docTemplate = `{
         "github_com_francotraversa_Sliceflow_internal_types.User": {
             "type": "object",
             "properties": {
-                "createdAt": {
+                "created_at": {
                     "type": "string"
                 },
                 "id": {
@@ -1534,7 +1534,7 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
-                "updatedAt": {
+                "updated_at": {
                     "type": "string"
                 },
                 "username": {

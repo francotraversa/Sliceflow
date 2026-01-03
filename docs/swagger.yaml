@@ -291,7 +291,7 @@ definitions:
     type: object
   github_com_francotraversa_Sliceflow_internal_types.User:
     properties:
-      createdAt:
+      created_at:
         type: string
       id:
         type: integer
@@ -302,7 +302,7 @@ definitions:
         type: string
       status:
         type: string
-      updatedAt:
+      updated_at:
         type: string
       username:
         type: string
