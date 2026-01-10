@@ -201,6 +201,76 @@
                 }
             }
         },
+        "/hornero/authed/admin/enableuser": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cambia el estado a 'enable'. Usa el endpoint '/admin/...'",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Activado lógico de usuario (Admin o Propio)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/hornero/authed/admin/enableuser/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cambia el estado a 'enable'. Usa el endpoint '/admin/...'",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Activado lógico de usuario (Admin o Propio)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del usuario (Requerido solo para la ruta /admin/deleteuser/{id})",
+                        "name": "id",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_francotraversa_Sliceflow_internal_types.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/hornero/authed/admin/newuser": {
             "post": {
                 "security": [
@@ -1329,6 +1399,14 @@
                 "quantity": {
                     "type": "integer",
                     "example": 10
+                }
+            }
+        },
+        "github_com_francotraversa_Sliceflow_internal_types.Response": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
                 }
             }
         },

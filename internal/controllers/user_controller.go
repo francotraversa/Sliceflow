@@ -122,6 +122,37 @@ func DeleteUserHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, types.Response{Message: fmt.Sprintf("The UserID %d has been deleted", targetID)})
 }
 
+// EnableUserHandler godoc
+// @Summary      Habilitar usuario por ID
+// @Description  Cambia el estado del usuario a 'active'. Requiere permisos de ADMIN.
+// @Tags         Users
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request  body      types.UserIDRequest  true  "JSON con el ID del usuario"
+// @Success      200   {object}  types.Response       "User with ID [id] has been enabled"
+// @Failure      400   {object}  types.Response       "Error message"
+// @Router       /hornero/authed/admin/enableuser [delete]
+func EnableUserHandler(c echo.Context) error {
+	var req types.UserIDActivate
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, types.Response{
+			Message: "Invalid input format",
+		})
+	}
+
+	err := services.EnableUserByIDUseCase(req)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Response{
+			Message: err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, types.Response{
+		Message: fmt.Sprintf("User with ID %d has been enabled successfully", req.ID),
+	})
+}
+
 // GetAllUserHandler godoc
 // @Summary      Listar todos los usuarios
 // @Description  Obtiene una lista de usuarios filtrada por rol o estado. Solo accesible para ADMIN.

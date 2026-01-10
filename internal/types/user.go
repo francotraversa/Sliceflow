@@ -34,3 +34,7 @@ type UserUpdateCreds struct {
 type UserDeleteCreds struct {
 	Username string `json:"username"`
 }
+
+type UserIDActivate struct {
+	ID uint `json:"id"`
+}
