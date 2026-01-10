@@ -171,6 +171,11 @@ definitions:
         type: string
         x-order: "1"
     type: object
+  github_com_francotraversa_Sliceflow_internal_types.Response:
+    properties:
+      message:
+        type: string
+    type: object
   github_com_francotraversa_Sliceflow_internal_types.StockItem:
     properties:
       created_at:
@@ -468,6 +473,49 @@ paths:
       summary: Actualizar usuario
       tags:
       - Users
+  /hornero/authed/admin/enableuser:
+    delete:
+      description: Cambia el estado a 'enable'. Usa el endpoint '/admin/...'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Activado lógico de usuario (Admin o Propio)
+      tags:
+      - Admin
+  /hornero/authed/admin/enableuser/{id}:
+    delete:
+      description: Cambia el estado a 'enable'. Usa el endpoint '/admin/...'
+      parameters:
+      - description: ID del usuario (Requerido solo para la ruta /admin/deleteuser/{id})
+        in: path
+        name: id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_francotraversa_Sliceflow_internal_types.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Activado lógico de usuario (Admin o Propio)
+      tags:
+      - Admin
   /hornero/authed/admin/newuser:
     post:
       consumes:

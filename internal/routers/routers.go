@@ -58,6 +58,7 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	admin.POST("/newuser", controller.CreateUserHandler)
 	admin.GET("/alluser", controller.GetAllUserHandler)
 	admin.PATCH("/edituser/:id", controller.UpdateUserHandler)
+	admin.PATCH("/enableuser", controller.EnableUserHandler)
 	admin.DELETE("/deleteuser/:id", controller.DeleteUserHandler)
 
 }
