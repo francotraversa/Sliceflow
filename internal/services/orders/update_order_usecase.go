@@ -2,99 +2,84 @@ package services
 
 import (
 	"fmt"
-	"time"
 
 	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
-	db_utils "github.com/francotraversa/Sliceflow/internal/infra/database/utils"
 	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
+	"gorm.io/gorm"
 )
 
 func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO) error {
 	db := storage.DatabaseInstance{}.Instance()
 	var order types.ProductionOrder
 
-	// 1. Buscar la orden existente
-	if err := db.First(&order, id).Error; err != nil {
-		return err
+	// 1. Cargamos la orden con sus ítems actuales para que GORM conozca el estado previo
+	if err := db.Preload("Items").First(&order, id).Error; err != nil {
+		return fmt.Errorf("order not found: %w", err)
 	}
 
-	// 2. Actualizar Datos Básicos
+	// 2. Actualizamos los campos de la tabla 'production_orders'
 	if dto.ClientName != nil {
 		order.ClientName = *dto.ClientName
 	}
-
-	if dto.ProductDetails != nil {
-		order.ProductDetails = *dto.ProductDetails
-	}
-
-	if dto.TotalPieces != nil {
-		order.TotalPieces = *dto.TotalPieces
-	}
-
-	if dto.DonePieces != nil {
-		order.DonePieces = *dto.DonePieces
-	}
-
 	if dto.Priority != nil {
 		order.Priority = *dto.Priority
 	}
-
 	if dto.Notes != nil {
 		order.Notes = *dto.Notes
 	}
-
 	if dto.Status != nil {
 		order.Status = *dto.Status
 	}
-
 	if dto.Price != nil {
 		order.Price = dto.Price
 	}
-
-	// --- RELACIONES ---
-
 	if dto.OperatorID != nil {
 		order.OperatorID = *dto.OperatorID
 	}
-
 	if dto.MaterialID != nil {
 		order.MaterialID = *dto.MaterialID
 	}
-
 	if dto.MachineID != nil {
 		order.MachineID = dto.MachineID
 	}
 
-	// 4. Recalcular Tiempo (si mandaron datos)
-	if dto.EstimatedHours != nil || dto.EstimatedMinutes != nil {
-		hours := 0
-		minutes := 0
-		if dto.EstimatedHours != nil {
-			hours = *dto.EstimatedHours
-		}
+	// 3. Sincronizamos la tabla 'order_items'
+	if dto.Items != nil {
+		var updatedItems []types.OrderItem
+		currentTotalDone := 0
+		currentTotalPieces := 0
 
-		if dto.EstimatedMinutes != nil {
-			minutes = *dto.EstimatedMinutes
-		}
+		for _, itemDTO := range *dto.Items {
 
-		order.EstimatedMinutes = (hours * 60) + minutes
+			item := types.OrderItem{
+				ID:         itemDTO.ID,
+				OrderID:    order.ID,
+				StlName:    itemDTO.ProductName,
+				Quantity:   itemDTO.Quantity,
+				DonePieces: itemDTO.DonePieces,
+			}
+			updatedItems = append(updatedItems, item)
+			currentTotalDone += item.DonePieces
+			currentTotalPieces += item.Quantity
+		}
+		order.Items = updatedItems
+		order.DonePieces = currentTotalDone
+		order.TotalPieces = currentTotalPieces
 	}
 
-	if dto.Deadline != nil && *dto.Deadline != "" {
-		parsedDeadline, err := time.Parse("2006-01-02", *dto.Deadline)
-		if err == nil {
-			order.Deadline = parsedDeadline
-		}
-	}
-
+	// 4. Lógica de tiempos y auto-completado
 	if order.DonePieces >= order.TotalPieces && order.TotalPieces > 0 {
 		order.Status = "completed"
 	}
 
-	if err := db_utils.Save(&order); err != nil {
-		return fmt.Errorf("The Order was not updated")
+	err := db.Session(&gorm.Session{FullSaveAssociations: true}).Save(&order).Error
+
+	if err != nil {
+		return fmt.Errorf("failed to update order and items: %w", err)
 	}
+
+	// 6. Limpieza de cache y eventos
 	services.InvalidateCache("orders:list:*")
 	services.PublishEvent("dashboard_updates", `{"type": "ORDER_UPDATED", "message": "ORDER UPDATED"}`)
 

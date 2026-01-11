@@ -14,25 +14,37 @@ import (
 )
 
 func CreateOrderUseCase(dto types.CreateOrderDTO) error {
-	order, err := ordersutils.CheckOrder(dto)
-	if err != nil {
-		return err
+	if dto.ID != nil {
+		order, _ := ordersutils.CheckOrder(dto)
+		if order != nil {
+			return fmt.Errorf("The Order %d already exists", *dto.ID)
+		}
 	}
 
-	if order != nil {
-		return fmt.Errorf("The Order %d already exists", dto.ID)
-	}
 	// 1. Validar que el Material exista (Integridad referencial)
-	_, err = materialutils.GetMaterialbyID(dto.MaterialID)
+	_, err := materialutils.GetMaterialbyID(dto.MaterialID)
 	if err != nil {
 		return err
 	}
 
-	_, err = machineutils.GetMachinebyID(*dto.MachineID)
-	if err != nil {
-		return err
+	if dto.MachineID != nil {
+		_, err = machineutils.GetMachinebyID(*dto.MachineID)
+		if err != nil {
+			return fmt.Errorf("Machine could not be found: %w", err)
+		}
 	}
-	// 3. Convertir Fecha (String "2025-12-31" -> Time)
+	var itemsDB []types.OrderItem
+	totalPiecesCalculated := 0
+
+	for _, itemDTO := range dto.Items {
+		totalPiecesCalculated += itemDTO.Quantity
+
+		itemsDB = append(itemsDB, types.OrderItem{
+			StlName:    itemDTO.ProductName,
+			Quantity:   itemDTO.Quantity,
+			DonePieces: 0,
+		})
+	}
 	deadlineTime, err := time.Parse("2006-01-02", dto.Deadline)
 	if err != nil {
 		return errors.New("Format Date invalid (use YYYY-MM-DD)")
@@ -45,40 +57,28 @@ func CreateOrderUseCase(dto types.CreateOrderDTO) error {
 		initialStatus = "queued" // Si ya tiene máquina, pasa a cola
 	}
 
-	// 6. Armar el Modelo DB
-	var machineID *int
-	if dto.MachineID != nil {
-		id := int(*dto.MachineID)
-		machineID = &id
-	}
-
 	newOrder := types.ProductionOrder{
-		ClientName:     dto.ClientName,
-		ProductDetails: dto.ProductDetails,
-		TotalPieces:    dto.TotalPieces,
-		DonePieces:     0, // Arranca en 0
-
-		MaterialID: dto.MaterialID, // Relación
-
+		ID:               *dto.ID,
+		ClientName:       dto.ClientName,
+		Items:            itemsDB,               // La lista de piezas que armamos en el loop
+		TotalPieces:      totalPiecesCalculated, // Usamos la suma de las cantidades
+		DonePieces:       0,
+		MaterialID:       dto.MaterialID,
 		Priority:         dto.Priority,
 		Notes:            dto.Notes,
 		EstimatedMinutes: totalMinutes,
 		Deadline:         deadlineTime,
-
-		Status: initialStatus,
-
-		OperatorID: dto.OperatorID,
-		MachineID:  machineID, // Puntero (puede ser nil)
-		Price:      &dto.Price,
+		Status:           initialStatus,
+		OperatorID:       dto.OperatorID,
+		MachineID:        dto.MachineID,
+		Price:            dto.Price, // Asignamos el precio del DTO al TotalPrice del modelo
 	}
-
-	// 7. Guardar
 
 	if err := db_utils.Create(&newOrder); err != nil {
-		return fmt.Errorf("Error Creating Machine")
+		return fmt.Errorf("could not save order and items: %w", err)
 	}
 	services.InvalidateCache("orders:list:*")
-	services.PublishEvent("dashboard_updates", `{"type": "ORDER_CREATED", "message": "NEW ORDER CREATED"}`)
+	services.PublishEvent("dashboard_updates", `{"type": "ORDER_CREATED", "message": "NEW MULTI-ITEM ORDER CREATED"}`)
 
 	return nil
 }

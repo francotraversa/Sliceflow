@@ -43,7 +43,7 @@ func (database DatabaseInstance) NewDataBase() {
 	db.AutoMigrate(&types.User{})
 	db.AutoMigrate(&types.StockItem{})
 	db.AutoMigrate(&types.StockMovement{})
-	db.AutoMigrate(&types.Machine{}, &types.ProductionOrder{}, &types.Material{})
+	db.AutoMigrate(&types.Machine{}, &types.ProductionOrder{}, &types.Material{}, &types.OrderItem{})
 	DBInstance.DB = db
 }
 

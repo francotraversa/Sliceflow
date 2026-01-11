@@ -10,7 +10,8 @@ import (
 
 func GetAllOrdersUseCase(filter types.OrderFilter) (*[]types.ProductionOrder, error) {
 	db := storage.DatabaseInstance{}.Instance()
-	cacheKey := fmt.Sprintf("orders:list:%s", filter.Status)
+
+	cacheKey := fmt.Sprintf("orders:list:st_%s:id_%d:sort_%v", filter.Status, filter.ID, filter.SortPriority)
 	var orders []types.ProductionOrder
 
 	if services.GetCache(cacheKey, &orders) {
@@ -19,19 +20,25 @@ func GetAllOrdersUseCase(filter types.OrderFilter) (*[]types.ProductionOrder, er
 
 	query := db.Preload("Material").Preload("Machine")
 
-	if filter.Status != "" {
-		query = query.Where("status = ?", filter.Status)
+	if filter.ID != 0 {
+		query = query.Preload("Items").Where("id = ?", filter.ID)
+	} else {
+		if filter.Status != "" {
+			query = query.Where("status = ?", filter.Status)
+		}
 	}
 
+	// Ordenamiento
 	if filter.SortPriority {
-		query = query.Order("priority ASC") // P1 primero
+		query = query.Order("priority ASC")
 	} else {
-		query = query.Order("created_at DESC") // Las más nuevas primero
+		query = query.Order("created_at DESC")
 	}
 
 	if err := query.Find(&orders).Error; err != nil {
 		return nil, err
 	}
+
 	services.SetCache(cacheKey, &orders)
 	return &orders, nil
 }

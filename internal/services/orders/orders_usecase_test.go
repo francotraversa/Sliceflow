@@ -48,7 +48,6 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		initialOrder := types.ProductionOrder{
 			ClientName:       "Cliente Viejo",
 			TotalPieces:      10,
-			DonePieces:       0,
 			Status:           "pending",
 			MaterialID:       matID,
 			OperatorID:       1,

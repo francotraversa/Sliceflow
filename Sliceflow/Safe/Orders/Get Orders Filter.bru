@@ -5,14 +5,15 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/hornero/loged/orders/list?status=pending&sort_priority=true
+  url: {{baseUrl}}/hornero/authed/orders/list?sort_priority=true&id=2014
   body: json
   auth: inherit
 }
 
 params:query {
-  status: pending
   sort_priority: true
+  id: 2014
+  ~status: pending
 }
 
 settings {

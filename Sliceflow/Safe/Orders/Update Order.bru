@@ -5,27 +5,41 @@ meta {
 }
 
 patch {
-  url: {{baseUrl}}/hornero/loged/orders/updord/1
+  url: {{baseUrl}}/hornero/authed/orders/updord/2014
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "client_name": "TechSolutions SA",
-    "product_details": "Gabinete Prototipo V1",
-    "total_pieces": 50,
-    "done_pieces": 55,           
+    "client_name": "Industrias Tech S.A. (Actualizado)",
     "status": "in-progress",
-    "material_id": 1,
     "priority": "P1",
-    "notes": "Producción iniciada.",
-    "estimated_hours": 4,
-    "estimated_minutes": 30,
-    "deadline": "2025-12-30",
-    "operator_id": 1,
-    "machine_id": 1,
-    "price": 45000.00
+    "notes": "Se reporta avance: piezas de soporte listas, engranajes al 50%.",
+    "estimated_hours": 2,
+    "estimated_minutes": 45,
+    "deadline": "2026-02-20",
+    "price": 15500.50,
+    "items": [
+      {
+        "id": 1,
+        "product_name": "Soporte_Eje_A.stl",
+        "quantity": 10,
+        "done_pieces": 10
+      },
+      {
+        "id": 2,
+        "product_name": "Engranaje_Z24.stl",
+        "quantity": 5,
+        "done_pieces": 4
+      },
+      {
+        "id": 3,
+        "product_name": "Carcasa_Frontal_V2.stl",
+        "quantity": 1,
+        "done_pieces": 4
+      }
+    ]
   }
 }
 

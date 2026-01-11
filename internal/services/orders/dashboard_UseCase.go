@@ -10,14 +10,12 @@ func GetDashboardDataUseCase(userRole string) (*types.ProductionDashboardRespons
 	var response types.ProductionDashboardResponse
 
 	// --- 1. MÁQUINAS ---
-	// Todos ven el estado de las máquinas
 	var machines []types.Machine
 	if err := db.Find(&machines).Error; err != nil {
 		return &response, err
 	}
 	response.Machines = machines
 
-	// Calcular Tasa de Utilización
 	var busyMachines float64
 	for _, m := range machines {
 		if m.Status != "idle" && m.Status != "maintenance" {
@@ -31,7 +29,9 @@ func GetDashboardDataUseCase(userRole string) (*types.ProductionDashboardRespons
 	// --- 2. ÓRDENES ACTIVAS ---
 	var activeOrders []types.ProductionOrder
 
-	err := db.Preload("Material").
+	// CAMBIO CLAVE: Agregamos Preload("Items") para traer la lista de piezas
+	err := db.Preload("Items").
+		Preload("Material").
 		Preload("Machine").
 		Where("status IN ?", []string{"in-progress", "queued"}).
 		Order("priority ASC").
@@ -40,31 +40,29 @@ func GetDashboardDataUseCase(userRole string) (*types.ProductionDashboardRespons
 	if err != nil {
 		return &response, err
 	}
-	response.Orders = activeOrders
-	response.ActiveJobs = int64(len(activeOrders))
 
 	isAdmin := (userRole == "admin")
 
 	if isAdmin {
 		var totalRevenue float64
 		for _, o := range activeOrders {
+			// CAMBIO: Usamos TotalPrice que es el campo del nuevo modelo
 			totalRevenue += *o.Price
 		}
 		response.TotalRevenueFDM = totalRevenue
-
 		response.Orders = activeOrders
 
 	} else {
-		// --- USUARIO NORMAL: CENSURA TOTAL ---
-
-		// 1. El Total es Cero
+		// --- USUARIO NORMAL: CENSURA ---
 		response.TotalRevenueFDM = 0
 		response.TotalRevenueSLS = 0
 
+		// Creamos una copia para no afectar la data original si fuera necesario
 		censoredOrders := make([]types.ProductionOrder, len(activeOrders))
 		copy(censoredOrders, activeOrders)
 
 		for i := range censoredOrders {
+			// CAMBIO: Ponemos el precio en 0 para usuarios no admin
 			censoredOrders[i].Price = nil
 		}
 		response.Orders = censoredOrders

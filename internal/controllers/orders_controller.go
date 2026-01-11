@@ -25,8 +25,7 @@ func CreateOrderHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 
-	// Validaciones básicas manuales si querés
-	if dto.ClientName == "" || dto.TotalPieces <= 0 || dto.ID == nil {
+	if dto.ClientName == "" || dto.Items == nil || dto.ID == nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Insufficient fields"})
 	}
 
@@ -45,7 +44,7 @@ func GetOrdersHandler(c echo.Context) error {
 	var filter types.OrderFilter
 
 	if err := c.Bind(&filter); err != nil {
-		return c.JSON(http.StatusBadRequest, types.Error{Error: "Filters don't work"})
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Filters invalid"})
 	}
 	orders, err := services.GetAllOrdersUseCase(filter)
 	if err != nil {
