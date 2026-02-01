@@ -26,6 +26,7 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	stock := protected.Group("/stock")
 	stock.POST("/addprod", controller.CreateProductHandler)
 	stock.GET("/list", controller.GetAllProductsHandler)
+	stock.GET("/list/:name", controller.GetProductByNameHandler)
 	stock.GET("/list/:sku", controller.GetIdProductHandler)
 	stock.PATCH("/updprod/:sku", controller.UpdateByIdProductHandler)
 	stock.DELETE("/delprod/:sku", controller.DeleteIdProductHandler)

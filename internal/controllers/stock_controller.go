@@ -204,3 +204,26 @@ func GetDashboardHandler(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, &stats)
 }
+
+// GetProductByNameHandler godoc
+// @Summary      Obtener producto por nombre
+// @Description  Busca un producto específico usando su nombre.
+// @Tags         Stock
+// @Produce      json
+// @Param        name      path      string                       true  "Nombre del producto"
+// @Success      200      {object}  types.StockItem
+// @Failure      400      {string}  string                      "Nombre inválido"
+// @Failure      409      {string}  string                      "Producto no encontrado"
+// @Security BearerAuth
+// @Router       /hornero/authed/stock/list/{name} [get]
+func GetProductByNameHandler(c echo.Context) error {
+	name := c.Param("name")
+	if name == "" {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Name is required"})
+	}
+	item, err := services.GetProductByNameUseCase(name)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	return c.JSON(http.StatusOK, item)
+}
