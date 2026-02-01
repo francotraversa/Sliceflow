@@ -38,46 +38,14 @@ func CreateProductHandler(c echo.Context) error {
 
 }
 
-// GetAllProductsHandler godoc
-// @Summary      Listar todos los productos
-// @Description  Obtiene la lista completa de productos en stock que no han sido borrados.
-// @Tags         Stock
-// @Produce      json
-// @Success      200      {array}   types.StockItem
-// @Failure      409      {string}  string                      "Error al obtener productos"
-// @Security BearerAuth
-// @Router       /hornero/authed/stock/list [get]
-func GetAllProductsHandler(c echo.Context) error {
-	items, err := services.GetAllProductsUseCase()
+func GetProductsHandler(c echo.Context) error {
+	search := c.QueryParam("q")
+	result, err := services.GetStockUseCase(search)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
-	return c.JSON(http.StatusOK, items)
 
-}
-
-// GetIdProductHandler godoc
-// @Summary      Obtener producto por ID
-// @Description  Busca un producto específico usando su ID numérico de base de datos.
-// @Tags         Stock
-// @Produce      json
-// @Param        sku      path      int                       true  "ID del producto"
-// @Success      200      {object}  types.StockItem
-// @Failure      400      {string}  string                      "ID inválido"
-// @Failure      409      {string}  string                      "Producto no encontrado"
-// @Security BearerAuth
-// @Router       /hornero/authed/stock/{sku} [get]
-func GetIdProductHandler(c echo.Context) error {
-	sku := c.Param("sku")
-	if sku == "" {
-		return c.JSON(http.StatusBadRequest, types.Error{Error: "SKU is required"})
-
-	}
-	item, err := services.GetByIdUseCase(sku)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
-	}
-	return c.JSON(http.StatusOK, item)
+	return c.JSON(http.StatusOK, &result)
 }
 
 // DeleteIdProductHandler godoc
@@ -203,27 +171,4 @@ func GetDashboardHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusOK, &stats)
-}
-
-// GetProductByNameHandler godoc
-// @Summary      Obtener producto por nombre
-// @Description  Busca un producto específico usando su nombre.
-// @Tags         Stock
-// @Produce      json
-// @Param        name      path      string                       true  "Nombre del producto"
-// @Success      200      {object}  types.StockItem
-// @Failure      400      {string}  string                      "Nombre inválido"
-// @Failure      409      {string}  string                      "Producto no encontrado"
-// @Security BearerAuth
-// @Router       /hornero/authed/stock/list/{name} [get]
-func GetProductByNameHandler(c echo.Context) error {
-	name := c.Param("name")
-	if name == "" {
-		return c.JSON(http.StatusBadRequest, types.Error{Error: "Name is required"})
-	}
-	item, err := services.GetProductByNameUseCase(name)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
-	}
-	return c.JSON(http.StatusOK, item)
 }
