@@ -48,6 +48,13 @@ func main() {
 	redis.InitRedis(redisHost, "6379", "")
 
 	e := echo.New()
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:5173"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
+	}))
+
 	e.Use(middleware.Recover())
 
 	jwtCfg := echojwt.Config{
