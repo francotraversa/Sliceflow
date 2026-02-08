@@ -41,6 +41,5 @@ func GetStockUseCase(query string) (*[]types.StockItem, error) {
 		}
 	}
 
-	// IMPORTANTE: Devolvemos el slice FILTRADO, no el 'allProducts'
 	return &filtered, nil
 }

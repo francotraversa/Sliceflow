@@ -37,7 +37,7 @@ func AuthUseCase(userCread types.UserLoginCreds) (*types.TokenResponse, error) {
 		return nil, fmt.Errorf("Invalid TTL value")
 	}
 
-	token, err := auth.GenerateToken(User.ID, User.Role, os.Getenv("JWT_SECRET"), time.Duration(ttl)*time.Minute)
+	token, err := auth.GenerateToken(User.ID, User.Username, User.Role, os.Getenv("JWT_SECRET"), time.Duration(ttl)*time.Minute)
 	if err != nil {
 		return nil, err
 	}

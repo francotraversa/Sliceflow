@@ -31,12 +31,29 @@ func CreateProductUseCase(item types.ProductCreateRequest) error {
 		return fmt.Errorf("The price must be positive")
 	}
 
+	if item.MinQty < 0 {
+		return fmt.Errorf("The minimum quantity must be positive")
+	}
+
+	if item.Quantity < 0 {
+		return fmt.Errorf("The quantity must be positive")
+	}
+
+	if item.Description == "" {
+		item.Description = "No description"
+	}
+
+	if item.MinQty == 0 {
+		item.MinQty = 5 // Valor por defecto si no se proporciona
+	}
+
 	product := types.StockItem{
 		SKU:         item.SKU,
 		Name:        item.Name,
 		Description: item.Description,
 		Quantity:    item.Quantity,
 		Price:       item.Price,
+		MinQty:      item.MinQty,
 	}
 	if err := db_utils.Create(&product); err != nil {
 		return fmt.Errorf("Error Create Product")

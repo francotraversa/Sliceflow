@@ -39,14 +39,14 @@ func AddStockMovementUseCase(req types.CreateMovementRequest) error {
 		case "IN", "RETURN":
 			qtyDelta = req.Quantity
 
-		case "OUT", "LOSS", "SCRAP":
+		case "OUT", "INTERNAL_USE":
 			qtyDelta = -req.Quantity // Lo volvemos negativo para la suma
 
 			// Validación CRÍTICA: No vender lo que no tenemos
 			if item.Quantity < req.Quantity {
 				return fmt.Errorf("stock insuficiente. Tienes %d, intentas sacar %d", item.Quantity, req.Quantity)
 			}
-		case "ADJUST":
+		case "ADJUSTMENT":
 			qtyDelta = req.Quantity - item.Quantity
 
 		default:
@@ -60,11 +60,12 @@ func AddStockMovementUseCase(req types.CreateMovementRequest) error {
 
 		// 5. CREAR EL OBJETO MOVIMIENTO
 		movement := types.StockMovement{
-			StockSKU:  item.SKU, // Relación por string
-			Type:      req.Type,
-			QtyDelta:  qtyDelta,  // ej: +5 o -5
-			QtyBefore: qtyBefore, // ej: 100
-			QtyAfter:  qtyAfter,  // ej: 105 o 95
+			StockSKU:    item.SKU, // Relación por string
+			Type:        req.Type,
+			QtyDelta:    qtyDelta,  // ej: +5 o -5
+			QtyBefore:   qtyBefore, // ej: 100
+			QtyAfter:    qtyAfter,  // ej: 105 o 95
+			Description: req.Description,
 
 			Reason:     req.Reason,
 			CreatedBy:  req.UserID,
@@ -82,8 +83,10 @@ func AddStockMovementUseCase(req types.CreateMovementRequest) error {
 		if err := tx.Model(&item).Select("Quantity").Updates(&item).Error; err != nil {
 			return err // Dispara Rollback
 		}
+		services.InvalidateCache("stock:list:*")
 		services.InvalidateCache("historic:list:*")
-
+		services.InvalidateCache("dashboard:*")
+		services.PublishEvent("dashboard_updates", `{"type": "STOCK_MOVEMENT", "message": "STOCK MOVEMENT CREATED"}`)
 		return nil
 	})
 }

@@ -10,7 +10,10 @@ import (
 
 func GetStockHistoryUseCase(filter types.HistoryFilter) (*[]types.StockMovement, error) {
 	db := storage.DatabaseInstance{}.Instance()
-	cacheKey := fmt.Sprintf("historic:list:%s:%s", filter.SKU, filter.Type)
+	cacheKey := fmt.Sprintf(
+		"historic:list:sku=%s:type=%s:start=%s:end=%s",
+		filter.SKU, filter.Type, filter.StartDate, filter.EndDate,
+	)
 
 	var movements []types.StockMovement
 
