@@ -27,7 +27,7 @@ type ProductionOrder struct {
 	Notes            string    `gorm:"type:text" json:"notes"`
 	TotalPieces      int       `gorm:"not null" json:"total_pieces"`
 	EstimatedMinutes int       `json:"estimated_minutes"`
-	Deadline         time.Time `json:"deadline"`
+	Deadline         time.Time `gorm:"type:datetime;not null" json:"deadline"`
 	Status           string    `gorm:"type:varchar(20);default:'pending';index" json:"status"`
 	DonePieces       int       `gorm:"default:0" json:"done_pieces"`
 	OperatorID       int       `gorm:"not null" json:"operator_id"`
@@ -43,6 +43,7 @@ type OrderItem struct {
 	Quantity   int    `gorm:"not null" json:"quantity"`
 	DonePieces int    `gorm:"default:0" json:"done_pieces"`
 }
+
 type CreateOrderDTO struct {
 	ID               *uint                `gorm:"primaryKey" json:"id"`
 	ClientName       string               `json:"client_name"`
@@ -61,7 +62,7 @@ type CreateOrderItemDTO struct {
 	ID          uint   `json:"id"`
 	ProductName string `json:"product_name"`
 	Quantity    int    `json:"quantity"`
-	DonePieces  int    `json:"done_pieces"` // <--- Agregamos esto
+	DonePieces  int    `json:"done_pieces"`
 }
 
 type UpdateOrderDTO struct {

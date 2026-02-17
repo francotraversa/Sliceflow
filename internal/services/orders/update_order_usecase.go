@@ -68,7 +68,6 @@ func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO) error {
 		order.TotalPieces = currentTotalPieces
 	}
 
-	// 4. Lógica de tiempos y auto-completado
 	if order.DonePieces >= order.TotalPieces && order.TotalPieces > 0 {
 		order.Status = "completed"
 	}
@@ -79,7 +78,6 @@ func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO) error {
 		return fmt.Errorf("failed to update order and items: %w", err)
 	}
 
-	// 6. Limpieza de cache y eventos
 	services.InvalidateCache("orders:list:*")
 	services.PublishEvent("dashboard_updates", `{"type": "ORDER_UPDATED", "message": "ORDER UPDATED"}`)
 

@@ -1,0 +1,32 @@
+//package services
+//
+//import (
+//	"testing"
+//
+//	"github.com/francotraversa/Sliceflow/internal/infra/database"
+//	"github.com/francotraversa/Sliceflow/internal/types"
+//)
+//
+//func TestDeleteOrderUseCase(t *testing.T) {
+//	// Configuración inicial: Creamos una orden de prueba
+//	db := database.DatabaseInstance{}.Instance()
+//	testOrder := types.ProductionOrder{
+//		ClientName: "Test Client",
+//		Priority:   1,
+//		Notes:      "Test Notes",
+//		Status:     "pending",
+//	}
+//	if err := db.Create(&testOrder).Error; err != nil {
+//		t.Fatalf("Failed to create test order: %v", err)
+//	}
+//
+//	// Ejecutamos la función de eliminación
+//	if err := DeleteOrderUseCase(testOrder.ID); err != nil {
+//		t.Fatalf("Failed to delete test order: %v", err)
+//	}
+//
+//	// Verificamos que la orden haya sido eliminada
+//	var deletedOrder types.ProductionOrder
+//	if err := db.First(&deletedOrder, testOrder.ID).Error; err == nil {
+//		t.Fatalf("Test order was not deleted properly")	}
+//}

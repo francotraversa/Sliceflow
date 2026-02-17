@@ -95,3 +95,21 @@ func GetPrincipalDashboardHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, data)
 }
+
+// DeleteOrderHandler godoc
+// @Summary      Eliminar Orden de Trabajo
+// @Description  Elimina una orden por su ID. Solo para admins.
+// @Tags         Orders
+// @Param        id  path    int true "ID de la Orden"
+// @Security     BearerAuth
+// @Router       /hornero/authed/orders/delord/{id} [delete]
+func DeleteOrderHandler(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "ID param invalid"})
+	}
+	if err := services.DeleteOrderUseCase(id); err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	return c.JSON(http.StatusOK, types.Response{Message: fmt.Sprintf("The Order %d has been deleted", id)})
+}

@@ -21,7 +21,6 @@ func CreateOrderUseCase(dto types.CreateOrderDTO) error {
 		}
 	}
 
-	// 1. Validar que el Material exista (Integridad referencial)
 	_, err := materialutils.GetMaterialbyID(dto.MaterialID)
 	if err != nil {
 		return err

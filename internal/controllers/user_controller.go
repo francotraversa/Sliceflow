@@ -28,6 +28,12 @@ func CreateUserHandler(c echo.Context) error {
 	if err := c.Bind(&UserCreateCreds); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
+	token := c.Get("user").(*jwt.Token)
+	claims := token.Claims.(*auth.JwtCustomClaims)
+	if claims.Role != "admin" {
+		return c.JSON(http.StatusForbidden, types.Error{Error: "Only admins can create new users"})
+	}
+
 	err := services.CreateUserUseCase(UserCreateCreds)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
