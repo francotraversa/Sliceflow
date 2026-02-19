@@ -33,7 +33,7 @@ func GetDashboardDataUseCase(userRole string) (*types.ProductionDashboardRespons
 	err := db.Preload("Items").
 		Preload("Material").
 		Preload("Machine").
-		Where("status IN ?", []string{"in-progress", "queued"}).
+		Where("status IN ?", []string{"in-progress", "queued", "ready"}).
 		Order("priority ASC").
 		Find(&activeOrders).Error
 

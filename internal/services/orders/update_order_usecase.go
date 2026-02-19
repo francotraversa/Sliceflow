@@ -68,10 +68,13 @@ func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO) error {
 		order.TotalPieces = currentTotalPieces
 	}
 
-	if order.DonePieces >= order.TotalPieces && order.TotalPieces > 0 {
-		order.Status = "completed"
+	if order.Status != "completed" {
+		if order.DonePieces >= order.TotalPieces {
+			order.Status = "ready"
+		} else if order.DonePieces > 0 {
+			order.Status = "in-progress"
+		}
 	}
-
 	err := db.Session(&gorm.Session{FullSaveAssociations: true}).Save(&order).Error
 
 	if err != nil {
