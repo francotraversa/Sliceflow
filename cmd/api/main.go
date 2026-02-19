@@ -37,10 +37,6 @@ type CustomClaims struct {
 func main() {
 	enviroment.LoadEnviroment("dev")
 	storage.DatabaseInstance{}.NewDataBase()
-	if err := userStorage.EnsureHardcodedUser(); err != nil {
-		log.Fatalf("Error creando usuario hardcodeado: %v", err)
-	}
-
 	redisHost := os.Getenv("REDIS_HOST")
 	if redisHost == "" {
 		redisHost = "localhost"
@@ -79,6 +75,9 @@ func main() {
 			services.CheckAndSetPriorities()
 		}
 	}()
+	if err := userStorage.EnsureHardcodedUser(); err != nil {
+		log.Fatalf("Error creando usuario hardcodeado: %v", err)
+	}
 
 	port := os.Getenv("PORT")
 	e.Logger.Fatal(e.Start(":" + port))

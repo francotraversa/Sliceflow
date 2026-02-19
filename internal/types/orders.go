@@ -27,7 +27,7 @@ type ProductionOrder struct {
 	Notes            string    `gorm:"type:text" json:"notes"`
 	TotalPieces      int       `gorm:"not null" json:"total_pieces"`
 	EstimatedMinutes int       `json:"estimated_minutes"`
-	Deadline         time.Time `gorm:"type:datetime;not null" json:"deadline"`
+	Deadline         time.Time `gorm:"type:timestamp;not null" json:"deadline"`
 	Status           string    `gorm:"type:varchar(20);default:'pending';index" json:"status"`
 	DonePieces       int       `gorm:"default:0" json:"done_pieces"`
 	OperatorID       int       `gorm:"not null" json:"operator_id"`
