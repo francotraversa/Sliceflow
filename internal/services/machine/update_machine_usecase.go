@@ -16,10 +16,17 @@ func UpdateMachineUseCase(id int, dto types.UpdateMachineDTO) error {
 		return err
 	}
 
-	// 2. Actualizar campos
-	machine.Name = *dto.Name
-	machine.Type = *dto.Type
-	machine.Status = *dto.Status // Importante para cambiar estado manual
+	if dto.Name != nil {
+		machine.Name = *dto.Name
+	}
+
+	if dto.Type != nil {
+		machine.Type = *dto.Type
+	}
+
+	if dto.Status != nil {
+		machine.Status = *dto.Status
+	}
 
 	if err := db_utils.Save(machine); err != nil {
 		return fmt.Errorf("The Machine was not updated")

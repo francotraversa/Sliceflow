@@ -10,6 +10,8 @@ type OrderFilter struct {
 	ID           uint   `query:"id"`            // ?id=123
 	Status       string `query:"status"`        // ?status=pending
 	SortPriority bool   `query:"sort_priority"` // ?sort_priority=true
+	FromDate     string `query:"from_date"`     // ?from_date=2024-01-01
+	ToDate       string `query:"to_date"`       // ?to_date=2024-01-31
 }
 
 type ProductionOrder struct {
@@ -21,19 +23,20 @@ type ProductionOrder struct {
 
 	Items []OrderItem `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE;" json:"items"`
 
-	MaterialID       int       `gorm:"not null" json:"material_id"`
-	Material         *Material `gorm:"foreignKey:MaterialID" json:"material"`
-	Priority         string    `gorm:"type:varchar(10);default:'P3'" json:"priority"`
-	Notes            string    `gorm:"type:text" json:"notes"`
-	TotalPieces      int       `gorm:"not null" json:"total_pieces"`
-	EstimatedMinutes int       `json:"estimated_minutes"`
-	Deadline         time.Time `gorm:"type:timestamp;not null" json:"deadline"`
-	Status           string    `gorm:"type:varchar(20);default:'pending';index" json:"status"`
-	DonePieces       int       `gorm:"default:0" json:"done_pieces"`
-	OperatorID       int       `gorm:"not null" json:"operator_id"`
-	MachineID        *int      `gorm:"index" json:"machine_id"`
-	Machine          Machine   `gorm:"foreignKey:MachineID" json:"machine,omitempty"`
-	Price            *float64  `gorm:"type:decimal(12,2)" json:"price,omitempty"`
+	MaterialID       int        `gorm:"not null" json:"material_id"`
+	Material         *Material  `gorm:"foreignKey:MaterialID" json:"material"`
+	Priority         string     `gorm:"type:varchar(10);default:'P3'" json:"priority"`
+	Notes            string     `gorm:"type:text" json:"notes"`
+	TotalPieces      int        `gorm:"not null" json:"total_pieces"`
+	EstimatedMinutes int        `json:"estimated_minutes"`
+	Deadline         time.Time  `gorm:"type:timestamp;not null" json:"deadline"`
+	FinishTime       *time.Time `json:"finish_time,omitempty"`
+	Status           string     `gorm:"type:varchar(20);default:'pending';index" json:"status"`
+	DonePieces       int        `gorm:"default:0" json:"done_pieces"`
+	OperatorID       int        `gorm:"not null" json:"operator_id"`
+	MachineID        *int       `gorm:"index" json:"machine_id"`
+	Machine          Machine    `gorm:"foreignKey:MachineID" json:"machine,omitempty"`
+	Price            *float64   `gorm:"type:decimal(12,2)" json:"price,omitempty"`
 }
 
 type OrderItem struct {
@@ -83,4 +86,19 @@ type UpdateOrderDTO struct {
 	OperatorID *int `json:"operator_id"`
 	MaterialID *int `json:"material_id"`
 	MachineID  *int `json:"machine_id"`
+}
+type OrderMovement struct {
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	StockSKU    string    `gorm:"size:50;index;not null" json:"stock_sku"`
+	StockItem   StockItem `gorm:"foreignKey:StockSKU;references:SKU" json:"-"`
+	LocationID  uint      `gorm:"index" json:"location_id"`
+	Type        string    `gorm:"size:20;not null" json:"type"` // IN, OUT, ADJUST
+	QtyDelta    int       `gorm:"not null" json:"qty_delta"`    // Cuánto cambió (+10, -5)
+	QtyBefore   int       `gorm:"not null" json:"qty_before"`   // Cuánto había (100)
+	QtyAfter    int       `gorm:"not null" json:"qty_after"`    // Cuánto quedó (110)
+	Reason      string    `gorm:"size:255" json:"reason"`
+	CreatedBy   uint      `gorm:"index" json:"created_by"`
+	User        User      `gorm:"foreignKey:CreatedBy" json:"-"` // Opcional: relación con User
+	CreatedAt   time.Time `gorm:"index" json:"created_at"`
+	Description string    `gorm:"null" json:"description"`
 }

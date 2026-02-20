@@ -9,7 +9,9 @@ import (
 	materialutils "github.com/francotraversa/Sliceflow/internal/infra/database/material_utils"
 	ordersutils "github.com/francotraversa/Sliceflow/internal/infra/database/orders_utils"
 	db_utils "github.com/francotraversa/Sliceflow/internal/infra/database/utils"
-	services "github.com/francotraversa/Sliceflow/internal/services/common"
+	servicesWeb "github.com/francotraversa/Sliceflow/internal/services/common"
+	services "github.com/francotraversa/Sliceflow/internal/services/machine"
+
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
@@ -76,8 +78,21 @@ func CreateOrderUseCase(dto types.CreateOrderDTO) error {
 	if err := db_utils.Create(&newOrder); err != nil {
 		return fmt.Errorf("could not save order and items: %w", err)
 	}
-	services.InvalidateCache("orders:list:*")
-	services.PublishEvent("dashboard_updates", `{"type": "ORDER_CREATED", "message": "NEW MULTI-ITEM ORDER CREATED"}`)
+
+	if dto.MachineID != nil {
+		newStatus := "printing"
+		updmachine := types.UpdateMachineDTO{
+			Status: &newStatus,
+		}
+		err := services.UpdateMachineUseCase(*dto.MachineID, updmachine)
+
+		if err != nil {
+			return fmt.Errorf("could not update machine status: %w", err)
+		}
+
+	}
+	servicesWeb.InvalidateCache("orders:list:*")
+	servicesWeb.PublishEvent("dashboard_updates", `{"type": "ORDER_CREATED", "message": "NEW MULTI-ITEM ORDER CREATED"}`)
 
 	return nil
 }

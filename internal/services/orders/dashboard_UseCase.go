@@ -1,6 +1,8 @@
 package services
 
 import (
+	"time"
+
 	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
@@ -29,11 +31,10 @@ func GetDashboardDataUseCase(userRole string) (*types.ProductionDashboardRespons
 	// --- 2. ÓRDENES ACTIVAS ---
 	var activeOrders []types.ProductionOrder
 
-	// CAMBIO CLAVE: Agregamos Preload("Items") para traer la lista de piezas
 	err := db.Preload("Items").
 		Preload("Material").
 		Preload("Machine").
-		Where("status IN ?", []string{"in-progress", "queued", "ready"}).
+		Where("status IN ?", []string{"in-progress", "queued", "ready", "pending"}).
 		Order("priority ASC").
 		Find(&activeOrders).Error
 
@@ -44,25 +45,31 @@ func GetDashboardDataUseCase(userRole string) (*types.ProductionDashboardRespons
 	isAdmin := (userRole == "admin")
 
 	if isAdmin {
-		var totalRevenue float64
-		for _, o := range activeOrders {
-			// CAMBIO: Usamos TotalPrice que es el campo del nuevo modelo
-			totalRevenue += *o.Price
+		// --- 3. CÁLCULO DE REVENUE TOTAL DEL MES (Métrica Principal) ---
+		var monthlyRevenue float64
+
+		// Calculamos el inicio del mes actual
+		now := time.Now()
+		firstDayOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+
+		err := db.Model(&types.ProductionOrder{}).
+			Where("created_at >= ?", firstDayOfMonth).
+			Select("COALESCE(SUM(price), 0)").
+			Scan(&monthlyRevenue).Error
+
+		if err != nil {
+			monthlyRevenue = 0
 		}
-		response.TotalRevenueFDM = totalRevenue
+
+		response.TotalRevenueFDM = monthlyRevenue
 		response.Orders = activeOrders
 
 	} else {
-		// --- USUARIO NORMAL: CENSURA ---
 		response.TotalRevenueFDM = 0
-		response.TotalRevenueSLS = 0
-
-		// Creamos una copia para no afectar la data original si fuera necesario
 		censoredOrders := make([]types.ProductionOrder, len(activeOrders))
 		copy(censoredOrders, activeOrders)
 
 		for i := range censoredOrders {
-			// CAMBIO: Ponemos el precio en 0 para usuarios no admin
 			censoredOrders[i].Price = nil
 		}
 		response.Orders = censoredOrders
