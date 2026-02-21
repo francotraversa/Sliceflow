@@ -40,7 +40,7 @@ func main() {
 	storage.DatabaseInstance{}.NewDataBase()
 	redis.InitRedis()
 	e := echo.New()
-	fmt.Sprintf("%s", os.Getenv("FRONTENDHOST"))
+	fmt.Printf("%s", os.Getenv("FRONTENDHOST"))
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{fmt.Sprintf("%s", os.Getenv("FRONTENDHOST"))},
