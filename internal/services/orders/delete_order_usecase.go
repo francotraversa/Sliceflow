@@ -6,18 +6,34 @@ import (
 	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
 	services "github.com/francotraversa/Sliceflow/internal/services/common"
 	"github.com/francotraversa/Sliceflow/internal/types"
+	"gorm.io/gorm"
 )
 
 func DeleteOrderUseCase(id int) error {
 	db := storage.DatabaseInstance{}.Instance()
-	var order types.ProductionOrder
-	if err := db.First(&order, id).Error; err != nil {
-		return fmt.Errorf("order not found: %w", err)
-	}
-	if err := db.Delete(&order).Error; err != nil {
-		return fmt.Errorf("failed to delete order: %w", err)
-	}
-	services.InvalidateCache("orders:list:*")
-	services.PublishEvent("dashboard_updates", `{"type": "ORDER_DELETED", "message": "ORDER DELETED"}`)
-	return nil
+
+	// Usamos una transacción para asegurar consistencia
+	return db.Transaction(func(tx *gorm.DB) error {
+		var order types.ProductionOrder
+
+		if err := tx.First(&order, id).Error; err != nil {
+			return fmt.Errorf("order not found: %w", err)
+		}
+
+		if order.MachineID != nil && *order.MachineID != 0 {
+			if err := tx.Model(&types.Machine{}).Where("id = ?", *order.MachineID).Update("status", "idle").Error; err != nil {
+				return fmt.Errorf("failed to set machine to idle: %w", err)
+			}
+			services.PublishEvent("dashboard_updates", `{"type": "MACHINE_STATUS_CHANGED", "message": "Machine set to idle due to order deletion"}`)
+		}
+
+		if err := tx.Delete(&order).Error; err != nil {
+			return fmt.Errorf("failed to delete order: %w", err)
+		}
+
+		services.InvalidateCache("orders:list:*")
+		services.PublishEvent("dashboard_updates", `{"type": "ORDER_DELETED", "message": "ORDER DELETED"}`)
+
+		return nil
+	})
 }

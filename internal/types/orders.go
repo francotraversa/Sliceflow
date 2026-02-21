@@ -87,18 +87,3 @@ type UpdateOrderDTO struct {
 	MaterialID *int `json:"material_id"`
 	MachineID  *int `json:"machine_id"`
 }
-type OrderMovement struct {
-	ID          uint      `gorm:"primaryKey" json:"id"`
-	StockSKU    string    `gorm:"size:50;index;not null" json:"stock_sku"`
-	StockItem   StockItem `gorm:"foreignKey:StockSKU;references:SKU" json:"-"`
-	LocationID  uint      `gorm:"index" json:"location_id"`
-	Type        string    `gorm:"size:20;not null" json:"type"` // IN, OUT, ADJUST
-	QtyDelta    int       `gorm:"not null" json:"qty_delta"`    // Cuánto cambió (+10, -5)
-	QtyBefore   int       `gorm:"not null" json:"qty_before"`   // Cuánto había (100)
-	QtyAfter    int       `gorm:"not null" json:"qty_after"`    // Cuánto quedó (110)
-	Reason      string    `gorm:"size:255" json:"reason"`
-	CreatedBy   uint      `gorm:"index" json:"created_by"`
-	User        User      `gorm:"foreignKey:CreatedBy" json:"-"` // Opcional: relación con User
-	CreatedAt   time.Time `gorm:"index" json:"created_at"`
-	Description string    `gorm:"null" json:"description"`
-}
