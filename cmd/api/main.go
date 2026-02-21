@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -36,6 +37,9 @@ type CustomClaims struct {
 // @description                Escribí "Bearer " seguido de tu token JWT. Ejemplo: "Bearer eyJhbG..."
 func main() {
 	enviroment.LoadEnviroment("dev")
+	fmt.Println("Starting API...")
+	fmt.Printf("Environment: %s\n", os.Getenv("ENVIRONMENT"))
+	fmt.Printf("Database Host: %s\n", os.Getenv("POSTGRES_HOST"))
 	storage.DatabaseInstance{}.NewDataBase()
 	redisHost := os.Getenv("REDIS_HOST")
 	if redisHost == "" {
