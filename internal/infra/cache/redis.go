@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -10,14 +11,28 @@ import (
 
 var RedisClient *redis.Client
 
-func InitRedis(host string, port string, password string) {
-	addr := fmt.Sprintf("%s:%s", host, port)
+func InitRedis() {
+	redisHost := os.Getenv("REDIS_HOST")
+	if redisHost == "" {
+		redisHost = "localhost"
+	}
+
+	redisPort := os.Getenv("REDIS_PORT")
+	if redisPort == "" {
+		redisPort = "6379"
+	}
+
+	redisPass := os.Getenv("REDIS_PASSWORD")
+
+	// Se los pasamos a tu función InitRedis
+
+	addr := fmt.Sprintf("%s:%s", redisHost, redisPort)
 	fmt.Printf("🔌 Conectando a Redis en: %s ...\n", addr)
 
 	RedisClient = redis.NewClient(&redis.Options{
 		Addr:     addr,
-		Password: password,
-		DB:       0, // DB por defecto
+		Password: redisPass, // Si no hay contraseña, se deja vacío
+		DB:       0,         // DB por defecto
 	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
