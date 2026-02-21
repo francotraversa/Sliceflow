@@ -24,15 +24,13 @@ func InitRedis() {
 
 	redisPass := os.Getenv("REDIS_PASSWORD")
 
-	// Se los pasamos a tu función InitRedis
-
 	addr := fmt.Sprintf("%s:%s", redisHost, redisPort)
 	fmt.Printf("🔌 Conectando a Redis en: %s ...\n", addr)
 
 	RedisClient = redis.NewClient(&redis.Options{
 		Addr:     addr,
-		Password: redisPass, // Si no hay contraseña, se deja vacío
-		DB:       0,         // DB por defecto
+		Password: redisPass,
+		DB:       0,
 	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
