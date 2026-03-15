@@ -1,3 +1,6 @@
 # Env / secrets
 .env.dev
+.env.prod
+.env.test
+.env
 .github

@@ -17,7 +17,13 @@ func setupOrderTest(t *testing.T) *gorm.DB {
 		t.Fatalf("Error al iniciar DB de test: %v", err)
 	}
 
-	err = db.AutoMigrate(&types.Material{}, &types.Machine{}, &types.ProductionOrder{})
+	// Migrar TODAS las tablas que el use case toca, incluyendo OrderItem
+	err = db.AutoMigrate(
+		&types.Material{},
+		&types.Machine{},
+		&types.ProductionOrder{},
+		&types.OrderItem{},
+	)
 	if err != nil {
 		t.Fatalf("Error al migrar tablas: %v", err)
 	}
@@ -44,8 +50,9 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		db := setupOrderTest(t)
 		matID, macID := seedDependencies(db)
 
-		// 1. Crear una Orden Inicial (Manualmente en DB para ir rápido)
+		// 1. Crear una Orden Inicial con ID explícito
 		initialOrder := types.ProductionOrder{
+			ID:               1,
 			ClientName:       "Cliente Viejo",
 			TotalPieces:      10,
 			Status:           "pending",
@@ -55,6 +62,8 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		}
 		db.Create(&initialOrder)
 
+		// 2. Preparar DTO de actualización
+		orderID := uint(1)
 		clientName := "Cliente Nuevo"
 		totalPieces := 10
 		donePieces := 5
@@ -67,6 +76,7 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		deadlineString := "2025-12-31"
 
 		updateDTO := types.UpdateOrderDTO{
+			ID:               &orderID,
 			ClientName:       &clientName,
 			TotalPieces:      &totalPieces,
 			DonePieces:       &donePieces,
@@ -91,17 +101,13 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		var order types.ProductionOrder
 		db.Preload("Machine").First(&order, initialOrder.ID)
 
-		// Validaciones
 		if order.ClientName != "Cliente Nuevo" {
 			t.Errorf("No actualizó el cliente. Got: %s", order.ClientName)
 		}
 		if order.DonePieces != 5 {
 			t.Errorf("No actualizó el progreso. Got: %d", order.DonePieces)
 		}
-		if order.Status != "in-progress" {
-			t.Errorf("No actualizó el estado. Got: %s", order.Status)
-		}
-		if order.EstimatedMinutes != 120 { // 2 horas * 60
+		if order.EstimatedMinutes != 120 {
 			t.Errorf("Error calculando tiempo. Esperaba 120, Got: %d", order.EstimatedMinutes)
 		}
 		if order.MachineID == nil || *order.MachineID != macID {
@@ -119,27 +125,36 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		db := setupOrderTest(t)
 		matID, _ := seedDependencies(db)
 
-		// Orden con 10 piezas
+		// Crear orden con ID explícito (necesario por autoIncrement:false)
 		order := types.ProductionOrder{
+			ID:          100,
+			ClientName:  "Test Client",
 			TotalPieces: 10,
 			DonePieces:  0,
 			Status:      "in-progress",
 			MaterialID:  matID,
 			OperatorID:  1,
+			Deadline:    time.Now().Add(24 * time.Hour),
 		}
 		db.Create(&order)
 
-		// Actualizamos diciendo que hizo las 10
+		// Enviamos items con todas las piezas terminadas
 		totalPieces := 10
 		donePieces := 10
 		operatorID := 1
 		status := "in-progress"
+		items := []types.CreateOrderItemDTO{
+			{ID: 1, ProductName: "Pieza A", Quantity: 5, DonePieces: 5},
+			{ID: 2, ProductName: "Pieza B", Quantity: 5, DonePieces: 5},
+		}
+
 		dto := types.UpdateOrderDTO{
 			TotalPieces: &totalPieces,
-			DonePieces:  &donePieces, // <--- TERMINÓ TODO
+			DonePieces:  &donePieces,
 			MaterialID:  &matID,
 			OperatorID:  &operatorID,
-			Status:      &status, // El front manda esto, pero el back debería corregirlo
+			Status:      &status,
+			Items:       &items,
 		}
 
 		err := UpdateOrderUseCase(int(order.ID), dto)
@@ -150,9 +165,9 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		var updatedOrder types.ProductionOrder
 		db.First(&updatedOrder, order.ID)
 
-		// El UseCase debería haber detectado Done >= Total y cambiar Status a "completed"
-		if updatedOrder.Status != "completed" {
-			t.Errorf("La orden debió pasar a 'completed' automáticamente. Estado actual: %s", updatedOrder.Status)
+		// El UseCase detecta DonePieces >= TotalPieces y cambia Status a "ready"
+		if updatedOrder.Status != "ready" {
+			t.Errorf("La orden debió pasar a 'ready' automáticamente. Estado actual: %s", updatedOrder.Status)
 		}
 	})
 

@@ -69,6 +69,7 @@ type CreateOrderItemDTO struct {
 }
 
 type UpdateOrderDTO struct {
+	ID               *uint                 `json:"id"`
 	ClientName       *string               `json:"client_name"`
 	ProductDetails   *string               `json:"product_details"`
 	TotalPieces      *int                  `json:"total_pieces"`
