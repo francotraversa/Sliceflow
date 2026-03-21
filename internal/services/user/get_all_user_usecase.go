@@ -23,7 +23,7 @@ func GetAllUserUserUseCase(requesterRole string, filterRole string) (*[]types.Us
 	var response []types.User
 	for _, u := range usersDB {
 		response = append(response, types.User{
-			ID:        u.ID,
+			IdUser:    u.IdUser,
 			Username:  u.Username,
 			Role:      u.Role,
 			Status:    u.Status,

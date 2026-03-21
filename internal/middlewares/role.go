@@ -3,7 +3,7 @@ package middlewares
 import (
 	"net/http"
 
-	"github.com/francotraversa/Sliceflow/internal/auth"
+	"github.com/francotraversa/Sliceflow/internal/types"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
@@ -16,7 +16,7 @@ func RequireRole(role string) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusUnauthorized, "missing or invalid token")
 			}
 
-			claims, ok := tok.Claims.(*auth.JwtCustomClaims)
+			claims, ok := tok.Claims.(*types.JwtCustomClaims)
 			if !ok || claims == nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid claims")
 			}

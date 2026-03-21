@@ -14,6 +14,7 @@ type StockItem struct {
 	MinQty      float64        `gorm:"default:5" json:"min_qty"`
 	Description string         `gorm:"null" json:"description"`
 	Status      string         `gorm:"size:16;default:'active';index" json:"status"`
+	IdCompany   Company        `gorm:"foreignKey:IdCompany;references:IdCompany"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
@@ -21,6 +22,7 @@ type StockItem struct {
 
 type StockMovement struct {
 	ID          uint      `gorm:"primaryKey" json:"id"`
+	IdCompany   Company   `gorm:"foreignKey:IdCompany;references:IdCompany"`
 	StockSKU    string    `gorm:"size:50;index;not null" json:"stock_sku"`
 	StockItem   StockItem `gorm:"foreignKey:StockSKU;references:SKU" json:"-"`
 	LocationID  uint      `gorm:"index" json:"location_id"`
@@ -76,13 +78,12 @@ type TopProduct struct {
 	TotalSold int    `json:"total_sold"`
 }
 
-// DashboardResponse es el objeto gigante que recibe el frontend
 type DashboardResponse struct {
-	TotalItems      int64        `json:"total_items"`     // Cantidad de productos en catálogo
-	TotalValue      float64      `json:"total_value"`     // Cuánta plata hay parada en el depósito
-	LowStockCount   int64        `json:"low_stock_count"` // Cuántos productos están en alerta
+	TotalItems      int64        `json:"total_items"`
+	TotalValue      float64      `json:"total_value"`
+	LowStockCount   int64        `json:"low_stock_count"`
 	MovementsToday  int64        `json:"movements_today"`
 	ActiveUsers     int64        `json:"active_users"`
-	LowStockItems   []StockItem  `json:"low_stock_items"`   // La lista de esos productos
-	TopSellingItems []TopProduct `json:"top_selling_items"` // Los 5 más vendidos
+	LowStockItems   []StockItem  `json:"low_stock_items"`
+	TopSellingItems []TopProduct `json:"top_selling_items"`
 }

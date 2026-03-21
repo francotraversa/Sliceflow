@@ -17,9 +17,10 @@ type Machine struct {
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 
-	Name   string `gorm:"type:varchar(100);not null" json:"name"`        // Nombre obligatorio
-	Type   string `gorm:"type:varchar(50);not null" json:"type"`         // FDM o SLS
-	Status string `gorm:"type:varchar(20);default:'idle'" json:"status"` // Arranca libre
+	Name      string  `gorm:"type:varchar(100);not null" json:"name"`        // Nombre obligatorio
+	Type      string  `gorm:"type:varchar(50);not null" json:"type"`         // FDM o SLS
+	Status    string  `gorm:"type:varchar(20);default:'idle'" json:"status"` // Arranca libre
+	IdCompany Company `gorm:"foreignKey:IdCompany;references:IdCompany"`
 }
 type CreateMachineDTO struct {
 	Name string `json:"name"` // Ej: "Prusa i3 MK3S+"

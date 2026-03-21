@@ -27,20 +27,20 @@ func TestDeleteUserUseCase(t *testing.T) {
 	db.Create(&user)
 
 	t.Run("Usuario se borra a sí mismo (éxito)", func(t *testing.T) {
-		err := DeleteUserUseCase(user.ID, user.ID, "user")
+		err := DeleteUserUseCase(user.IdUser, user.IdUser, "user")
 		if err != nil {
 			t.Errorf("No debería haber error: %v", err)
 		}
 
 		var found types.User
-		db.First(&found, user.ID)
+		db.First(&found, user.IdUser)
 		if found.Status != "disabled" {
 			t.Errorf("Se esperaba status disabled, se obtuvo %s", found.Status)
 		}
 	})
 
 	t.Run("Usuario intenta borrar a otro (error)", func(t *testing.T) {
-		err := DeleteUserUseCase(user.ID, 999, "user")
+		err := DeleteUserUseCase(user.IdUser, 999, "user")
 		if err == nil {
 			t.Error("Se esperaba error de permisos")
 		}
@@ -55,13 +55,13 @@ func TestUpdateUserUseCase(t *testing.T) {
 
 	t.Run("Cambio de Username exitoso", func(t *testing.T) {
 		update := types.UserUpdateCreds{Username: "nuevo"}
-		err := UpdateUserUseCase(u.ID, u.ID, "user", update)
+		err := UpdateUserUseCase(u.IdUser, u.IdUser, "user", update)
 		if err != nil {
 			t.Fatalf("Error: %v", err)
 		}
 
 		var found types.User
-		db.First(&found, u.ID)
+		db.First(&found, u.IdUser)
 		if found.Username != "nuevo" {
 			t.Errorf("Se esperaba 'nuevo', se obtuvo %s", found.Username)
 		}
@@ -69,7 +69,7 @@ func TestUpdateUserUseCase(t *testing.T) {
 
 	t.Run("Usuario intenta cambiar su Rol (denegado)", func(t *testing.T) {
 		update := types.UserUpdateCreds{Role: "admin"}
-		err := UpdateUserUseCase(u.ID, u.ID, "user", update)
+		err := UpdateUserUseCase(u.IdUser, u.IdUser, "user", update)
 		if err == nil {
 			t.Error("Se esperaba error de restricción de admin")
 		}

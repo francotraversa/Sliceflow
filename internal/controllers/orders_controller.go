@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/francotraversa/Sliceflow/internal/auth"
 	services "github.com/francotraversa/Sliceflow/internal/services/orders"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"github.com/golang-jwt/jwt/v5"
@@ -86,7 +85,7 @@ func UpdateOrderHandler(c echo.Context) error {
 // @Router       /hornero/authed/orders/dashboard [get]
 func GetPrincipalDashboardHandler(c echo.Context) error {
 	userToken := c.Get("user").(*jwt.Token)
-	claims := userToken.Claims.(*auth.JwtCustomClaims)
+	claims := userToken.Claims.(*types.JwtCustomClaims)
 
 	data, err := services.GetDashboardDataUseCase(claims.Role)
 	if err != nil {

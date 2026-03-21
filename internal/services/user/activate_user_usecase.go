@@ -10,14 +10,14 @@ import (
 
 func EnableUserByIDUseCase(req types.UserIDActivate) error {
 	// 1. Validar que el ID no sea 0
-	if req.ID == 0 {
+	if req.IdUser == 0 {
 		return fmt.Errorf("invalid user ID")
 	}
 
 	// 2. Buscar usuario por ID
-	user := userStorage.FindUserByUserId(req.ID)
+	user := userStorage.FindUserByUserId(req.IdUser)
 	if user == nil {
-		return fmt.Errorf("user not found with ID %d", req.ID)
+		return fmt.Errorf("user not found with ID %d", req.IdUser)
 	}
 
 	if user.Status == "active" {

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/francotraversa/Sliceflow/internal/auth"
 	services "github.com/francotraversa/Sliceflow/internal/services/user"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"github.com/golang-jwt/jwt/v5"
@@ -29,7 +28,7 @@ func CreateUserHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 	token := c.Get("user").(*jwt.Token)
-	claims := token.Claims.(*auth.JwtCustomClaims)
+	claims := token.Claims.(*types.JwtCustomClaims)
 	if claims.Role != "admin" {
 		return c.JSON(http.StatusForbidden, types.Error{Error: "Only admins can create new users"})
 	}
@@ -59,7 +58,7 @@ func UpdateUserHandler(c echo.Context) error {
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, types.Error{Error: "invalid or missing token"})
 	}
-	claims, ok := token.Claims.(*auth.JwtCustomClaims)
+	claims, ok := token.Claims.(*types.JwtCustomClaims)
 	if !ok {
 		return c.JSON(http.StatusInternalServerError, types.Error{Error: "failed to parse custom claims"})
 	}
@@ -106,7 +105,7 @@ func UpdateUserHandler(c echo.Context) error {
 // @Router       /hornero/authed/admin/deleteuser/{id} [delete]
 func DeleteUserHandler(c echo.Context) error {
 	token := c.Get("user").(*jwt.Token)
-	claims := token.Claims.(*auth.JwtCustomClaims)
+	claims := token.Claims.(*types.JwtCustomClaims)
 
 	requesterID := claims.UserId
 	requesterRole := claims.Role
@@ -155,7 +154,7 @@ func EnableUserHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, types.Response{
-		Message: fmt.Sprintf("User with ID %d has been enabled successfully", req.ID),
+		Message: fmt.Sprintf("User with ID %d has been enabled successfully", req.IdUser),
 	})
 }
 
@@ -172,7 +171,7 @@ func EnableUserHandler(c echo.Context) error {
 // @Router       /hornero/authed/admin/alluser [get]
 func GetAllUserHandler(c echo.Context) error {
 	token := c.Get("user").(*jwt.Token)
-	claims := token.Claims.(*auth.JwtCustomClaims)
+	claims := token.Claims.(*types.JwtCustomClaims)
 
 	filterRole := c.QueryParam("role")
 

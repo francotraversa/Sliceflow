@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/francotraversa/Sliceflow/internal/auth"
 	services "github.com/francotraversa/Sliceflow/internal/services/stock"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"github.com/golang-jwt/jwt/v5"
@@ -119,7 +118,7 @@ func CreateMovementHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 	token := c.Get("user").(*jwt.Token)
-	claims := token.Claims.(*auth.JwtCustomClaims)
+	claims := token.Claims.(*types.JwtCustomClaims)
 	mov.UserID = claims.UserId
 
 	err := services.AddStockMovementUseCase(mov)
