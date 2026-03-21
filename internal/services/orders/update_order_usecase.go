@@ -39,6 +39,19 @@ func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO) error {
 	if dto.OperatorID != nil {
 		order.OperatorID = *dto.OperatorID
 	}
+	if dto.DonePieces != nil {
+		order.DonePieces = *dto.DonePieces
+	}
+	if dto.EstimatedMinutes != nil {
+		order.EstimatedMinutes = *dto.EstimatedMinutes
+	}
+	if dto.Deadline != nil {
+		deadlineTime, err := time.Parse("2006-01-02", *dto.Deadline)
+		if err != nil {
+			return fmt.Errorf("invalid deadline format: %w", err)
+		}
+		order.Deadline = deadlineTime
+	}
 	if dto.MaterialID != nil {
 		order.MaterialID = *dto.MaterialID
 	}
