@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	middleware "github.com/francotraversa/Sliceflow/internal/middlewares"
 	services "github.com/francotraversa/Sliceflow/internal/services/stock"
 	"github.com/francotraversa/Sliceflow/internal/types"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -29,7 +29,11 @@ func CreateProductHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 
-	err := services.CreateProductUseCase(item)
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	err = services.CreateProductUseCase(item, claims.CompanyId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
@@ -39,7 +43,11 @@ func CreateProductHandler(c echo.Context) error {
 
 func GetProductsHandler(c echo.Context) error {
 	search := c.QueryParam("q")
-	result, err := services.GetStockUseCase(search)
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	result, err := services.GetStockUseCase(search, claims.CompanyId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
@@ -62,7 +70,11 @@ func DeleteIdProductHandler(c echo.Context) error {
 	if sku == "" {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "SKU is required"})
 	}
-	err := services.DeleteByIdUseCase(sku)
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	err = services.DeleteByIdUseCase(sku, claims.CompanyId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
@@ -93,8 +105,12 @@ func UpdateByIdProductHandler(c echo.Context) error {
 	if err := c.Bind(&item); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
 
-	product, err := services.UpdateByIdProductUseCase(sku, item)
+	product, err := services.UpdateByIdProductUseCase(sku, item, claims.CompanyId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
@@ -117,11 +133,13 @@ func CreateMovementHandler(c echo.Context) error {
 	if err := c.Bind(&mov); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
-	token := c.Get("user").(*jwt.Token)
-	claims := token.Claims.(*types.JwtCustomClaims)
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
 	mov.UserID = claims.UserId
 
-	err := services.AddStockMovementUseCase(mov)
+	err = services.AddStockMovementUseCase(mov, claims.CompanyId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
@@ -149,8 +167,11 @@ func GetStockHistoryHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid query parameters"})
 
 	}
-
-	history, err := services.GetStockHistoryUseCase(filter)
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	history, err := services.GetStockHistoryUseCase(filter, claims.CompanyId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
@@ -165,7 +186,11 @@ func GetStockHistoryHandler(c echo.Context) error {
 // @Success      200  {object}  types.DashboardResponse
 // @Router       /hornero/authed/stock/movement/dashboard [get]
 func GetDashboardHandler(c echo.Context) error {
-	stats, err := services.GetDashboardStatsUseCase()
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	stats, err := services.GetDashboardStatsUseCase(claims.CompanyId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"strings"
 
 	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
@@ -8,14 +9,13 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func GetStockUseCase(query string) (*[]types.StockItem, error) {
+func GetStockUseCase(query string, companyID uint) (*[]types.StockItem, error) {
 	var allProducts []types.StockItem
-	cacheKey := "stock:list:all"
+	cacheKey := fmt.Sprintf("stock:list:%d", companyID)
 
-	// 1. Traer todo de cache (esto funciona, por eso ves 1ms)
 	if !services.GetCache(cacheKey, &allProducts) {
 		db := storage.DatabaseInstance{}.Instance()
-		if err := db.Find(&allProducts).Error; err != nil {
+		if err := db.Where("id_company = ?", companyID).Find(&allProducts).Error; err != nil {
 			return nil, err
 		}
 		services.SetCache(cacheKey, &allProducts)

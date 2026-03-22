@@ -14,7 +14,8 @@ type StockItem struct {
 	MinQty      float64        `gorm:"default:5" json:"min_qty"`
 	Description string         `gorm:"null" json:"description"`
 	Status      string         `gorm:"size:16;default:'active';index" json:"status"`
-	IdCompany   Company        `gorm:"foreignKey:IdCompany;references:IdCompany"`
+	IdCompany   uint           `gorm:"not null" json:"id_company"`
+	Company     *Company       `gorm:"foreignKey:IdCompany;references:IdCompany"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
@@ -22,7 +23,8 @@ type StockItem struct {
 
 type StockMovement struct {
 	ID          uint      `gorm:"primaryKey" json:"id"`
-	IdCompany   Company   `gorm:"foreignKey:IdCompany;references:IdCompany"`
+	IdCompany   uint      `gorm:"not null" json:"id_company"`
+	Company     *Company  `gorm:"foreignKey:IdCompany;references:IdCompany"`
 	StockSKU    string    `gorm:"size:50;index;not null" json:"stock_sku"`
 	StockItem   StockItem `gorm:"foreignKey:StockSKU;references:SKU" json:"-"`
 	LocationID  uint      `gorm:"index" json:"location_id"`

@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
+	middleware "github.com/francotraversa/Sliceflow/internal/middlewares"
 	services "github.com/francotraversa/Sliceflow/internal/services/user"
 	"github.com/francotraversa/Sliceflow/internal/types"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -27,13 +27,15 @@ func CreateUserHandler(c echo.Context) error {
 	if err := c.Bind(&UserCreateCreds); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
-	token := c.Get("user").(*jwt.Token)
-	claims := token.Claims.(*types.JwtCustomClaims)
-	if claims.Role != "admin" {
-		return c.JSON(http.StatusForbidden, types.Error{Error: "Only admins can create new users"})
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	if claims.Role != "owner" && claims.Role != "superadmin" {
+		return c.JSON(http.StatusForbidden, types.Error{Error: "Only owners can create new users"})
 	}
 
-	err := services.CreateUserUseCase(UserCreateCreds)
+	err = services.CreateUserUseCase(UserCreateCreds)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
@@ -54,12 +56,8 @@ func CreateUserHandler(c echo.Context) error {
 // @Router       /hornero/authed/updmyuser [patch]
 // @Router       /hornero/authed/admin/edituser/{id} [patch]
 func UpdateUserHandler(c echo.Context) error {
-	token, ok := c.Get("user").(*jwt.Token)
-	if !ok {
-		return c.JSON(http.StatusUnauthorized, types.Error{Error: "invalid or missing token"})
-	}
-	claims, ok := token.Claims.(*types.JwtCustomClaims)
-	if !ok {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
 		return c.JSON(http.StatusInternalServerError, types.Error{Error: "failed to parse custom claims"})
 	}
 
@@ -84,7 +82,7 @@ func UpdateUserHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "invalid JSON body"})
 	}
 
-	err := services.UpdateUserUseCase(targetID, requesterID, requesterRole, updateData)
+	err = services.UpdateUserUseCase(targetID, requesterID, requesterRole, updateData)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
@@ -104,8 +102,10 @@ func UpdateUserHandler(c echo.Context) error {
 // @Router       /hornero/authed/deletemyuser [delete]
 // @Router       /hornero/authed/admin/deleteuser/{id} [delete]
 func DeleteUserHandler(c echo.Context) error {
-	token := c.Get("user").(*jwt.Token)
-	claims := token.Claims.(*types.JwtCustomClaims)
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, types.Error{Error: "failed to parse custom claims"})
+	}
 
 	requesterID := claims.UserId
 	requesterRole := claims.Role
@@ -120,7 +120,7 @@ func DeleteUserHandler(c echo.Context) error {
 		targetID = requesterID
 	}
 
-	err := services.DeleteUserUseCase(targetID, requesterID, requesterRole)
+	err = services.DeleteUserUseCase(targetID, requesterID, requesterRole)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
@@ -170,12 +170,14 @@ func EnableUserHandler(c echo.Context) error {
 // @Failure      400     {string}  string  "Error en la solicitud"
 // @Router       /hornero/authed/admin/alluser [get]
 func GetAllUserHandler(c echo.Context) error {
-	token := c.Get("user").(*jwt.Token)
-	claims := token.Claims.(*types.JwtCustomClaims)
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, types.Error{Error: "failed to parse custom claims"})
+	}
 
 	filterRole := c.QueryParam("role")
 
-	users, err := services.GetAllUserUserUseCase(claims.Role, filterRole)
+	users, err := services.GetAllUserUserUseCase(claims.Role, filterRole, claims.Role, int(claims.CompanyId))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}

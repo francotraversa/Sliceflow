@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const testCompanyIDMachine uint = 1
+
 // setupMachineTest crea una DB limpia para cada prueba
 func setupMachineTest(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
@@ -23,8 +25,7 @@ func setupMachineTest(t *testing.T) *gorm.DB {
 	}
 
 	// Inyectamos la DB en la instancia global
-	// Asignamos directamente a la variable global DB
-	storage.DBInstance.DB = db
+	storage.OverrideDatabaseInstance(db)
 	return db
 }
 
@@ -39,7 +40,7 @@ func TestMachineCRUD(t *testing.T) {
 			Type: "FDM",
 		}
 
-		err := CreateMachineUseCase(dto)
+		err := CreateMachineUseCase(dto, testCompanyIDMachine)
 		if err != nil {
 			t.Fatalf("Error inesperado al crear: %v", err)
 		}
@@ -62,10 +63,10 @@ func TestMachineCRUD(t *testing.T) {
 		dto := types.CreateMachineDTO{Name: "Ender 3 V2", Type: "FDM"}
 
 		// Primera vez
-		CreateMachineUseCase(dto)
+		CreateMachineUseCase(dto, testCompanyIDMachine)
 
 		// Segunda vez (Mismo nombre)
-		err := CreateMachineUseCase(dto)
+		err := CreateMachineUseCase(dto, testCompanyIDMachine)
 		if err == nil {
 			t.Error("Debió fallar por nombre duplicado, pero pasó")
 		}
@@ -75,16 +76,14 @@ func TestMachineCRUD(t *testing.T) {
 	t.Run("Listar Maquinas", func(t *testing.T) {
 		setupMachineTest(t)
 
-		CreateMachineUseCase(types.CreateMachineDTO{Name: "M1", Type: "FDM"})
-		CreateMachineUseCase(types.CreateMachineDTO{Name: "M2", Type: "SLS"})
+		CreateMachineUseCase(types.CreateMachineDTO{Name: "M1", Type: "FDM"}, testCompanyIDMachine)
+		CreateMachineUseCase(types.CreateMachineDTO{Name: "M2", Type: "SLS"}, testCompanyIDMachine)
 
-		// CORRECCIÓN: Ahora GetAll recibe un filtro. Pasamos vacío para traer todas.
-		list, err := GetAllMachinesUseCase(types.MachineFilter{})
+		list, err := GetAllMachinesUseCase(types.MachineFilter{}, testCompanyIDMachine)
 		if err != nil {
 			t.Fatalf("Error al listar: %v", err)
 		}
 
-		// CORRECCIÓN: 'list' es un slice, no un puntero. Quitamos el *.
 		if len(*list) != 2 {
 			t.Errorf("Esperaba 2 máquinas, obtuvo %d", len(*list))
 		}
@@ -95,7 +94,7 @@ func TestMachineCRUD(t *testing.T) {
 		db := setupMachineTest(t)
 
 		// Crear original
-		CreateMachineUseCase(types.CreateMachineDTO{Name: "Original"})
+		CreateMachineUseCase(types.CreateMachineDTO{Name: "Original"}, testCompanyIDMachine)
 
 		// Update
 		id := 1
@@ -108,7 +107,7 @@ func TestMachineCRUD(t *testing.T) {
 			Status: &maintenance, // Probamos cambiar estado manualmente
 		}
 
-		err := UpdateMachineUseCase(id, updateDTO)
+		err := UpdateMachineUseCase(id, updateDTO, testCompanyIDMachine)
 		if err != nil {
 			t.Fatalf("Error al actualizar: %v", err)
 		}
@@ -127,19 +126,17 @@ func TestMachineCRUD(t *testing.T) {
 		db := setupMachineTest(t)
 
 		// Crear
-		CreateMachineUseCase(types.CreateMachineDTO{Name: "Para Borrar", Type: "FDM"})
+		CreateMachineUseCase(types.CreateMachineDTO{Name: "Para Borrar", Type: "FDM"}, testCompanyIDMachine)
 
 		// Borrar ID 1
-		err := DeleteMachineUseCase(1)
+		err := DeleteMachineUseCase(1, testCompanyIDMachine)
 		if err != nil {
 			t.Fatalf("Error al borrar: %v", err)
 		}
 
 		// A. Verificar que GetAll NO la trae
-		// CORRECCIÓN: Pasamos filtro vacío
-		list, _ := GetAllMachinesUseCase(types.MachineFilter{})
+		list, _ := GetAllMachinesUseCase(types.MachineFilter{}, testCompanyIDMachine)
 
-		// CORRECCIÓN: Quitamos el *
 		if len(*list) != 0 {
 			t.Errorf("El listado debió venir vacío, trajo %d", len(*list))
 		}

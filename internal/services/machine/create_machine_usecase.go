@@ -9,7 +9,7 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func CreateMachineUseCase(dto types.CreateMachineDTO) error {
+func CreateMachineUseCase(dto types.CreateMachineDTO, companyID uint) error {
 	machine, err := machineutils.GetMachine(dto)
 	if err != nil {
 		return err
@@ -20,9 +20,10 @@ func CreateMachineUseCase(dto types.CreateMachineDTO) error {
 	}
 
 	newMachine := types.Machine{
-		Name:   dto.Name,
-		Type:   dto.Type,
-		Status: "idle",
+		Name:      dto.Name,
+		Type:      dto.Type,
+		Status:    "idle",
+		IdCompany: companyID,
 	}
 	if err := db_utils.Create(&newMachine); err != nil {
 		return fmt.Errorf("Error Creating Machine")

@@ -12,6 +12,8 @@ import (
 
 // --- SETUP & HELPERS ---
 
+const testCompanyIDMovement uint = 1
+
 // setupMovementTest inicia una DB en memoria limpia para cada test
 func setupMovementTest(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
@@ -40,10 +42,11 @@ func TestStockMovements(t *testing.T) {
 	// Preparamos un producto base para las pruebas
 	baseSku := "TEST-MOV-1"
 	initialItem := types.StockItem{
-		SKU:      baseSku,
-		Name:     "Producto Test",
-		Quantity: 10, // Arrancamos con 10 unidades
-		Price:    100,
+		SKU:       baseSku,
+		Name:      "Producto Test",
+		Quantity:  10, // Arrancamos con 10 unidades
+		Price:     100,
+		IdCompany: testCompanyIDMovement,
 	}
 	db.Create(&initialItem)
 
@@ -56,7 +59,7 @@ func TestStockMovements(t *testing.T) {
 			Reason:   "Compra Proveedor",
 		}
 
-		err := AddStockMovementUseCase(req)
+		err := AddStockMovementUseCase(req, testCompanyIDMovement)
 		if err != nil {
 			t.Fatalf("Error inesperado en movimiento IN: %v", err)
 		}
@@ -97,7 +100,7 @@ func TestStockMovements(t *testing.T) {
 			Reason:   "Venta Cliente",
 		}
 
-		err := AddStockMovementUseCase(req)
+		err := AddStockMovementUseCase(req, testCompanyIDMovement)
 		if err != nil {
 			t.Fatalf("Error inesperado en movimiento OUT: %v", err)
 		}
@@ -132,7 +135,7 @@ func TestStockMovements(t *testing.T) {
 			UserID:   1,
 		}
 
-		err := AddStockMovementUseCase(req)
+		err := AddStockMovementUseCase(req, testCompanyIDMovement)
 		if err == nil {
 			t.Error("Se esperaba error por falta de stock, pero la operación pasó")
 		}
@@ -152,7 +155,7 @@ func TestStockMovements(t *testing.T) {
 			Quantity: 10,
 		}
 
-		err := AddStockMovementUseCase(req)
+		err := AddStockMovementUseCase(req, testCompanyIDMovement)
 		if err == nil {
 			t.Error("Se esperaba error 'producto no encontrado'")
 		}
@@ -171,14 +174,14 @@ func TestGetStockHistory(t *testing.T) {
 	// Insertamos movimientos manualmente con fechas específicas
 	movements := []types.StockMovement{
 		// Enero - Producto A
-		{StockSKU: skuA, Type: "IN", QtyDelta: 10, CreatedAt: parseDate("2025-01-01")},
-		{StockSKU: skuA, Type: "OUT", QtyDelta: -2, CreatedAt: parseDate("2025-01-15")},
+		{StockSKU: skuA, Type: "IN", QtyDelta: 10, CreatedAt: parseDate("2025-01-01"), IdCompany: testCompanyIDMovement},
+		{StockSKU: skuA, Type: "OUT", QtyDelta: -2, CreatedAt: parseDate("2025-01-15"), IdCompany: testCompanyIDMovement},
 
 		// Febrero - Producto A
-		{StockSKU: skuA, Type: "IN", QtyDelta: 5, CreatedAt: parseDate("2025-02-10")},
+		{StockSKU: skuA, Type: "IN", QtyDelta: 5, CreatedAt: parseDate("2025-02-10"), IdCompany: testCompanyIDMovement},
 
 		// Enero - Producto B
-		{StockSKU: skuB, Type: "IN", QtyDelta: 100, CreatedAt: parseDate("2025-01-05")},
+		{StockSKU: skuB, Type: "IN", QtyDelta: 100, CreatedAt: parseDate("2025-01-05"), IdCompany: testCompanyIDMovement},
 	}
 	db.Create(&movements)
 
@@ -188,7 +191,7 @@ func TestGetStockHistory(t *testing.T) {
 		// Pedimos solo Producto A
 		filter := types.HistoryFilter{SKU: skuA}
 
-		results, err := GetStockHistoryUseCase(filter)
+		results, err := GetStockHistoryUseCase(filter, testCompanyIDMovement)
 		if err != nil {
 			t.Fatalf("Error: %v", err)
 		}
@@ -208,7 +211,7 @@ func TestGetStockHistory(t *testing.T) {
 		// Pedimos todo lo de Enero (de A y de B)
 		filter := types.HistoryFilter{StartDate: "2025-01-01", EndDate: "2025-01-31"}
 
-		results, err := GetStockHistoryUseCase(filter)
+		results, err := GetStockHistoryUseCase(filter, testCompanyIDMovement)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -226,7 +229,7 @@ func TestGetStockHistory(t *testing.T) {
 			EndDate:   "2025-01-31",
 		}
 
-		results, err := GetStockHistoryUseCase(filter)
+		results, err := GetStockHistoryUseCase(filter, testCompanyIDMovement)
 		if err != nil {
 			t.Fatal(err)
 		}

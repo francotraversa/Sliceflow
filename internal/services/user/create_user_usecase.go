@@ -20,10 +20,14 @@ func CreateUserUseCase(user types.UserCreateCreds) error {
 		return fmt.Errorf("short password (min 6)")
 	}
 
+	if user.Role == "superadmin" {
+		return fmt.Errorf("You can't create an superadmin")
+	}
+
 	if user.Role == "" {
 		user.Role = "user"
 	} else {
-		if user.Role == "user" || user.Role == "admin" {
+		if user.Role == "user" || user.Role == "owner" {
 			user.Role = strings.ToLower(strings.TrimSpace(user.Role))
 		} else {
 			return fmt.Errorf("invalid user role")

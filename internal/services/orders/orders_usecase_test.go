@@ -10,6 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const testCompanyIDOrder uint = 1
+
 // setupOrderTest: Prepara DB en memoria y tablas necesarias
 func setupOrderTest(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
@@ -35,8 +37,8 @@ func setupOrderTest(t *testing.T) *gorm.DB {
 
 // Helper para crear dependencias rápidamente
 func seedDependencies(db *gorm.DB) (int, int) {
-	mat := types.Material{Name: "PLA Test", Type: "FDM"}
-	mac := types.Machine{Name: "Prusa Test", Type: "FDM"}
+	mat := types.Material{Name: "PLA Test", Type: "FDM", IdCompany: testCompanyIDOrder}
+	mac := types.Machine{Name: "Prusa Test", Type: "FDM", IdCompany: testCompanyIDOrder}
 
 	db.Create(&mat)
 	db.Create(&mac)
@@ -53,12 +55,15 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		// 1. Crear una Orden Inicial con ID explícito
 		initialOrder := types.ProductionOrder{
 			ID:               1,
+			IdCompany:        testCompanyIDOrder,
 			ClientName:       "Cliente Viejo",
 			TotalPieces:      10,
 			Status:           "pending",
-			MaterialID:       matID,
 			OperatorID:       1,
 			EstimatedMinutes: 60,
+			Items: []types.OrderItem{
+				{StlName: "Pieza A", Quantity: 5, MaterialID: &matID, MachineID: &macID},
+			},
 		}
 		db.Create(&initialOrder)
 
@@ -72,7 +77,6 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		notes := "Avanzando rápido"
 		operatorID := 1
 		estimatedMinutes := 120
-		price := 5000.0
 		deadlineString := "2025-12-31"
 
 		updateDTO := types.UpdateOrderDTO{
@@ -81,25 +85,22 @@ func TestUpdateOrderUseCase(t *testing.T) {
 			TotalPieces:      &totalPieces,
 			DonePieces:       &donePieces,
 			Status:           &status,
-			MaterialID:       &matID,
 			Priority:         &priority,
 			Notes:            &notes,
 			OperatorID:       &operatorID,
 			EstimatedMinutes: &estimatedMinutes,
-			Price:            &price,
-			MachineID:        &macID,
 			Deadline:         &deadlineString,
 		}
 
 		// 3. Ejecutar Update
-		err := UpdateOrderUseCase(int(initialOrder.ID), updateDTO)
+		err := UpdateOrderUseCase(int(initialOrder.ID), updateDTO, testCompanyIDOrder)
 		if err != nil {
 			t.Fatalf("Error al actualizar orden: %v", err)
 		}
 
 		// 4. Verificar Cambios
 		var order types.ProductionOrder
-		db.Preload("Machine").First(&order, initialOrder.ID)
+		db.Preload("Items").First(&order, initialOrder.ID)
 
 		if order.ClientName != "Cliente Nuevo" {
 			t.Errorf("No actualizó el cliente. Got: %s", order.ClientName)
@@ -109,9 +110,6 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		}
 		if order.EstimatedMinutes != 120 {
 			t.Errorf("Error calculando tiempo. Esperaba 120, Got: %d", order.EstimatedMinutes)
-		}
-		if order.MachineID == nil || *order.MachineID != macID {
-			t.Error("No se asignó la máquina correctamente")
 		}
 
 		// Verificar fecha
@@ -123,41 +121,37 @@ func TestUpdateOrderUseCase(t *testing.T) {
 
 	t.Run("Auto-Completar Orden (Lógica de Negocio)", func(t *testing.T) {
 		db := setupOrderTest(t)
-		matID, _ := seedDependencies(db)
+		matID, macID := seedDependencies(db)
 
 		// Crear orden con ID explícito (necesario por autoIncrement:false)
 		order := types.ProductionOrder{
 			ID:          100,
+			IdCompany:   testCompanyIDOrder,
 			ClientName:  "Test Client",
 			TotalPieces: 10,
 			DonePieces:  0,
 			Status:      "in-progress",
-			MaterialID:  matID,
 			OperatorID:  1,
 			Deadline:    time.Now().Add(24 * time.Hour),
 		}
 		db.Create(&order)
 
 		// Enviamos items con todas las piezas terminadas
-		totalPieces := 10
-		donePieces := 10
-		operatorID := 1
-		status := "in-progress"
 		items := []types.CreateOrderItemDTO{
-			{ID: 1, ProductName: "Pieza A", Quantity: 5, DonePieces: 5},
-			{ID: 2, ProductName: "Pieza B", Quantity: 5, DonePieces: 5},
+			{ID: 1, StlName: "Pieza A", Quantity: 5, DonePieces: 5, MaterialID: &matID, MachineID: &macID},
+			{ID: 2, StlName: "Pieza B", Quantity: 5, DonePieces: 5, MaterialID: &matID},
 		}
+
+		status := "in-progress"
+		operatorID := 1
 
 		dto := types.UpdateOrderDTO{
-			TotalPieces: &totalPieces,
-			DonePieces:  &donePieces,
-			MaterialID:  &matID,
-			OperatorID:  &operatorID,
-			Status:      &status,
-			Items:       &items,
+			OperatorID: &operatorID,
+			Status:     &status,
+			Items:      &items,
 		}
 
-		err := UpdateOrderUseCase(int(order.ID), dto)
+		err := UpdateOrderUseCase(int(order.ID), dto, testCompanyIDOrder)
 		if err != nil {
 			t.Fatalf("Error: %v", err)
 		}
@@ -174,7 +168,7 @@ func TestUpdateOrderUseCase(t *testing.T) {
 	t.Run("Actualizar Orden Inexistente", func(t *testing.T) {
 		setupOrderTest(t) // DB vacía
 
-		err := UpdateOrderUseCase(999, types.UpdateOrderDTO{})
+		err := UpdateOrderUseCase(999, types.UpdateOrderDTO{}, testCompanyIDOrder)
 		if err == nil {
 			t.Error("Debió fallar porque la orden 999 no existe")
 		}

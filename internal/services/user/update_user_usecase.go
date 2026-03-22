@@ -65,7 +65,7 @@ func UpdateUserUseCase(targetID uint, requesterID uint, requesterRole string, da
 		return nil
 	}
 
-	if err := db_utils.Save(currentUser); err != nil {
+	if err := db_utils.SaveWithoutCompany(currentUser); err != nil {
 		return fmt.Errorf("failed to update user in database")
 	}
 

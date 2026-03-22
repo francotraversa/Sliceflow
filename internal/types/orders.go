@@ -16,6 +16,8 @@ type OrderFilter struct {
 
 type ProductionOrder struct {
 	ID               uint           `gorm:"primaryKey;autoIncrement:false" json:"id"` // autoIncrement:false es clave para ID manual
+	IdCompany        uint           `gorm:"not null" json:"id_company"`
+	Company          *Company       `gorm:"foreignKey:IdCompany;references:IdCompany" json:"company,omitempty"`
 	CreatedAt        time.Time      `json:"created_at"`
 	UpdatedAt        time.Time      `json:"updated_at"`
 	DeletedAt        gorm.DeletedAt `gorm:"index" json:"-"`
@@ -30,7 +32,7 @@ type ProductionOrder struct {
 	Status           string         `gorm:"type:varchar(20);default:'pending';index" json:"status"`
 	DonePieces       int            `gorm:"default:0" json:"done_pieces"`
 	OperatorID       int            `gorm:"not null" json:"operator_id"`
-	Price            *float64       `gorm:"type:decimal(12,2)" json:"price,omitempty"`
+	TotalPrice       *float64       `gorm:"type:decimal(12,2)" json:"total_price,omitempty"`
 }
 
 type OrderItem struct {
@@ -39,6 +41,7 @@ type OrderItem struct {
 	StlName    string    `gorm:"type:varchar(150);not null" json:"product_name"`
 	Quantity   int       `gorm:"not null" json:"quantity"`
 	DonePieces int       `gorm:"default:0" json:"done_pieces"`
+	Price      *float64  `gorm:"type:decimal(12,2)" json:"price,omitempty"`
 	MaterialID *int      `gorm:"index" json:"material_id"`
 	MachineID  *int      `gorm:"index" json:"machine_id"`
 	Material   *Material `gorm:"foreignKey:MaterialID" json:"material"`
@@ -49,22 +52,22 @@ type CreateOrderDTO struct {
 	ID               *uint                `gorm:"primaryKey" json:"id"`
 	ClientName       string               `json:"client_name"`
 	Items            []CreateOrderItemDTO `json:"items"` // Lista de piezas
-	MaterialID       *int                 `json:"material_id"`
 	Priority         string               `json:"priority"`
 	Notes            string               `json:"notes"`
 	EstimatedHours   int                  `json:"estimated_hours"`
 	EstimatedMinutes int                  `json:"estimated_minutes"`
 	Deadline         string               `json:"deadline"` // "YYYY-MM-DD"
 	OperatorID       int                  `json:"operator_id"`
-	Price            *float64             `json:"price,omitempty"`
+	TotalPrice       *float64             `json:"total_price,omitempty"`
 }
 type CreateOrderItemDTO struct {
-	ID          uint   `json:"id"`
-	ProductName string `json:"product_name"`
-	Quantity    int    `json:"quantity"`
-	DonePieces  int    `json:"done_pieces"`
-	MachineID   *int   `json:"machine_id"`
-	MaterialID  *int   `json:"material_id"`
+	ID         uint     `json:"id"`
+	StlName    string   `json:"stl_name"`
+	Quantity   int      `json:"quantity"`
+	DonePieces int      `json:"done_pieces"`
+	MachineID  *int     `json:"machine_id"`
+	MaterialID *int     `json:"material_id"`
+	Price      *float64 `gorm:"type:decimal(12,2)" json:"price,omitempty"`
 }
 
 type UpdateOrderDTO struct {
@@ -76,13 +79,11 @@ type UpdateOrderDTO struct {
 	Priority         *string               `json:"priority"` // O int, segun como lo tengas
 	Notes            *string               `json:"notes"`
 	Status           *string               `json:"status"`
-	Price            *float64              `json:"price"`
+	TotalPrice       *float64              `json:"total_price"`
 	EstimatedHours   *int                  `json:"estimated_hours"`
 	EstimatedMinutes *int                  `json:"estimated_minutes"`
 	Deadline         *string               `json:"deadline"`
 	Items            *[]CreateOrderItemDTO `json:"items" `
 
 	OperatorID *int `json:"operator_id"`
-	MaterialID *int `json:"material_id"`
-	MachineID  *int `json:"machine_id"`
 }

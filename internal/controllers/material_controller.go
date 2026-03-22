@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	middleware "github.com/francotraversa/Sliceflow/internal/middlewares"
 	services "github.com/francotraversa/Sliceflow/internal/services/material"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"github.com/labstack/echo/v4"
@@ -26,7 +27,11 @@ func CreateMaterialHandler(c echo.Context) error {
 	if err := c.Bind(&newmaterial); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
-	if err := services.CreateMaterialUseCase(newmaterial); err != nil {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	if err := services.CreateMaterialUseCase(newmaterial, claims.CompanyId); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
@@ -56,7 +61,11 @@ func UpdateMaterialHandler(c echo.Context) error {
 	if err := c.Bind(&mat); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
-	if err := services.UpdateMaterialUseCase(id, mat); err != nil {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	if err := services.UpdateMaterialUseCase(id, mat, claims.CompanyId); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The material %s has been updated", mat.Name)})
@@ -83,7 +92,11 @@ func DeleteMaterialHandler(c echo.Context) error {
 	if err := c.Bind(&mat); err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid Json")
 	}
-	if err := services.DeleteMaterialUseCase(id); err != nil {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	if err := services.DeleteMaterialUseCase(id, claims.CompanyId); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The material %s has been deleted", mat.Name)})
@@ -105,7 +118,11 @@ func GetMaterialsHandler(c echo.Context) error {
 	if err := c.Bind(&filter); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Filters don't work"})
 	}
-	materials, err := services.GetAllMaterialsUseCase(filter)
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	materials, err := services.GetAllMaterialsUseCase(filter, claims.CompanyId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}

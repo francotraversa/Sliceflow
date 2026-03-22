@@ -4,25 +4,19 @@ import (
 	"net/http"
 
 	"github.com/francotraversa/Sliceflow/internal/types"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
 func RequireRole(role string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			tok, ok := c.Get("user").(*jwt.Token)
-			if !ok || tok == nil || !tok.Valid {
-				return echo.NewHTTPError(http.StatusUnauthorized, "missing or invalid token")
+			claims, err := GetClaimsFromContext(c)
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, types.Error{Error: "failed to parse custom claims"})
 			}
 
-			claims, ok := tok.Claims.(*types.JwtCustomClaims)
-			if !ok || claims == nil {
-				return echo.NewHTTPError(http.StatusUnauthorized, "invalid claims")
-			}
-
-			if claims.Role != role {
-				return echo.NewHTTPError(http.StatusForbidden, "insufficient permissions")
+			if claims.Role != role && claims.Role != "owner" {
+				return c.JSON(http.StatusForbidden, types.Error{Error: "permission denied: only admins can access the user list"})
 			}
 
 			return next(c)

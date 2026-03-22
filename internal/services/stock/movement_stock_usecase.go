@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func AddStockMovementUseCase(req types.CreateMovementRequest) error {
+func AddStockMovementUseCase(req types.CreateMovementRequest, companyID uint) error {
 	db := storage.DatabaseInstance{}.Instance()
 
 	// INICIO DE TRANSACCIÓN
@@ -66,10 +66,10 @@ func AddStockMovementUseCase(req types.CreateMovementRequest) error {
 			QtyBefore:   qtyBefore, // ej: 100
 			QtyAfter:    qtyAfter,  // ej: 105 o 95
 			Description: req.Description,
-
-			Reason:     req.Reason,
-			CreatedBy:  req.UserID,
-			LocationID: req.LocationID,
+			IdCompany:   companyID,
+			Reason:      req.Reason,
+			CreatedBy:   req.UserID,
+			LocationID:  req.LocationID,
 		}
 
 		// 6. GUARDAR CAMBIOS EN LA DB (Usando 'tx', no 'db')
@@ -83,8 +83,8 @@ func AddStockMovementUseCase(req types.CreateMovementRequest) error {
 		if err := tx.Model(&item).Select("Quantity").Updates(&item).Error; err != nil {
 			return err // Dispara Rollback
 		}
-		services.InvalidateCache("stock:list:*")
-		services.InvalidateCache("historic:list:*")
+		services.InvalidateCache(fmt.Sprintf("stock:list:%d", companyID))
+		services.InvalidateCache(fmt.Sprintf("historic:list:%d", companyID))
 		services.InvalidateCache("dashboard:*")
 		services.PublishEvent("dashboard_updates", `{"type": "STOCK_MOVEMENT", "message": "STOCK MOVEMENT CREATED"}`)
 		return nil

@@ -1,0 +1,23 @@
+meta {
+  name: Create User
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/hornero/authed/admin/newuser
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "username": "usertes1t12",
+    "password": "usertest12"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

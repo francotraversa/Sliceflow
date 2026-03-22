@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const testCompanyIDUser int = 1
+
 func setupTest(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	if err != nil {
@@ -79,12 +81,12 @@ func TestUpdateUserUseCase(t *testing.T) {
 func TestGetAllUserUseCase(t *testing.T) {
 	db := setupTest(t)
 
-	db.Create(&types.User{Username: "admin1", Role: "admin", Status: "active"})
-	db.Create(&types.User{Username: "user1", Role: "user", Status: "active"})
-	db.Create(&types.User{Username: "user2", Role: "user", Status: "disabled"})
+	db.Create(&types.User{Username: "admin1", Role: "admin", Status: "active", IdCompany: uint(testCompanyIDUser)})
+	db.Create(&types.User{Username: "user1", Role: "user", Status: "active", IdCompany: uint(testCompanyIDUser)})
+	db.Create(&types.User{Username: "user2", Role: "user", Status: "disabled", IdCompany: uint(testCompanyIDUser)})
 
 	t.Run("Listar solo Admins", func(t *testing.T) {
-		users, err := GetAllUserUserUseCase("admin", "admin")
+		users, err := GetAllUserUserUseCase("admin", "admin", testCompanyIDUser, testCompanyIDUser)
 		if err != nil {
 			t.Fatalf("Error: %v", err)
 		}
@@ -94,7 +96,7 @@ func TestGetAllUserUseCase(t *testing.T) {
 	})
 
 	t.Run("Listar Todos (sin filtro)", func(t *testing.T) {
-		users, err := GetAllUserUserUseCase("admin", "")
+		users, err := GetAllUserUserUseCase("admin", "", testCompanyIDUser, testCompanyIDUser)
 		if err != nil {
 			t.Fatalf("Error: %v", err)
 		}

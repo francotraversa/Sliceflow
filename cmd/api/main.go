@@ -7,14 +7,13 @@ import (
 	"time"
 
 	_ "github.com/francotraversa/Sliceflow/docs"
-	"github.com/francotraversa/Sliceflow/internal/auth"
 	enviroment "github.com/francotraversa/Sliceflow/internal/enviroment"
-	redis "github.com/francotraversa/Sliceflow/internal/infra/cache"
 	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
 	userStorage "github.com/francotraversa/Sliceflow/internal/infra/database/user_utils"
 	"github.com/francotraversa/Sliceflow/internal/routers"
 	services "github.com/francotraversa/Sliceflow/internal/services/rutines"
 	"github.com/francotraversa/Sliceflow/internal/swagger"
+	"github.com/francotraversa/Sliceflow/internal/types"
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -38,9 +37,8 @@ type CustomClaims struct {
 func main() {
 	enviroment.LoadEnviroment("dev")
 	storage.DatabaseInstance{}.NewDataBase()
-	redis.InitRedis()
+	//redis.InitRedis()
 	e := echo.New()
-	fmt.Printf("%s", os.Getenv("FRONTENDHOST"))
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{fmt.Sprintf("%s", os.Getenv("FRONTENDHOST"))},
@@ -52,7 +50,7 @@ func main() {
 
 	jwtCfg := echojwt.Config{
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
-			return new(auth.JwtCustomClaims)
+			return new(types.JwtCustomClaims)
 		},
 		SigningKey:    []byte(os.Getenv("JWT_SECRET")),
 		SigningMethod: "HS256",

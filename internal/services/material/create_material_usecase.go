@@ -9,7 +9,7 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func CreateMaterialUseCase(new types.CreateMaterialDTO) error {
+func CreateMaterialUseCase(new types.CreateMaterialDTO, companyID uint) error {
 	if new.Name == "" || new.Type == "" {
 		return fmt.Errorf("Name and Type are required")
 	}
@@ -27,6 +27,7 @@ func CreateMaterialUseCase(new types.CreateMaterialDTO) error {
 		Type:        new.Type,
 		Description: new.Description,
 		Brand:       new.Brand,
+		IdCompany:   companyID,
 	}
 
 	if err := db_utils.Create(&newMaterial); err != nil {

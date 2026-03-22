@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const testCompanyIDStock uint = 1
+
 // setupStockTest adapta tu función de setup para el catálogo de productos
 func setupStockTest(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
@@ -35,7 +37,7 @@ func TestStockService(t *testing.T) {
 			Price:       90,
 		}
 
-		err := CreateProductUseCase(req)
+		err := CreateProductUseCase(req, testCompanyIDStock)
 		if err != nil {
 			t.Fatalf("No debería haber error al crear producto: %v", err)
 		}
@@ -53,7 +55,7 @@ func TestStockService(t *testing.T) {
 			Name: "Producto Duplicado",
 		}
 
-		err := CreateProductUseCase(req)
+		err := CreateProductUseCase(req, testCompanyIDStock)
 		if err == nil {
 			t.Error("Se esperaba un error por SKU duplicado")
 		}
@@ -61,18 +63,17 @@ func TestStockService(t *testing.T) {
 
 	t.Run("Soft Delete de Producto", func(t *testing.T) {
 		// Creamos uno nuevo para borrar
-		item := types.StockItem{SKU: "DEL-99", Name: "Borrame", Status: "active"}
+		item := types.StockItem{SKU: "DEL-99", Name: "Borrame", Status: "active", IdCompany: testCompanyIDStock}
 		db.Create(&item)
 
-		// Llamamos al UseCase (Asumiendo que ya lo actualizaste para recibir string)
-		err := DeleteByIdUseCase(item.SKU)
+		// Llamamos al UseCase
+		err := DeleteByIdUseCase(item.SKU, testCompanyIDStock)
 		if err != nil {
 			t.Fatalf("Error al borrar: %v", err)
 		}
 
 		// 1. Verificar que NO lo encuentra en consulta normal
 		var found types.StockItem
-		// CORRECCIÓN: Usamos Where explícito porque SKU es un string
 		result := db.Where("sku = ?", item.SKU).First(&found)
 
 		if result.Error == nil {
@@ -81,7 +82,6 @@ func TestStockService(t *testing.T) {
 
 		// 2. Verificar que SIGUE en la DB físicamente (Unscoped)
 		var raw types.StockItem
-		// CORRECCIÓN: Usamos Where explícito también aquí
 		db.Unscoped().Where("sku = ?", item.SKU).First(&raw)
 
 		if !raw.DeletedAt.Valid {
@@ -91,20 +91,19 @@ func TestStockService(t *testing.T) {
 
 	t.Run("Actualizar Producto - Exito y Fallo", func(t *testing.T) {
 		// A. Caso Feliz
-		item := types.StockItem{SKU: "EDIT-1", Name: "Viejo", Quantity: 50}
+		item := types.StockItem{SKU: "EDIT-1", Name: "Viejo", Quantity: 50, IdCompany: testCompanyIDStock}
 		db.Create(&item)
 
 		updateReq := types.ProductUpdateRequest{Name: "Nuevo Nombre"}
 
 		// Llamada al UseCase con SKU string
-		_, err := UpdateByIdProductUseCase(item.SKU, updateReq)
+		_, err := UpdateByIdProductUseCase(item.SKU, updateReq, testCompanyIDStock)
 		if err != nil {
 			t.Errorf("Error inesperado al actualizar: %v", err)
 		}
 
 		// Validamos cambio
 		var found types.StockItem
-		// CORRECCIÓN: Búsqueda explícita por SKU
 		db.Where("sku = ?", item.SKU).First(&found)
 
 		if found.Name != "Nuevo Nombre" {
@@ -112,7 +111,7 @@ func TestStockService(t *testing.T) {
 		}
 
 		// B. Caso Fallido (SKU no existe)
-		_, err = UpdateByIdProductUseCase("SKU-FALSO-999", updateReq)
+		_, err = UpdateByIdProductUseCase("SKU-FALSO-999", updateReq, testCompanyIDStock)
 		if err == nil {
 			t.Error("Se esperaba error al actualizar SKU inexistente, pero no falló")
 		}

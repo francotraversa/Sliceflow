@@ -68,7 +68,7 @@ func CheckAndSetPriorities() {
 		}
 
 		if madeChanges {
-			if err := db_utils.Save(&order); err != nil {
+			if err := db_utils.CreateWithoutCompany(&order); err != nil {
 				fmt.Printf("Error guardando orden %d: %v\n", order.ID, err)
 				continue
 			}

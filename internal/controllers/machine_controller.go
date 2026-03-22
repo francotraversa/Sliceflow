@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	middleware "github.com/francotraversa/Sliceflow/internal/middlewares"
 	services "github.com/francotraversa/Sliceflow/internal/services/machine"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"github.com/labstack/echo/v4"
@@ -22,8 +23,12 @@ func CreateMachineHandler(c echo.Context) error {
 	if err := c.Bind(&newmachine); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
 
-	if err := services.CreateMachineUseCase(newmachine); err != nil {
+	if err := services.CreateMachineUseCase(newmachine, claims.CompanyId); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusCreated, types.Response{Message: fmt.Sprintf("Machine %s has been created", newmachine.Name)})
@@ -40,7 +45,11 @@ func GetMachinesHandler(c echo.Context) error {
 	if err := c.Bind(&filter); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Filters don't work"})
 	}
-	machines, err := services.GetAllMachinesUseCase(filter)
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	machines, err := services.GetAllMachinesUseCase(filter, claims.CompanyId)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, types.Error{Error: err.Error()})
 	}
@@ -61,7 +70,12 @@ func UpdateMachineHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 
-	if err := services.UpdateMachineUseCase(id, dto); err != nil {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+
+	if err := services.UpdateMachineUseCase(id, dto, claims.CompanyId); err != nil {
 		return c.JSON(http.StatusInternalServerError, types.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusOK, types.Response{Message: fmt.Sprintf("Machine %d has been updated", id)})
@@ -80,7 +94,12 @@ func DeleteMachineHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 
-	if err := services.DeleteMachineUseCase(id); err != nil {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+
+	if err := services.DeleteMachineUseCase(id, claims.CompanyId); err != nil {
 		return c.JSON(http.StatusInternalServerError, types.Error{Error: err.Error()})
 	}
 

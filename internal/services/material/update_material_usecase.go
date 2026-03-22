@@ -9,8 +9,8 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func UpdateMaterialUseCase(id int, mat types.UpdateMaterialDTO) error {
-	material, err := materialutils.GetMaterialbyID(id)
+func UpdateMaterialUseCase(id int, mat types.UpdateMaterialDTO, companyID uint) error {
+	material, err := materialutils.GetMaterialbyID(id, companyID)
 	if err != nil {
 		return err
 	}
@@ -18,7 +18,7 @@ func UpdateMaterialUseCase(id int, mat types.UpdateMaterialDTO) error {
 	material.Type = mat.Type
 	material.Description = mat.Description
 	material.Brand = mat.Brand
-	if err := db_utils.Save(material); err != nil {
+	if err := db_utils.Save(material, companyID); err != nil {
 		return fmt.Errorf("Error update Material %s", mat.Name)
 	}
 	services.InvalidateCache("materials:list:*")

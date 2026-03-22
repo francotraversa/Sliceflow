@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	middleware "github.com/francotraversa/Sliceflow/internal/middlewares"
 	services "github.com/francotraversa/Sliceflow/internal/services/orders"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"github.com/golang-jwt/jwt/v5"
@@ -24,11 +25,12 @@ func CreateOrderHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 
-	if dto.ClientName == "" || dto.Items == nil || dto.ID == nil {
-		return c.JSON(http.StatusBadRequest, types.Error{Error: "Insufficient fields"})
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
-	if err := services.CreateOrderUseCase(dto); err != nil {
+	if err := services.CreateOrderUseCase(dto, claims.CompanyId); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusCreated, types.Response{Message: fmt.Sprintf("The Order %d has been created", *dto.ID)})
@@ -45,7 +47,11 @@ func GetOrdersHandler(c echo.Context) error {
 	if err := c.Bind(&filter); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Filters invalid"})
 	}
-	orders, err := services.GetAllOrdersUseCase(filter)
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	orders, err := services.GetAllOrdersUseCase(filter, claims.CompanyId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
@@ -70,7 +76,12 @@ func UpdateOrderHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 
-	if err := services.UpdateOrderUseCase(id, dto); err != nil {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+
+	if err := services.UpdateOrderUseCase(id, dto, claims.CompanyId); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
@@ -87,7 +98,7 @@ func GetPrincipalDashboardHandler(c echo.Context) error {
 	userToken := c.Get("user").(*jwt.Token)
 	claims := userToken.Claims.(*types.JwtCustomClaims)
 
-	data, err := services.GetDashboardDataUseCase(claims.Role)
+	data, err := services.GetDashboardDataUseCase(claims.Role, claims.CompanyId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
@@ -107,7 +118,11 @@ func DeleteOrderHandler(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "ID param invalid"})
 	}
-	if err := services.DeleteOrderUseCase(id); err != nil {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	if err := services.DeleteOrderUseCase(id, claims.CompanyId); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusOK, types.Response{Message: fmt.Sprintf("The Order %d has been deleted", id)})

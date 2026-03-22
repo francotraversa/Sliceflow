@@ -35,5 +35,6 @@ type Material struct {
 	Type        string  `gorm:"type:varchar(50);not null" json:"type"`         // Ej: "Filamento", "Resina"
 	Description string  `gorm:"type:text" json:"description"`                  // Ej: "Marca Grilon, temperatura 200°C"
 	Brand       string  `gorm:"type:text" json:"brand"`                        // Ej: "Marca Grilon, temperatura 200°C"
-	IdCompany   Company `gorm:"foreignKey:IdCompany;references:IdCompany"`
+	IdCompany   uint     `gorm:"not null" json:"id_company"`
+	Company     *Company `gorm:"foreignKey:IdCompany;references:IdCompany" json:"company,omitempty"`
 }

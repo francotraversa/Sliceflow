@@ -29,17 +29,23 @@ type User struct {
 	Password  string    `gorm:"size:255;not null"` // hash
 	Role      string    `gorm:"size:16;default:user"`
 	Status    string    `gorm:"size:16;default:active"`
-	IdCompany Company   `gorm:"foreignKey:IdCompany;references:IdCompany"`
+	IdCompany uint      `gorm:"not null" json:"id_company"`
+	Company   *Company  `gorm:"foreignKey:IdCompany;references:IdCompany"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Company struct {
-	IdCompany uint      `gorm:"primaryKey"`
+	IdCompany uint      `gorm:"primaryKey;autoIncrement"`
 	Name      string    `gorm:"uniqueIndex;size:120;not null"`
 	Status    string    `gorm:"size:16;default:active"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	DeletedAt time.Time `gorm:"index"`
+}
+
+type CompanyCreateDTO struct {
+	Name string `json:"name" example:"companytest"`
 }
 
 type UserCreateCreds struct {

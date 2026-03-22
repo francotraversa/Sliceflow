@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const testCompanyIDMaterial uint = 1
+
 // setupMaterialTest crea una DB en memoria limpia para cada prueba
 func setupMaterialTest(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
@@ -23,8 +25,7 @@ func setupMaterialTest(t *testing.T) *gorm.DB {
 	}
 
 	// Inyectamos la DB de prueba en la instancia global
-	// CORRECCIÓN: Asignación directa
-	storage.DBInstance.DB = db
+	storage.OverrideDatabaseInstance(db)
 	return db
 }
 
@@ -39,7 +40,7 @@ func TestMaterialCRUD(t *testing.T) {
 			Description: "Bobina 1kg",
 		}
 
-		err := CreateMaterialUseCase(dto)
+		err := CreateMaterialUseCase(dto, testCompanyIDMaterial)
 		if err != nil {
 			t.Fatalf("Error inesperado al crear: %v", err)
 		}
@@ -58,10 +59,10 @@ func TestMaterialCRUD(t *testing.T) {
 		dto := types.CreateMaterialDTO{Name: "PLA Unico", Type: "Filamento"}
 
 		// Primer insert
-		_ = CreateMaterialUseCase(dto)
+		_ = CreateMaterialUseCase(dto, testCompanyIDMaterial)
 
 		// Segundo insert (Mismo nombre)
-		err := CreateMaterialUseCase(dto)
+		err := CreateMaterialUseCase(dto, testCompanyIDMaterial)
 		if err == nil {
 			t.Error("Debió fallar por nombre duplicado, pero pasó")
 		}
@@ -72,16 +73,14 @@ func TestMaterialCRUD(t *testing.T) {
 		setupMaterialTest(t)
 
 		// Insertamos 2 materiales
-		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "Mat 1", Type: "A"})
-		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "Mat 2", Type: "B"})
+		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "Mat 1", Type: "A"}, testCompanyIDMaterial)
+		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "Mat 2", Type: "B"}, testCompanyIDMaterial)
 
-		// CORRECCIÓN: Pasamos el filtro vacío types.MaterialFilter{}
-		result, err := GetAllMaterialsUseCase(types.MaterialFilter{})
+		result, err := GetAllMaterialsUseCase(types.MaterialFilter{}, testCompanyIDMaterial)
 		if err != nil {
 			t.Fatalf("Error al listar: %v", err)
 		}
 
-		// CORRECCIÓN: Quitamos el *, es un slice normal
 		if len(*result) != 2 {
 			t.Errorf("Esperaba 2 materiales, obtuvo %d", len(*result))
 		}
@@ -91,7 +90,7 @@ func TestMaterialCRUD(t *testing.T) {
 	t.Run("Actualizar Material", func(t *testing.T) {
 		db := setupMaterialTest(t)
 
-		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "Nombre Viejo", Type: "Viejo"})
+		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "Nombre Viejo", Type: "Viejo"}, testCompanyIDMaterial)
 
 		id := 1
 		updateDTO := types.UpdateMaterialDTO{
@@ -100,7 +99,7 @@ func TestMaterialCRUD(t *testing.T) {
 			Description: "Editado",
 		}
 
-		err := UpdateMaterialUseCase(id, updateDTO)
+		err := UpdateMaterialUseCase(id, updateDTO, testCompanyIDMaterial)
 		if err != nil {
 			t.Fatalf("Error al actualizar: %v", err)
 		}
@@ -117,10 +116,10 @@ func TestMaterialCRUD(t *testing.T) {
 		db := setupMaterialTest(t)
 
 		// Crear material ID 1
-		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "A Borrar", Type: "X"})
+		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "A Borrar", Type: "X"}, testCompanyIDMaterial)
 
 		// Eliminar
-		err := DeleteMaterialUseCase(1)
+		err := DeleteMaterialUseCase(1, testCompanyIDMaterial)
 		if err != nil {
 			t.Fatalf("Error al borrar: %v", err)
 		}
@@ -128,10 +127,8 @@ func TestMaterialCRUD(t *testing.T) {
 		// Verificaciones:
 
 		// A. GetAll no lo debe traer
-		// CORRECCIÓN: Filtro vacío
-		list, _ := GetAllMaterialsUseCase(types.MaterialFilter{})
+		list, _ := GetAllMaterialsUseCase(types.MaterialFilter{}, testCompanyIDMaterial)
 
-		// CORRECCIÓN: Quitamos el *
 		if len(*list) != 0 {
 			t.Errorf("El listado debió venir vacío, trajo %d", len(*list))
 		}
