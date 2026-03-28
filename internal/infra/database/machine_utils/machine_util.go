@@ -9,12 +9,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetMachinebyID(id int) (*types.Machine, error) {
-	db := storage.DatabaseInstance{}.Instance()
+func getDB() *gorm.DB {
+	return storage.DatabaseInstance{}.Instance()
+}
 
+func GetMachinebyID(id int, companyID uint) (*types.Machine, error) {
+	db := getDB()
 	var machine types.Machine
 
-	if err := db.First(&machine, id).Error; err != nil {
+	if err := db.Where("id_company = ?", companyID).First(&machine, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("Machine doesn't exists")
 		}
@@ -25,10 +28,10 @@ func GetMachinebyID(id int) (*types.Machine, error) {
 }
 
 func GetMachine(dto types.CreateMachineDTO) (*types.Machine, error) {
-	db := storage.DatabaseInstance{}.Instance()
+	db := getDB()
 	var machine types.Machine
 
-	// Usamos First
+	// Use First to find by name
 	if err := db.Where("name = ?", dto.Name).First(&machine).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -36,6 +39,23 @@ func GetMachine(dto types.CreateMachineDTO) (*types.Machine, error) {
 		return nil, fmt.Errorf("error database lookup for machine %s: %w", dto.Name, err)
 	}
 
-	// 3. Si llegamos acá, la máquina existe.
+	// 3. If we get here, the machine exists.
 	return &machine, nil
+}
+
+func GetMachinesFiltered(filter types.MachineFilter, companyID uint) (*[]types.Machine, error) {
+	db := getDB()
+	var machines []types.Machine
+
+	query := db.Model(&types.Machine{})
+
+	if filter.Status != "" {
+		query = query.Where("status = ?", filter.Status)
+	}
+
+	if err := query.Where("id_company = ?", companyID).Find(&machines).Error; err != nil {
+		return nil, fmt.Errorf("error database lookup for machines: %w", err)
+	}
+
+	return &machines, nil
 }

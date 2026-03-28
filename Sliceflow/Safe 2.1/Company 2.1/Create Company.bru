@@ -1,0 +1,22 @@
+meta {
+  name: Create Company
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/hornero/authed/owner/newcompany
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Test Company"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

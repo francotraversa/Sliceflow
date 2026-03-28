@@ -1,124 +1,324 @@
-# Sliceflow Backend (Go + Clean Arch + Postgres)
+<p align="center">
+  <h1 align="center">⚙️ SliceFlow</h1>
+  <p align="center">
+    <strong>Manufacturing Execution System for 3D Printing Farms</strong>
+  </p>
+  <p align="center">
+    <img src="https://img.shields.io/badge/Go-1.25-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Go Version"/>
+    <img src="https://img.shields.io/badge/Echo-v4-4A90D9?style=flat-square" alt="Echo v4"/>
+    <img src="https://img.shields.io/badge/PostgreSQL-16-336791?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
+    <img src="https://img.shields.io/badge/Redis-Alpine-DC382D?style=flat-square&logo=redis&logoColor=white" alt="Redis"/>
+    <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker"/>
+    <img src="https://img.shields.io/badge/Swagger-Documented-85EA2D?style=flat-square&logo=swagger&logoColor=black" alt="Swagger"/>
+  </p>
+</p>
 
-README Manufacturing Execution System (MES) for 3D printing farms (FDM/SLS) written in Go following Clean Architecture + GORM + PostgreSQL + Redis. It includes intelligent background workers and role-based security.
+---
 
-# Summary
+SliceFlow is a **production-grade REST API** that centralizes operations for 3D printing businesses. It manages the full lifecycle of production orders, material inventory, machine fleet monitoring, and stock movements — with an intelligent background worker that auto-prioritizes tasks based on deadlines.
 
-This service centralizes production control. It manages the lifecycle of production orders, material inventory control, and machine monitoring. It exposes a secure REST API and features a "Brain" (Worker) that automatically prioritizes tasks based on deadlines.
+> 📢 **Includes Swagger UI documentation & Bruno Collection for API testing.**
 
-> 📢 **Includes Swagger Documentation & Bruno Collection for API testing.**
+## ✨ Key Features
 
-# Typical Flow:
+- 🧠 **Smart Worker** — Background goroutine that auto-escalates priority (`P1`/`P2`) when deadlines approach (<24h/48h) and flags stalled ("zombie") orders.
+- 🔐 **Role-Based Access Control** — JWT authentication with three-tier roles: `owner` → `admin` → `user`. Financial fields (`revenue`, `price`) are automatically censored for non-admin roles.
+- 📡 **Real-Time Dashboard** — WebSocket endpoint backed by Redis Pub/Sub pushes live updates to connected clients on order/machine state changes.
+- ⚡ **Redis Caching** — High-performance caching layer with pattern-based invalidation for heavy-read endpoints.
+- 🏢 **Multi-Tenancy** — All resources are scoped by `CompanyID`, supporting multiple organizations on a single deployment.
+- 📦 **Inventory Control** — Full stock management with movement history, material tracking, and pre-validation before order prioritization.
 
-1. The operator or admin authenticates and obtains a JWT token.
-2. The admin or user creates production orders.
-3. The "Worker" (background process) monitors deadlines and upgrades priority (P1/P2) if the deadline is approaching.
-4. The Dashboard endpoint shows real-time data (censoring prices for non-admins).
+## 🏗️ Architecture
 
-# Features
+```
+Clean Architecture — Request lifecycle
+```
 
-✅ **Smart Worker:** Auto-prioritization of orders (<24hs urgent) and detection of "Zombie" (stalled) orders.
+```mermaid
+graph LR
+    Client([Client]) --> Router
 
-✅ **Data Security:** Automatic censorship of financial fields (`Revenue`, `Price`) for standard operators.
+    subgraph Echo Server
+        Router[Router + Middleware<br/>JWT · RBAC · CORS] --> Controllers
+        Controllers --> UseCases[Use Cases<br/>Business Logic]
+        UseCases --> Infra[Infrastructure Layer]
+    end
 
-✅ **Stock Management:** Material validation before prioritizing an order.
+    subgraph Infrastructure
+        Infra --> DB[(PostgreSQL)]
+        Infra --> Cache[(Redis)]
+    end
 
-✅ **High Performance Caching:** Redis implementation for heavy read endpoints (Dashboard).
+    subgraph Background
+        Worker[🤖 Smart Worker<br/>Goroutine · 1h tick] --> DB
+        Worker --> Cache
+    end
 
-✅ **Swagger UI:** Full API documentation available at `/swagger/index.html`.
+    Cache -- Pub/Sub --> WS[WebSocket<br/>Real-time Events]
+    WS --> Client
 
-✅ **Bruno Support:** API Collection included for easy testing.
+    style Client fill:#4A90D9,color:#fff
+    style Worker fill:#e8a838,color:#000
+    style DB fill:#336791,color:#fff
+    style Cache fill:#DC382D,color:#fff
+```
 
-✅ **Docker Compose:** Ready-to-use environment with DB and Cache.
+## 📁 Project Structure
 
-# Tech Stack
+```
+SliceFlow/
+├── cmd/
+│   └── api/
+│       └── main.go              # Entry point, server bootstrap, goroutine init
+├── internal/
+│   ├── auth/                    # JWT token generation & validation
+│   ├── controllers/             # HTTP handlers (Echo) with Swagger annotations
+│   │   ├── auth_controller.go
+│   │   ├── orders_controller.go
+│   │   ├── machine_controller.go
+│   │   ├── stock_controller.go
+│   │   ├── ws_controller.go     # WebSocket handler (Redis Pub/Sub consumer)
+│   │   └── ...
+│   ├── middlewares/             # JWT claims extraction & role enforcement
+│   ├── routers/                # Route registration & group definitions
+│   ├── services/               # Business logic (Use Cases)
+│   │   ├── orders/             # Create, Update, Delete, Get, Dashboard
+│   │   ├── stock/              # Products & stock movements
+│   │   ├── machine/            # Machine fleet management
+│   │   ├── material/           # Material catalog (FDM/SLS)
+│   │   ├── user/               # User CRUD with soft-delete
+│   │   ├── company/            # Multi-tenant company management
+│   │   ├── authenticator/      # Login use case
+│   │   ├── rutines/            # 🤖 Smart Worker (auto-priority engine)
+│   │   └── common/             # Shared: cache invalidation, Pub/Sub events
+│   ├── infra/
+│   │   ├── database/           # GORM setup, generic CRUD utils, scoped queries
+│   │   └── cache/              # Redis client initialization
+│   ├── types/                  # Domain models, DTOs, response types
+│   └── swagger/                # Swagger UI registration
+├── docs/                       # Auto-generated Swagger JSON/YAML
+├── docker-compose.yaml         # Full stack: App + PostgreSQL + Redis + pgAdmin
+├── dockerfile                  # Multi-stage build (builder → alpine)
+└── go.mod
+```
 
-  Language: Go ≥ 1.21.
+## 🧠 Smart Worker — How It Works
 
-  Architecture: Hexagonal (Clean Architecture).
+The background worker runs as a **goroutine** with a 1-hour tick cycle. It implements two core algorithms:
 
-  GORM: GORM (PostgreSQL).
+```mermaid
+flowchart TD
+    Start([⏰ Tick Every 1h]) --> Fetch[Fetch all active orders]
+    Fetch --> Loop{For each order}
 
-  Cache: Redis.
+    Loop --> Expired{Deadline<br/>passed?}
+    Expired -->|Yes| SetP1_Expired["Priority → P1<br/>Tag: [VENCIDA]"]
 
-  Database: PostgreSQL.
+    Expired -->|No| Urgent{"< 24h<br/>remaining?"}
+    Urgent -->|Yes| SetP1["Priority → P1"]
 
-  Containers: Docker / Docker Compose.
+    Urgent -->|No| Soon{"< 48h<br/>remaining?"}
+    Soon -->|Yes| SetP2["Priority → P2"]
 
-# Setup
+    Soon -->|No| Stalled{"In-progress &<br/>no updates > 24h?"}
+    Stalled -->|Yes| TagZombie["Tag: [ESTANCADA?]"]
 
-  Requirements
-    Go ≥ 1.21.
-    Docker Desktop (with WSL2 enabled on Windows).
-    Git.
+    SetP1_Expired --> Save[Save & increment counter]
+    SetP1 --> Save
+    SetP2 --> Save
+    TagZombie --> Save
+    Stalled -->|No| Loop
 
-# Environment Variables
+    Save --> Loop
+    Loop -->|Done| HasChanges{Any updates?}
+    HasChanges -->|Yes| Invalidate["Invalidate cache<br/>Publish WS event"]
+    HasChanges -->|No| End([Wait next tick])
+    Invalidate --> End
 
-Copy `.env.example` to `.env.dev` and complete:
+    style Start fill:#e8a838,color:#000
+    style Invalidate fill:#DC382D,color:#fff
+```
 
-PORT=8181.
+## 🔐 Auth & Roles
 
-JWT_SECRET=<your_secure_secret>.
-TTL=1440 (Token life in minutes).
+| Role | Capabilities |
+|------|-------------|
+| `owner` | Full access. Create companies, manage admins, see all data including financials |
+| `admin` | Manage users, orders, machines, materials, stock. See prices and revenue |
+| `user` | Manage own orders and machines. Financial fields are **automatically zeroed** |
 
-REDIS_ADDR=redis:6379.
+**Flow:**
+1. `POST /hornero/auth/login` → Returns JWT token
+2. Include `Authorization: Bearer <token>` on all protected endpoints
+3. Middleware extracts claims and enforces role permissions per route group
 
-DB (if using Docker Compose):
-POSTGRES_HOST=db, POSTGRES_USER=postgres, POSTGRES_PASSWORD=postgres, POSTGRES_DB=sliceflow_db, POSTGRES_PORT=5432.
+## 🚀 Quick Start
 
-Local without Docker: POSTGRES_HOST=localhost - POSTGRES_PORT=5432.
+### Prerequisites
+- **Go** ≥ 1.21
+- **Docker Desktop** (WSL2 on Windows)
+- **Git**
 
-# Quick Start (Docker)
+### 1. Clone & Configure
 
-1) Prepare the environment
+```bash
+git clone https://github.com/francotraversa/Sliceflow.git
+cd Sliceflow
+cp .env.example .env.dev
+```
 
-  Copy the environment variables.
-  Ensure ports 8080 and 5432 are free.
+Edit `.env.dev`:
+```env
+PORT=8181
+JWT_SECRET=your_secure_secret_here
+TTL=1440
 
-2) Start everything
-  `docker-compose up --build -d`
+POSTGRES_HOST=db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=sliceflow_db
+POSTGRES_PORT=5432
 
-  The API runs inside the container at :8080.
+REDIS_ADDR=redis:6379
+```
 
-3) Useful commands
-  `docker-compose down` # stop everything.
-  `docker-compose logs -f api` # view logs (including Smart Worker logs).
+### 2. Run with Docker
 
-# Run Local (without Docker)
-  `go mod tidy`
-  `go run cmd/api/main.go`
-  http://localhost:8080
+```bash
+docker-compose up --build -d
+```
 
-# API Documentation & Tools
+The API will be available at `http://localhost:1000`
 
-### 📘 Swagger UI
-Once the server is running, visit:
-`http://localhost:8080/swagger/index.html`
+### 3. Run Locally (without Docker)
 
-### 🐶 Bruno Collection
-You will find a folder named `bruno_collection` (or `docs/bruno`) in the root of this repository. Open **Bruno**, click "Open Collection", and select that folder to load all pre-configured requests.
+```bash
+# Set POSTGRES_HOST=localhost in .env.dev
+go mod tidy
+go run cmd/api/main.go
+```
 
-# Auth Flow
+## 📡 API Endpoints
 
-Login with username -> JWT.
+**Base URL:** `http://localhost:1000/hornero`
 
-Send `Authorization: Bearer <token>` to protected endpoints.
+### Public
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Health check |
+| `POST` | `/auth/login` | Authenticate → JWT |
 
-Roles:
-- `admin`: Sees everything (including revenue/prices).
-- `user`: Sees orders and machines (prices hidden/zeroed).
+### Protected (requires JWT)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/authed/ws/dashboard` | WebSocket real-time feed |
+| `PATCH` | `/authed/user/updmyuser` | Update own profile |
+| `DELETE` | `/authed/user/delmyuser` | Soft-delete own account |
 
-## Main Endpoints
+### Stock & Materials
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/authed/stock/addprod` | Create product |
+| `GET` | `/authed/stock/list` | List products |
+| `PATCH` | `/authed/stock/updprod/:sku` | Update product |
+| `DELETE` | `/authed/stock/delprod/:sku` | Delete product |
+| `POST` | `/authed/stock/movement/addmov` | Record stock movement |
+| `GET` | `/authed/stock/movement/historic` | Movement history |
+| `GET` | `/authed/stock/movement/dashboard` | Stock dashboard |
+| `POST` | `/authed/materials/addmat` | Create material |
+| `GET` | `/authed/materials/list` | List materials |
 
-**Base URL:** `http://localhost:8080`
-> Use `{{token}}` (Bearer) for protected endpoints.
+### Machines
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/authed/machine/addmac` | Register machine |
+| `GET` | `/authed/machine/list` | List machines |
+| `PATCH` | `/authed/machine/updmac/:id` | Update machine |
+| `DELETE` | `/authed/machine/delmac/:id` | Delete machine |
 
-### Login
-- **URL:** `/auth/login`
-- **Method:** `POST`
-- **Body:**
-```json
-{
-  "username": "admin",
-  "password": "admin"
-}
+### Production Orders
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/authed/orders/order` | Create order (multi-item) |
+| `GET` | `/authed/orders/list` | List orders (filterable) |
+| `PATCH` | `/authed/orders/updord/:id` | Update order + auto-complete logic |
+| `DELETE` | `/authed/orders/delord/:id` | Delete order |
+| `GET` | `/authed/orders/dashboard` | Production dashboard |
+
+### Admin Only
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/authed/admin/newuser` | Create user |
+| `GET` | `/authed/admin/alluser` | List all users |
+| `PATCH` | `/authed/admin/edituser/:id` | Edit any user |
+| `PATCH` | `/authed/admin/enableuser` | Re-enable disabled user |
+| `DELETE` | `/authed/admin/deleteuser/:id` | Soft-delete user |
+
+### Owner Only
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/authed/owner/newcompany` | Create company |
+| `GET` | `/authed/owner/allcompany` | List companies |
+| `DELETE` | `/authed/owner/deletecompany/:id` | Delete company |
+
+> 📘 **Full interactive docs:** `http://localhost:1000/swagger/index.html`
+
+## 🧪 Testing
+
+```bash
+# Run all unit tests
+go test ./... -v
+
+# Run specific domain tests
+go test ./internal/services/orders/ -v
+go test ./internal/services/stock/ -v
+```
+
+Tests use **SQLite in-memory** databases for fast, isolated execution.
+
+## 🐳 Docker Commands
+
+```bash
+docker-compose up --build -d    # Start all services
+docker-compose down              # Stop everything
+docker-compose logs -f sliceflow # Stream API logs (including Worker)
+```
+
+| Service | Port | Description |
+|---------|------|-------------|
+| SliceFlow API | `1000` | REST API |
+| PostgreSQL | `5433` | Database |
+| Redis | `6379` | Cache + Pub/Sub |
+| pgAdmin | `8080` | Database GUI |
+
+## 🛠️ Tech Stack
+
+| Component | Technology |
+|-----------|-----------|
+| Language | Go 1.25 |
+| HTTP Framework | Echo v4 |
+| ORM | GORM (PostgreSQL driver) |
+| Database | PostgreSQL 16 |
+| Cache & Pub/Sub | Redis (Alpine) |
+| Authentication | JWT (golang-jwt/v5) + Echo-JWT middleware |
+| Real-Time | WebSocket (gorilla/websocket) + Redis Pub/Sub |
+| API Docs | Swagger (swaggo) |
+| Containers | Docker + Docker Compose |
+| Hot Reload | Air |
+
+## 📐 Technical Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| **Clean Architecture** | Decouples business logic from framework/infra. Controllers only handle HTTP; use cases contain all domain rules |
+| **Redis Pub/Sub for WebSocket** | Enables horizontal scaling — multiple API instances can share real-time events without shared memory |
+| **Background Goroutine** | Lightweight alternative to external job schedulers (cron, Celery). Runs within the same process, zero infrastructure overhead |
+| **Soft-Delete pattern** | Users and orders use `gorm.DeletedAt` for audit trails and recovery |
+| **Multi-stage Docker build** | Final image is ~15MB (Alpine) instead of ~1GB (full Go SDK) |
+| **SQLite for tests** | Fast in-memory tests without Docker dependency; GORM's driver abstraction makes this seamless |
+
+---
+
+<p align="center">
+  Built with ❤️ by <a href="https://github.com/francotraversa">Franco Traversa</a>
+</p>

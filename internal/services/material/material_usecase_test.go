@@ -9,145 +9,142 @@ import (
 	"gorm.io/gorm"
 )
 
-// setupMaterialTest crea una DB en memoria limpia para cada prueba
+const testCompanyIDMaterial uint = 1
+
+// setupMaterialTest creates a clean in-memory DB for each test
 func setupMaterialTest(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	if err != nil {
-		t.Fatalf("Error al iniciar DB de test: %v", err)
+		t.Fatalf("Failed to open test DB: %v", err)
 	}
 
-	// Migramos solo la tabla de Materiales
+	// Migrate only the Materials table
 	err = db.AutoMigrate(&types.Material{})
 	if err != nil {
-		t.Fatalf("Error al migrar: %v", err)
+		t.Fatalf("Failed to migrate: %v", err)
 	}
 
-	// Inyectamos la DB de prueba en la instancia global
-	// CORRECCIÓN: Asignación directa
-	storage.DBInstance.DB = db
+	// Inject test DB into global instance
+	storage.OverrideDatabaseInstance(db)
 	return db
 }
 
 func TestMaterialCRUD(t *testing.T) {
-	// --- 1. TEST DE CREACIÓN ---
-	t.Run("Crear Material Exitoso", func(t *testing.T) {
+	// --- 1. CREATE TESTS ---
+	t.Run("Create Material Successfully", func(t *testing.T) {
 		db := setupMaterialTest(t)
 
 		dto := types.CreateMaterialDTO{
-			Name:        "PLA Negro Grilon",
-			Type:        "Filamento",
-			Description: "Bobina 1kg",
+			Name:        "PLA Black Grilon",
+			Type:        "Filament",
+			Description: "1kg spool",
 		}
 
-		err := CreateMaterialUseCase(dto)
+		err := CreateMaterialUseCase(dto, testCompanyIDMaterial)
 		if err != nil {
-			t.Fatalf("Error inesperado al crear: %v", err)
+			t.Fatalf("Unexpected error creating material: %v", err)
 		}
 
-		// Verificar que se guardó
+		// Verify it was saved
 		var count int64
 		db.Model(&types.Material{}).Count(&count)
 		if count != 1 {
-			t.Errorf("Esperaba 1 material, hay %d", count)
+			t.Errorf("Expected 1 material, got %d", count)
 		}
 	})
 
-	t.Run("Crear Material Duplicado (Debe fallar)", func(t *testing.T) {
+	t.Run("Create Duplicate Material (Should Fail)", func(t *testing.T) {
 		setupMaterialTest(t)
 
-		dto := types.CreateMaterialDTO{Name: "PLA Unico", Type: "Filamento"}
+		dto := types.CreateMaterialDTO{Name: "PLA Unique", Type: "Filament"}
 
-		// Primer insert
-		_ = CreateMaterialUseCase(dto)
+		// First insert
+		_ = CreateMaterialUseCase(dto, testCompanyIDMaterial)
 
-		// Segundo insert (Mismo nombre)
-		err := CreateMaterialUseCase(dto)
+		// Second insert (Same name)
+		err := CreateMaterialUseCase(dto, testCompanyIDMaterial)
 		if err == nil {
-			t.Error("Debió fallar por nombre duplicado, pero pasó")
+			t.Error("Should have failed due to duplicate name, but passed")
 		}
 	})
 
-	// --- 2. TEST DE LECTURA (LISTADO) ---
-	t.Run("Listar Materiales", func(t *testing.T) {
+	// --- 2. READ TESTS (LIST) ---
+	t.Run("List Materials", func(t *testing.T) {
 		setupMaterialTest(t)
 
-		// Insertamos 2 materiales
-		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "Mat 1", Type: "A"})
-		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "Mat 2", Type: "B"})
+		// Insert 2 materials
+		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "Mat 1", Type: "A"}, testCompanyIDMaterial)
+		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "Mat 2", Type: "B"}, testCompanyIDMaterial)
 
-		// CORRECCIÓN: Pasamos el filtro vacío types.MaterialFilter{}
-		result, err := GetAllMaterialsUseCase(types.MaterialFilter{})
+		result, err := GetAllMaterialsUseCase(types.MaterialFilter{}, testCompanyIDMaterial)
 		if err != nil {
-			t.Fatalf("Error al listar: %v", err)
+			t.Fatalf("Failed to list: %v", err)
 		}
 
-		// CORRECCIÓN: Quitamos el *, es un slice normal
 		if len(*result) != 2 {
-			t.Errorf("Esperaba 2 materiales, obtuvo %d", len(*result))
+			t.Errorf("Expected 2 materials, got %d", len(*result))
 		}
 	})
 
-	// --- 3. TEST DE ACTUALIZACIÓN ---
-	t.Run("Actualizar Material", func(t *testing.T) {
+	// --- 3. UPDATE TESTS ---
+	t.Run("Update Material", func(t *testing.T) {
 		db := setupMaterialTest(t)
 
-		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "Nombre Viejo", Type: "Viejo"})
+		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "Old Name", Type: "Old"}, testCompanyIDMaterial)
 
 		id := 1
 		updateDTO := types.UpdateMaterialDTO{
-			Name:        "Nombre Nuevo",
-			Type:        "Nuevo Tipo",
-			Description: "Editado",
+			Name:        "New Name",
+			Type:        "New Type",
+			Description: "Edited",
 		}
 
-		err := UpdateMaterialUseCase(id, updateDTO)
+		err := UpdateMaterialUseCase(id, updateDTO, testCompanyIDMaterial)
 		if err != nil {
-			t.Fatalf("Error al actualizar: %v", err)
+			t.Fatalf("Failed to update: %v", err)
 		}
 
 		var mat types.Material
 		db.First(&mat, id)
-		if mat.Name != "Nombre Nuevo" {
-			t.Errorf("No se actualizó el nombre. Valor: %s", mat.Name)
+		if mat.Name != "New Name" {
+			t.Errorf("Name was not updated. Value: %s", mat.Name)
 		}
 	})
 
-	// --- 4. TEST DE BORRADO (SOFT DELETE) ---
-	t.Run("Eliminar Material (Soft Delete)", func(t *testing.T) {
+	// --- 4. DELETE (SOFT DELETE) TESTS ---
+	t.Run("Delete Material (Soft Delete)", func(t *testing.T) {
 		db := setupMaterialTest(t)
 
-		// Crear material ID 1
-		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "A Borrar", Type: "X"})
+		// Create material ID 1
+		CreateMaterialUseCase(types.CreateMaterialDTO{Name: "To Delete", Type: "X"}, testCompanyIDMaterial)
 
-		// Eliminar
-		err := DeleteMaterialUseCase(1)
+		// Delete
+		err := DeleteMaterialUseCase(1, testCompanyIDMaterial)
 		if err != nil {
-			t.Fatalf("Error al borrar: %v", err)
+			t.Fatalf("Failed to delete: %v", err)
 		}
 
-		// Verificaciones:
+		// Verifications:
 
-		// A. GetAll no lo debe traer
-		// CORRECCIÓN: Filtro vacío
-		list, _ := GetAllMaterialsUseCase(types.MaterialFilter{})
+		// A. GetAll should NOT return it
+		list, _ := GetAllMaterialsUseCase(types.MaterialFilter{}, testCompanyIDMaterial)
 
-		// CORRECCIÓN: Quitamos el *
 		if len(*list) != 0 {
-			t.Errorf("El listado debió venir vacío, trajo %d", len(*list))
+			t.Errorf("List should be empty, got %d", len(*list))
 		}
 
-		// B. En la DB física el registro SIGUE existiendo (Soft Delete)
+		// B. Physical record STILL exists in DB (Soft Delete)
 		var count int64
 		db.Unscoped().Model(&types.Material{}).Where("id = ?", 1).Count(&count)
 		if count != 1 {
-			t.Error("El registro físico desapareció de la DB (Debió ser borrado lógico)")
+			t.Error("Physical record disappeared from DB (should have been soft deleted)")
 		}
 
-		// C. Verificar que deleted_at no sea nulo
+		// C. Verify deleted_at is not null
 		var mat types.Material
 		db.Unscoped().First(&mat, 1)
 		if !mat.DeletedAt.Valid {
-			t.Error("El campo DeletedAt está vacío")
+			t.Error("DeletedAt field is empty")
 		}
 	})
 }

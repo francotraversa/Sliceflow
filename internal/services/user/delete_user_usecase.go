@@ -10,7 +10,7 @@ import (
 func DeleteUserUseCase(targetID uint, requesterID uint, requesterRole string) error {
 	db := storage.DatabaseInstance{}.Instance()
 
-	if requesterID != targetID && requesterRole != "admin" {
+	if requesterID != targetID && requesterRole != "admin" && requesterRole != "owner" {
 		return fmt.Errorf("You do not have permission to disable this account.")
 	}
 
@@ -20,7 +20,7 @@ func DeleteUserUseCase(targetID uint, requesterID uint, requesterRole string) er
 	}
 
 	if currentUser.Status == "disabled" {
-		return fmt.Errorf("The account is already disable")
+		return fmt.Errorf("The account is already disabled")
 	}
 
 	currentUser.Status = "disabled"

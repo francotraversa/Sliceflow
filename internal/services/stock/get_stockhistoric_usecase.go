@@ -8,11 +8,11 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func GetStockHistoryUseCase(filter types.HistoryFilter) (*[]types.StockMovement, error) {
+func GetStockHistoryUseCase(filter types.HistoryFilter, companyID uint) (*[]types.StockMovement, error) {
 	db := storage.DatabaseInstance{}.Instance()
 	cacheKey := fmt.Sprintf(
-		"historic:list:sku=%s:type=%s:start=%s:end=%s",
-		filter.SKU, filter.Type, filter.StartDate, filter.EndDate,
+		"historic:list:sku=%s:type=%s:start=%s:end=%s:company=%d",
+		filter.SKU, filter.Type, filter.StartDate, filter.EndDate, companyID,
 	)
 
 	var movements []types.StockMovement
@@ -21,7 +21,7 @@ func GetStockHistoryUseCase(filter types.HistoryFilter) (*[]types.StockMovement,
 		return &movements, nil
 	}
 
-	query := db.Model(&types.StockMovement{})
+	query := db.Model(&types.StockMovement{}).Where("id_company = ?", companyID)
 
 	if filter.SKU != "" {
 		query = query.Where("stock_sku = ?", filter.SKU)

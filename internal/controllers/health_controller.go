@@ -8,8 +8,8 @@ import (
 )
 
 // RegisterHealth godoc
-// @Summary      Chequear estado
-// @Description  Devuelve OK si el servicio está arriba
+// @Summary      Health check
+// @Description  Returns OK if the service is up
 // @Tags         Health
 // @Produce      json
 // @Success      200  {string}  string "OK"

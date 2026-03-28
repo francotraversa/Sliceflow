@@ -9,112 +9,111 @@ import (
 	"gorm.io/gorm"
 )
 
-// setupStockTest adapta tu función de setup para el catálogo de productos
+const testCompanyIDStock uint = 1
+
+// setupStockTest sets up an in-memory DB for product catalog tests
 func setupStockTest(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	if err != nil {
-		t.Fatalf("Error al abrir DB de test: %v", err)
+		t.Fatalf("Failed to open test DB: %v", err)
 	}
 
-	// Migramos el modelo de Stock
+	// Migrate the Stock model
 	db.AutoMigrate(&types.StockItem{})
 
-	// Inyectamos la base de datos de test en tu instancia global
+	// Inject the test DB into the global instance
 	storage.OverrideDatabaseInstance(db)
 	return db
 }
 func TestStockService(t *testing.T) {
 	db := setupStockTest(t)
 
-	t.Run("Crear Producto Exitoso", func(t *testing.T) {
+	t.Run("Create Product Successfully", func(t *testing.T) {
 		req := types.ProductCreateRequest{
 			SKU:         "SKU-779-1",
-			Name:        "Tornillo Phillips",
-			Description: "1/2 pulgada",
+			Name:        "Phillips Screw",
+			Description: "1/2 inch",
 			Quantity:    100,
 			Price:       90,
 		}
 
-		err := CreateProductUseCase(req)
+		err := CreateProductUseCase(req, testCompanyIDStock)
 		if err != nil {
-			t.Fatalf("No debería haber error al crear producto: %v", err)
+			t.Fatalf("Should not have errored when creating product: %v", err)
 		}
 
 		var found types.StockItem
 		db.Where("sku = ?", "SKU-779-1").First(&found)
-		if found.Name != "Tornillo Phillips" {
-			t.Errorf("Se esperaba 'Tornillo Phillips', se obtuvo %s", found.Name)
+		if found.Name != "Phillips Screw" {
+			t.Errorf("Expected 'Phillips Screw', got %s", found.Name)
 		}
 	})
 
-	t.Run("Evitar SKU Duplicado", func(t *testing.T) {
+	t.Run("Prevent Duplicate SKU", func(t *testing.T) {
 		req := types.ProductCreateRequest{
-			SKU:  "SKU-779-1", // SKU que ya existe del test anterior
-			Name: "Producto Duplicado",
+			SKU:  "SKU-779-1", // SKU already exists from previous test
+			Name: "Duplicate Product",
 		}
 
-		err := CreateProductUseCase(req)
+		err := CreateProductUseCase(req, testCompanyIDStock)
 		if err == nil {
-			t.Error("Se esperaba un error por SKU duplicado")
+			t.Error("Expected error for duplicate SKU")
 		}
 	})
 
-	t.Run("Soft Delete de Producto", func(t *testing.T) {
-		// Creamos uno nuevo para borrar
-		item := types.StockItem{SKU: "DEL-99", Name: "Borrame", Status: "active"}
+	t.Run("Soft Delete Product", func(t *testing.T) {
+		// Create a new product to delete
+		item := types.StockItem{SKU: "DEL-99", Name: "DeleteMe", Status: "active", IdCompany: testCompanyIDStock}
 		db.Create(&item)
 
-		// Llamamos al UseCase (Asumiendo que ya lo actualizaste para recibir string)
-		err := DeleteByIdUseCase(item.SKU)
+		// Call the UseCase
+		err := DeleteByIdUseCase(item.SKU, testCompanyIDStock)
 		if err != nil {
-			t.Fatalf("Error al borrar: %v", err)
+			t.Fatalf("Failed to delete: %v", err)
 		}
 
-		// 1. Verificar que NO lo encuentra en consulta normal
+		// 1. Verify it's NOT found in normal queries
 		var found types.StockItem
-		// CORRECCIÓN: Usamos Where explícito porque SKU es un string
 		result := db.Where("sku = ?", item.SKU).First(&found)
 
 		if result.Error == nil {
-			t.Error("El producto sigue visible en consultas normales")
+			t.Error("Product is still visible in normal queries")
 		}
 
-		// 2. Verificar que SIGUE en la DB físicamente (Unscoped)
+		// 2. Verify it STILL exists physically in the DB (Unscoped)
 		var raw types.StockItem
-		// CORRECCIÓN: Usamos Where explícito también aquí
 		db.Unscoped().Where("sku = ?", item.SKU).First(&raw)
 
 		if !raw.DeletedAt.Valid {
-			t.Error("DeletedAt no fue completado por GORM")
+			t.Error("DeletedAt was not set by GORM")
 		}
 	})
 
-	t.Run("Actualizar Producto - Exito y Fallo", func(t *testing.T) {
-		// A. Caso Feliz
-		item := types.StockItem{SKU: "EDIT-1", Name: "Viejo", Quantity: 50}
+	t.Run("Update Product - Success and Failure", func(t *testing.T) {
+		// A. Happy Path
+		item := types.StockItem{SKU: "EDIT-1", Name: "Old Name", Quantity: 50, IdCompany: testCompanyIDStock}
 		db.Create(&item)
 
-		updateReq := types.ProductUpdateRequest{Name: "Nuevo Nombre"}
+		updateReq := types.ProductUpdateRequest{Name: "New Name"}
 
-		// Llamada al UseCase con SKU string
-		_, err := UpdateByIdProductUseCase(item.SKU, updateReq)
+		// Call UseCase with SKU string
+		_, err := UpdateByIdProductUseCase(item.SKU, updateReq, testCompanyIDStock)
 		if err != nil {
-			t.Errorf("Error inesperado al actualizar: %v", err)
+			t.Errorf("Unexpected error during update: %v", err)
 		}
 
-		// Validamos cambio
+		// Validate the change
 		var found types.StockItem
-		// CORRECCIÓN: Búsqueda explícita por SKU
 		db.Where("sku = ?", item.SKU).First(&found)
 
-		if found.Name != "Nuevo Nombre" {
-			t.Errorf("No se actualizó el nombre. Valor actual: %s", found.Name)
+		if found.Name != "New Name" {
+			t.Errorf("Name was not updated. Current value: %s", found.Name)
 		}
 
-		// B. Caso Fallido (SKU no existe)
-		_, err = UpdateByIdProductUseCase("SKU-FALSO-999", updateReq)
+		// B. Failure Case (SKU does not exist)
+		_, err = UpdateByIdProductUseCase("FAKE-SKU-999", updateReq, testCompanyIDStock)
 		if err == nil {
-			t.Error("Se esperaba error al actualizar SKU inexistente, pero no falló")
+			t.Error("Expected error when updating non-existent SKU, but it didn't fail")
 		}
 	})
 }

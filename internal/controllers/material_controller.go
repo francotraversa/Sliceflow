@@ -5,18 +5,19 @@ import (
 	"net/http"
 	"strconv"
 
+	middleware "github.com/francotraversa/Sliceflow/internal/middlewares"
 	services "github.com/francotraversa/Sliceflow/internal/services/material"
 	"github.com/francotraversa/Sliceflow/internal/types"
 	"github.com/labstack/echo/v4"
 )
 
 // CreateMaterialHandler godoc
-// @Summary      Crear un nuevo material
-// @Description  Registra un insumo (Filamento, Resina, etc) para usar en las órdenes de producción.
+// @Summary      Create a new material
+// @Description  Registers a supply (Filament, Resin, etc.) for use in production orders.
 // @Tags         Production
 // @Accept       json
 // @Produce      json
-// @Param        request body   types.CreateMaterialDTO  true  "Datos del Material"
+// @Param        request body   types.CreateMaterialDTO  true  "Material data"
 // @Success      201     {object}  map[string]string
 // @Failure      400     {object}  map[string]string
 // @Router       /hornero/authed/materials/addmat [post]
@@ -26,7 +27,11 @@ func CreateMaterialHandler(c echo.Context) error {
 	if err := c.Bind(&newmaterial); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
-	if err := services.CreateMaterialUseCase(newmaterial); err != nil {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	if err := services.CreateMaterialUseCase(newmaterial, claims.CompanyId); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
@@ -35,13 +40,13 @@ func CreateMaterialHandler(c echo.Context) error {
 }
 
 // UpdateMaterialHandler godoc
-// @Summary      Actualizar un material existente
-// @Description  Modifica los datos de un insumo por su ID.
+// @Summary      Update an existing material
+// @Description  Modifies a supply's data by its ID.
 // @Tags         Production
 // @Accept       json
 // @Produce      json
-// @Param        id      path    int                         true  "ID del Material"
-// @Param        request body    types.UpdateMaterialDTO  true  "Nuevos datos"
+// @Param        id      path    int                         true  "Material ID"
+// @Param        request body    types.UpdateMaterialDTO  true  "Updated data"
 // @Success      200     {object}  map[string]string
 // @Failure      400     {object}  map[string]string
 // @Failure      404     {object}  map[string]string
@@ -56,19 +61,23 @@ func UpdateMaterialHandler(c echo.Context) error {
 	if err := c.Bind(&mat); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
-	if err := services.UpdateMaterialUseCase(id, mat); err != nil {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	if err := services.UpdateMaterialUseCase(id, mat, claims.CompanyId); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The material %s has been updated", mat.Name)})
 }
 
 // DeleteMaterialHandler godoc
-// @Summary      Eliminar un material (Borrado Lógico)
-// @Description  Marca un insumo como eliminado. No lo borra físicamente de la DB.
+// @Summary      Delete a material (Soft-delete)
+// @Description  Marks a supply as deleted. Does not physically remove it from the DB.
 // @Tags         Production
 // @Accept       json
 // @Produce      json
-// @Param        id   path      int  true  "ID del Material"
+// @Param        id   path      int  true  "Material ID"
 // @Success      200  {object}  map[string]string
 // @Failure      400  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
@@ -83,7 +92,11 @@ func DeleteMaterialHandler(c echo.Context) error {
 	if err := c.Bind(&mat); err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid Json")
 	}
-	if err := services.DeleteMaterialUseCase(id); err != nil {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	if err := services.DeleteMaterialUseCase(id, claims.CompanyId); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The material %s has been deleted", mat.Name)})
@@ -91,8 +104,8 @@ func DeleteMaterialHandler(c echo.Context) error {
 }
 
 // GetMaterialsHandler godoc
-// @Summary      Listar todos los materiales activos
-// @Description  Obtiene la lista de insumos disponibles (excluye eliminados).
+// @Summary      List all active materials
+// @Description  Returns the list of available supplies (excludes deleted).
 // @Tags         Production
 // @Accept       json
 // @Produce      json
@@ -105,7 +118,11 @@ func GetMaterialsHandler(c echo.Context) error {
 	if err := c.Bind(&filter); err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Filters don't work"})
 	}
-	materials, err := services.GetAllMaterialsUseCase(filter)
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	materials, err := services.GetAllMaterialsUseCase(filter, claims.CompanyId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}

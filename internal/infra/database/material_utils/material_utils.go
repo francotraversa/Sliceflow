@@ -9,11 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetMaterialbyID(id int) (*types.Material, error) {
+func GetMaterialbyID(id int, companyID uint) (*types.Material, error) {
 	db := storage.DatabaseInstance{}.Instance()
 	var material types.Material
 
-	if err := db.First(&material, id).Error; err != nil {
+	if err := db.Where("id = ? AND id_company = ?", id, companyID).First(&material).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("Material doesn't exists")
 		}
@@ -27,7 +27,7 @@ func GetMaterial(dto types.CreateMaterialDTO) (*types.Material, error) {
 	db := storage.DatabaseInstance{}.Instance()
 	var material types.Material
 
-	// Usamos First
+	// Use First to find by name
 	if err := db.Where("name = ?", dto.Name).First(&material).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -35,6 +35,6 @@ func GetMaterial(dto types.CreateMaterialDTO) (*types.Material, error) {
 		return nil, fmt.Errorf("error database lookup for machine %s: %w", dto.Name, err)
 	}
 
-	// 3. Si llegamos acá, la máquina existe.
+	// 3. If we get here, the material exists.
 	return &material, nil
 }

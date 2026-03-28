@@ -8,13 +8,10 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func GetAllOrdersUseCase(filter types.OrderFilter) (*[]types.ProductionOrder, error) {
+func GetAllOrdersUseCase(filter types.OrderFilter, companyID uint) (*[]types.ProductionOrder, error) {
 	db := storage.DatabaseInstance{}.Instance()
-
-	// Actualizamos la cacheKey para que incluya las fechas,
-	// si no, te mostraría datos viejos al filtrar.
-	cacheKey := fmt.Sprintf("orders:list:st_%s:id_%d:from_%s:to_%s:sort_%v",
-		filter.Status, filter.ID, filter.FromDate, filter.ToDate, filter.SortPriority)
+	cacheKey := fmt.Sprintf("orders:list:st_%s:id_%d:from_%s:to_%s:sort_%v:comp_%d",
+		filter.Status, filter.ID, filter.FromDate, filter.ToDate, filter.SortPriority, companyID)
 
 	var orders []types.ProductionOrder
 
@@ -22,7 +19,7 @@ func GetAllOrdersUseCase(filter types.OrderFilter) (*[]types.ProductionOrder, er
 		return &orders, nil
 	}
 
-	query := db.Preload("Material").Preload("Machine").Preload("Items")
+	query := db.Preload("Material").Preload("Machine").Preload("Items").Where("id_company = ?", companyID)
 
 	// 1. Filtro por ID (Prioridad absoluta)
 	if filter.ID != 0 {

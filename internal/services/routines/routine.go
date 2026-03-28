@@ -18,7 +18,7 @@ func CheckAndSetPriorities() {
 	var orders []types.ProductionOrder
 
 	if err := db.Find(&orders).Error; err != nil {
-		fmt.Println("Error getting Orders in Rutines:", err)
+		fmt.Println("Error getting Orders in Routines:", err)
 		return
 	}
 
@@ -41,12 +41,12 @@ func CheckAndSetPriorities() {
 				order.Priority = "P1"
 				madeChanges = true
 			}
-			if !strings.Contains(order.Notes, "[VENCIDA]") {
-				order.Notes = strings.TrimSpace(fmt.Sprintf("[VENCIDA] %s", order.Notes))
+			if !strings.Contains(order.Notes, "[OVERDUE]") {
+				order.Notes = strings.TrimSpace(fmt.Sprintf("[OVERDUE] %s", order.Notes))
 				madeChanges = true
 			}
 
-			// B. URGENTE (< 24 hs)
+			// B. URGENT (< 24 hrs)
 		} else if hoursLeft < 24 {
 			if order.Priority != "P1" {
 				order.Priority = "P1"
@@ -61,15 +61,15 @@ func CheckAndSetPriorities() {
 		}
 
 		if order.Status == "in-progress" && hoursStalled > 24 {
-			if !strings.Contains(order.Notes, "[ESTANCADA?]") {
-				order.Notes = strings.TrimSpace(fmt.Sprintf("%s [ESTANCADA?]", order.Notes))
+			if !strings.Contains(order.Notes, "[STALLED?]") {
+				order.Notes = strings.TrimSpace(fmt.Sprintf("%s [STALLED?]", order.Notes))
 				madeChanges = true
 			}
 		}
 
 		if madeChanges {
-			if err := db_utils.Save(&order); err != nil {
-				fmt.Printf("Error guardando orden %d: %v\n", order.ID, err)
+			if err := db_utils.CreateWithoutCompany(&order); err != nil {
+				fmt.Printf("Error saving order %d: %v\n", order.IdOrder, err)
 				continue
 			}
 			updatedCount++

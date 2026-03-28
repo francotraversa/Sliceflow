@@ -1,12 +1,12 @@
 package types
 
 type ProductionDashboardResponse struct {
-	ActiveJobs      int64   `json:"active_jobs"`      // Cantidad de órdenes en curso
-	UtilizationRate float64 `json:"utilization_rate"` // % de máquinas ocupadas
+	ActiveJobs      int64   `json:"active_jobs"`      // Number of active orders
+	UtilizationRate float64 `json:"utilization_rate"` // % of machines in use
 
-	TotalRevenueFDM float64 `json:"revenue_fdm,omitempty"` // Opcional por ahora
-	TotalRevenueSLS float64 `json:"revenue_sls,omitempty"` // Opcional por ahora
+	TotalRevenueFDM float64 `json:"revenue_fdm,omitempty"` // Optional for now
+	TotalRevenueSLS float64 `json:"revenue_sls,omitempty"` // Optional for now
 
-	Machines []Machine         `json:"machines"`      // Lista para mostrar estado de c/u
-	Orders   []ProductionOrder `json:"active_orders"` // Lista de lo que se está haciendo ya
+	Machines []Machine         `json:"machines"`      // List of machines with their status
+	Orders   []ProductionOrder `json:"active_orders"` // Currently active orders
 }

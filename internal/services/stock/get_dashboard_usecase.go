@@ -7,14 +7,14 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func GetDashboardStatsUseCase() (*types.DashboardResponse, error) {
+func GetDashboardStatsUseCase(companyID uint) (*types.DashboardResponse, error) {
 	db := storage.DatabaseInstance{}.Instance()
 	var response types.DashboardResponse
 
-	db.Model(&types.StockItem{}).Where("status = ?", "active").Count(&response.TotalItems)
+	db.Model(&types.StockItem{}).Where("status = ? AND id_company = ?", "active", companyID).Count(&response.TotalItems)
 
 	db.Model(&types.StockItem{}).
-		Where("status = ?", "active").
+		Where("status = ? AND id_company = ?", "active", companyID).
 		Select("COALESCE(SUM(quantity * price), 0)").
 		Scan(&response.TotalValue)
 
@@ -41,7 +41,7 @@ func GetDashboardStatsUseCase() (*types.DashboardResponse, error) {
 		Select("stock_sku, SUM(qty_delta) as total_sold").
 		Where("type = ?", "OUT").
 		Group("stock_sku").
-		Order("total_sold ASC"). // Orden ascendente porque son números negativos (ej: -100)
+		Order("total_sold ASC"). // Ascending order because values are negative (e.g. -100)
 		Scan(&results).Error
 
 	if err != nil {

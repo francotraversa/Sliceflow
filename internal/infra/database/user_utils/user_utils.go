@@ -24,15 +24,22 @@ func FindUserByUserId(id uint) *types.User {
 	return &user
 }
 
-func FindUsersByRole(role string) []types.User {
+func FindUsersByRole(role string, companyId uint) []types.User {
 	db := database.DatabaseInstance{}.Instance()
 	var users []types.User
-	query := db.Model(&types.User{})
+	query := db.Model(&types.User{}).Where("id_company = ?", companyId)
 
 	if role != "" {
 		query = query.Where("role = ?", role)
 	}
 
 	query.Find(&users)
+	return users
+}
+
+func FindAllUsers() []types.User {
+	db := database.DatabaseInstance{}.Instance()
+	var users []types.User
+	db.Find(&users)
 	return users
 }

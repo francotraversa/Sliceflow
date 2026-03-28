@@ -17,16 +17,18 @@ type Machine struct {
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 
-	Name   string `gorm:"type:varchar(100);not null" json:"name"`        // Nombre obligatorio
-	Type   string `gorm:"type:varchar(50);not null" json:"type"`         // FDM o SLS
-	Status string `gorm:"type:varchar(20);default:'idle'" json:"status"` // Arranca libre
+	Name      string   `gorm:"type:varchar(100);not null" json:"name"`        // Required name
+	Type      string   `gorm:"type:varchar(50);not null" json:"type"`         // FDM or SLS
+	Status    string   `gorm:"type:varchar(20);default:'idle'" json:"status"` // Starts as idle
+	IdCompany uint     `gorm:"not null" json:"id_company"`
+	Company   *Company `gorm:"foreignKey:IdCompany;references:IdCompany"`
 }
 type CreateMachineDTO struct {
-	Name string `json:"name"` // Ej: "Prusa i3 MK3S+"
-	Type string `json:"type"` // Ej: "FDM", "SLS"
+	Name string `json:"name"` // e.g. "Prusa i3 MK3S+"
+	Type string `json:"type"` // e.g. "FDM", "SLS"
 }
 
-// DTO para Actualizar (Incluye Status)
+// DTO for updating a machine (includes Status)
 type UpdateMachineDTO struct {
 	Name   *string `json:"name"`
 	Type   *string `json:"type"`

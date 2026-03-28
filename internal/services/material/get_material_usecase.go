@@ -9,7 +9,7 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func GetAllMaterialsUseCase(filter types.MaterialFilter) (*[]types.Material, error) {
+func GetAllMaterialsUseCase(filter types.MaterialFilter, companyID uint) (*[]types.Material, error) {
 	db := storage.DatabaseInstance{}.Instance()
 	cacheKey := fmt.Sprintf("materials:list:%s:%s", filter.Name, filter.Type)
 	var materials []types.Material
@@ -18,7 +18,7 @@ func GetAllMaterialsUseCase(filter types.MaterialFilter) (*[]types.Material, err
 		return &materials, nil
 	}
 
-	query := db.Model(&types.Material{})
+	query := db.Model(&types.Material{}).Where("id_company = ?", companyID)
 
 	if filter.Name != "" {
 		query = query.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(filter.Name)+"%")

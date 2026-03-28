@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	machineutils "github.com/francotraversa/Sliceflow/internal/infra/database/machine_utils"
-	materialutils "github.com/francotraversa/Sliceflow/internal/infra/database/material_utils"
 	ordersutils "github.com/francotraversa/Sliceflow/internal/infra/database/orders_utils"
 	db_utils "github.com/francotraversa/Sliceflow/internal/infra/database/utils"
 	servicesWeb "github.com/francotraversa/Sliceflow/internal/services/common"
@@ -15,82 +13,77 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func CreateOrderUseCase(dto types.CreateOrderDTO) error {
-	if dto.ID != nil {
-		order, _ := ordersutils.CheckOrder(dto)
-		if order != nil {
-			return fmt.Errorf("The Order %d already exists", *dto.ID)
-		}
-	}
-
-	_, err := materialutils.GetMaterialbyID(dto.MaterialID)
-	if err != nil {
-		return err
-	}
-
-	if dto.MachineID != nil {
-		_, err = machineutils.GetMachinebyID(*dto.MachineID)
+func CreateOrderUseCase(dtoOrder types.CreateOrderDTO, idCompany uint) error {
+	if dtoOrder.ID != nil {
+		order, err := ordersutils.CheckOrder(dtoOrder)
 		if err != nil {
-			return fmt.Errorf("Machine could not be found: %w", err)
+			return fmt.Errorf("error checking order: %w", err)
+		}
+		if order != nil {
+			return fmt.Errorf("The Order %d already exists", *dtoOrder.ID)
 		}
 	}
+	initialStatus := "pending"
 	var itemsDB []types.OrderItem
 	totalPiecesCalculated := 0
-
-	for _, itemDTO := range dto.Items {
+	totalPriceCalculated := 0.0
+	for _, itemDTO := range dtoOrder.Items {
 		totalPiecesCalculated += itemDTO.Quantity
-
+		totalPriceCalculated += *itemDTO.Price
 		itemsDB = append(itemsDB, types.OrderItem{
-			StlName:    itemDTO.ProductName,
+			StlName:    itemDTO.StlName,
 			Quantity:   itemDTO.Quantity,
 			DonePieces: 0,
+			MaterialID: itemDTO.MaterialID,
+			MachineID:  itemDTO.MachineID,
+			Price:      itemDTO.Price,
 		})
+
+		if itemDTO.MachineID != nil {
+			initialStatus = "queued"
+		}
+
+		if itemDTO.MachineID != nil {
+			newStatus := "printing"
+			updmachine := types.UpdateMachineDTO{
+				Status: &newStatus,
+			}
+			err := services.UpdateMachineUseCase(*itemDTO.MachineID, updmachine, idCompany)
+
+			if err != nil {
+				return fmt.Errorf("could not update machine status: %w", err)
+			}
+
+		}
 	}
-	deadlineTime, err := time.Parse("2006-01-02", dto.Deadline)
+
+	deadlineTime, err := time.Parse("2006-01-02", dtoOrder.Deadline)
 	if err != nil {
 		return errors.New("Format Date invalid (use YYYY-MM-DD)")
 	}
 
-	totalMinutes := (dto.EstimatedHours * 60) + dto.EstimatedMinutes
-
-	initialStatus := "pending"
-	if dto.MachineID != nil {
-		initialStatus = "queued" // Si ya tiene máquina, pasa a cola
-	}
+	totalMinutes := (dtoOrder.EstimatedHours * 60) + dtoOrder.EstimatedMinutes
 
 	newOrder := types.ProductionOrder{
-		ID:               *dto.ID,
-		ClientName:       dto.ClientName,
-		Items:            itemsDB,               // La lista de piezas que armamos en el loop
-		TotalPieces:      totalPiecesCalculated, // Usamos la suma de las cantidades
+		IdOrder:          *dtoOrder.ID,
+		IdCompany:        idCompany,
+		ClientName:       dtoOrder.ClientName,
+		Items:            itemsDB,               // Items list built in the loop
+		TotalPieces:      totalPiecesCalculated, // Sum of all item quantities
 		DonePieces:       0,
-		MaterialID:       dto.MaterialID,
-		Priority:         dto.Priority,
-		Notes:            dto.Notes,
+		Priority:         dtoOrder.Priority,
+		Notes:            dtoOrder.Notes,
 		EstimatedMinutes: totalMinutes,
 		Deadline:         deadlineTime,
 		Status:           initialStatus,
-		OperatorID:       dto.OperatorID,
-		MachineID:        dto.MachineID,
-		Price:            dto.Price, // Asignamos el precio del DTO al TotalPrice del modelo
+		OperatorID:       dtoOrder.OperatorID,
+		TotalPrice:       &totalPriceCalculated,
 	}
 
 	if err := db_utils.Create(&newOrder); err != nil {
 		return fmt.Errorf("could not save order and items: %w", err)
 	}
 
-	if dto.MachineID != nil {
-		newStatus := "printing"
-		updmachine := types.UpdateMachineDTO{
-			Status: &newStatus,
-		}
-		err := services.UpdateMachineUseCase(*dto.MachineID, updmachine)
-
-		if err != nil {
-			return fmt.Errorf("could not update machine status: %w", err)
-		}
-
-	}
 	servicesWeb.InvalidateCache("orders:list:*")
 	servicesWeb.PublishEvent("dashboard_updates", `{"type": "ORDER_CREATED", "message": "NEW MULTI-ITEM ORDER CREATED"}`)
 

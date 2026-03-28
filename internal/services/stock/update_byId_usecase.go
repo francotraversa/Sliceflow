@@ -9,7 +9,7 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func UpdateByIdProductUseCase(sku string, req types.ProductUpdateRequest) (*types.StockItem, error) {
+func UpdateByIdProductUseCase(sku string, req types.ProductUpdateRequest, companyID uint) (*types.StockItem, error) {
 	itemexist, err := stock_utils.CheckProductExistsBySKU(sku)
 
 	if itemexist == nil {
@@ -35,10 +35,10 @@ func UpdateByIdProductUseCase(sku string, req types.ProductUpdateRequest) (*type
 		itemexist.MinQty = req.MinQty
 	}
 
-	if err := db_utils.Save(itemexist); err != nil {
+	if err := db_utils.Save(itemexist, companyID); err != nil {
 		return nil, fmt.Errorf("Error update %s", itemexist.SKU)
 	}
-	services.InvalidateCache("stock:list:all")
+	services.InvalidateCache(fmt.Sprintf("stock:list:%d", companyID))
 	services.PublishEvent("dashboard_updates", `{"type": "PRODUCT_UPDATED", "message": "PRODUCT UPDATED"}`)
 
 	return itemexist, nil

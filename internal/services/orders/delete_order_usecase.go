@@ -9,22 +9,24 @@ import (
 	"gorm.io/gorm"
 )
 
-func DeleteOrderUseCase(id int) error {
+func DeleteOrderUseCase(id int, companyID uint) error {
 	db := storage.DatabaseInstance{}.Instance()
 
-	// Usamos una transacción para asegurar consistencia
+	// Use a transaction to ensure consistency
 	return db.Transaction(func(tx *gorm.DB) error {
 		var order types.ProductionOrder
 
-		if err := tx.First(&order, id).Error; err != nil {
+		if err := tx.Preload("Items").Where("id_company = ?", companyID).First(&order, id).Error; err != nil {
 			return fmt.Errorf("order not found: %w", err)
 		}
 
-		if order.MachineID != nil && *order.MachineID != 0 {
-			if err := tx.Model(&types.Machine{}).Where("id = ?", *order.MachineID).Update("status", "idle").Error; err != nil {
-				return fmt.Errorf("failed to set machine to idle: %w", err)
+		for _, item := range order.Items {
+			if item.MachineID != nil && *item.MachineID != 0 {
+				if err := tx.Model(&types.Machine{}).Where("id = ?", *item.MachineID).Update("status", "idle").Error; err != nil {
+					return fmt.Errorf("failed to set machine to idle: %w", err)
+				}
+				services.PublishEvent("dashboard_updates", `{"type": "MACHINE_STATUS_CHANGED", "message": "Machine set to idle due to order deletion"}`)
 			}
-			services.PublishEvent("dashboard_updates", `{"type": "MACHINE_STATUS_CHANGED", "message": "Machine set to idle due to order deletion"}`)
 		}
 
 		if err := tx.Delete(&order).Error; err != nil {

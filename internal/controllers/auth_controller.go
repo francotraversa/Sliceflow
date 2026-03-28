@@ -9,12 +9,12 @@ import (
 )
 
 // LoginHandler godoc
-// @Summary      Iniciar sesión
-// @Description  Autentica al usuario y devuelve un token JWT
+// @Summary      Login
+// @Description  Authenticates the user and returns a JWT token
 // @Tags         Authenticator
 // @Accept       json
 // @Produce      json
-// @Param        credentials  body      types.UserLoginCreds  true  "Credenciales"
+// @Param        credentials  body      types.UserLoginCreds  true  "Credentials"
 // @Success      200          {object}  types.TokenResponse
 // @Router       /hornero/auth/login [post]
 func LoginHandler(c echo.Context) error {

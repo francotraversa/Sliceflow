@@ -20,10 +20,14 @@ func CreateUserUseCase(user types.UserCreateCreds) error {
 		return fmt.Errorf("short password (min 6)")
 	}
 
+	if user.Role == "superadmin" {
+		return fmt.Errorf("You are not allowed to create a superadmin")
+	}
+
 	if user.Role == "" {
 		user.Role = "user"
 	} else {
-		if user.Role == "user" || user.Role == "admin" {
+		if user.Role == "user" || user.Role == "owner" {
 			user.Role = strings.ToLower(strings.TrimSpace(user.Role))
 		} else {
 			return fmt.Errorf("invalid user role")
@@ -36,7 +40,10 @@ func CreateUserUseCase(user types.UserCreateCreds) error {
 		return fmt.Errorf("The user already exists")
 	}
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("Error generating password hash")
+	}
 
 	u := types.User{
 		Username: user.Username,

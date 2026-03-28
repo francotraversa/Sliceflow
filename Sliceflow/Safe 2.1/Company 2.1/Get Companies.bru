@@ -1,0 +1,16 @@
+meta {
+  name: Get Companies
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/hornero/authed/owner/allcompany
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

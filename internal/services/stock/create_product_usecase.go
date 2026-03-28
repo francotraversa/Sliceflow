@@ -10,7 +10,7 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func CreateProductUseCase(item types.ProductCreateRequest) error {
+func CreateProductUseCase(item types.ProductCreateRequest, companyID uint) error {
 	item.SKU = strings.ToUpper(strings.TrimSpace(item.SKU))
 	item.Name = strings.TrimSpace(item.Name)
 
@@ -54,6 +54,7 @@ func CreateProductUseCase(item types.ProductCreateRequest) error {
 		Quantity:    item.Quantity,
 		Price:       item.Price,
 		MinQty:      item.MinQty,
+		IdCompany:   companyID,
 	}
 	if err := db_utils.Create(&product); err != nil {
 		return fmt.Errorf("Error Create Product")

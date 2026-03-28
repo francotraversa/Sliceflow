@@ -40,6 +40,7 @@ func (database DatabaseInstance) NewDataBase() {
 	}
 	log.Println("DB CONNECTED")
 
+	db.AutoMigrate(&types.Company{})
 	db.AutoMigrate(&types.User{})
 	db.AutoMigrate(&types.StockItem{})
 	db.AutoMigrate(&types.StockMovement{})

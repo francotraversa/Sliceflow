@@ -9,15 +9,12 @@ import (
 )
 
 func EnableUserByIDUseCase(req types.UserIDActivate) error {
-	// 1. Validar que el ID no sea 0
-	if req.ID == 0 {
+	if req.IdUser == 0 {
 		return fmt.Errorf("invalid user ID")
 	}
-
-	// 2. Buscar usuario por ID
-	user := userStorage.FindUserByUserId(req.ID)
+	user := userStorage.FindUserByUserId(req.IdUser)
 	if user == nil {
-		return fmt.Errorf("user not found with ID %d", req.ID)
+		return fmt.Errorf("user not found with ID %d", req.IdUser)
 	}
 
 	if user.Status == "active" {
@@ -26,7 +23,7 @@ func EnableUserByIDUseCase(req types.UserIDActivate) error {
 
 	user.Status = "active"
 
-	if err := db_utils.Save(user); err != nil {
+	if err := db_utils.SaveWithoutCompany(user); err != nil {
 		return fmt.Errorf("failed to update user in database")
 	}
 

@@ -7,13 +7,13 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func GetDashboardDataUseCase(userRole string) (*types.ProductionDashboardResponse, error) {
+func GetDashboardDataUseCase(userRole string, companyID uint) (*types.ProductionDashboardResponse, error) {
 	db := storage.DatabaseInstance{}.Instance()
 	var response types.ProductionDashboardResponse
 
-	// --- 1. MÁQUINAS ---
+	// --- 1. MACHINES ---
 	var machines []types.Machine
-	if err := db.Find(&machines).Error; err != nil {
+	if err := db.Where("id_company = ?", companyID).Find(&machines).Error; err != nil {
 		return &response, err
 	}
 	response.Machines = machines
@@ -28,13 +28,13 @@ func GetDashboardDataUseCase(userRole string) (*types.ProductionDashboardRespons
 		response.UtilizationRate = (busyMachines / float64(len(machines))) * 100
 	}
 
-	// --- 2. ÓRDENES ACTIVAS ---
+	// --- 2. ACTIVE ORDERS ---
 	var activeOrders []types.ProductionOrder
 
 	err := db.Preload("Items").
 		Preload("Material").
 		Preload("Machine").
-		Where("status IN ?", []string{"in-progress", "queued", "ready", "pending"}).
+		Where("id_company = ? AND status IN ?", companyID, []string{"in-progress", "queued", "ready", "pending"}).
 		Order("priority ASC").
 		Find(&activeOrders).Error
 
@@ -45,15 +45,15 @@ func GetDashboardDataUseCase(userRole string) (*types.ProductionDashboardRespons
 	isAdmin := (userRole == "admin")
 
 	if isAdmin {
-		// --- 3. CÁLCULO DE REVENUE TOTAL DEL MES (Métrica Principal) ---
+		// --- 3. TOTAL MONTHLY REVENUE CALCULATION (Main Metric) ---
 		var monthlyRevenue float64
 
-		// Calculamos el inicio del mes actual
+		// Calculate the first day of the current month
 		now := time.Now()
 		firstDayOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 
 		err := db.Model(&types.ProductionOrder{}).
-			Where("created_at >= ?", firstDayOfMonth).
+			Where("id_company = ? AND created_at >= ?", companyID, firstDayOfMonth).
 			Select("COALESCE(SUM(price), 0)").
 			Scan(&monthlyRevenue).Error
 
@@ -70,7 +70,7 @@ func GetDashboardDataUseCase(userRole string) (*types.ProductionDashboardRespons
 		copy(censoredOrders, activeOrders)
 
 		for i := range censoredOrders {
-			censoredOrders[i].Price = nil
+			censoredOrders[i].TotalPrice = nil
 		}
 		response.Orders = censoredOrders
 	}

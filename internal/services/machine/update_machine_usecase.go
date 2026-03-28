@@ -9,9 +9,9 @@ import (
 	"github.com/francotraversa/Sliceflow/internal/types"
 )
 
-func UpdateMachineUseCase(id int, dto types.UpdateMachineDTO) error {
+func UpdateMachineUseCase(id int, dto types.UpdateMachineDTO, companyID uint) error {
 
-	machine, err := machineutils.GetMachinebyID(id)
+	machine, err := machineutils.GetMachinebyID(id, companyID)
 	if err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func UpdateMachineUseCase(id int, dto types.UpdateMachineDTO) error {
 		machine.Status = *dto.Status
 	}
 
-	if err := db_utils.Save(machine); err != nil {
+	if err := db_utils.Save(machine, companyID); err != nil {
 		return fmt.Errorf("The Machine was not updated")
 	}
 	services.InvalidateCache("machine:list:*")
