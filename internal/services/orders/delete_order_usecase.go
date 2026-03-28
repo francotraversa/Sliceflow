@@ -12,7 +12,7 @@ import (
 func DeleteOrderUseCase(id int, companyID uint) error {
 	db := storage.DatabaseInstance{}.Instance()
 
-	// Usamos una transacción para asegurar consistencia
+	// Use a transaction to ensure consistency
 	return db.Transaction(func(tx *gorm.DB) error {
 		var order types.ProductionOrder
 

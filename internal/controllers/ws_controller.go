@@ -17,15 +17,15 @@ var upgrader = websocket.Upgrader{
 }
 
 // WebSocketHandler godoc
-// @Summary      Conexión WebSocket para Dashboard
-// @Description  Establece una conexión WebSocket persistente. Escucha eventos de Redis (canal "dashboard_updates") y los envía al cliente en tiempo real.
-// @Description  <br> **Eventos esperados:** `REFRESH_ORDERS`, `MACHINE_UPDATED`, etc.
-// @Description  <br> **Nota:** Swagger UI no soporta probar WebSockets nativamente. Usar Bruno, Postman o PieSocket.
+// @Summary      WebSocket connection for Dashboard
+// @Description  Establishes a persistent WebSocket connection. Listens to Redis events (channel "dashboard_updates") and sends them to the client in real-time.
+// @Description  <br> **Expected events:** `REFRESH_ORDERS`, `MACHINE_UPDATED`, etc.
+// @Description  <br> **Note:** Swagger UI does not natively support WebSocket testing. Use Bruno, Postman or PieSocket.
 // @Tags         Dashboard Realtime
 // @Accept       json
 // @Produce      json
-// @Success      101  {string}  string  "Switching Protocols (Conexión Establecida)"
-// @Failure      400  {string}  string  "Error al actualizar protocolo (Upgrade failed)"
+// @Success      101  {string}  string  "Switching Protocols (Connection Established)"
+// @Failure      400  {string}  string  "Protocol upgrade failed"
 // @Failure      500  {string}  string  "Error interno del servidor"
 // @Router       /hornero/ws/dashboard [get]
 func WebSocketHandler(c echo.Context) error {
@@ -45,7 +45,7 @@ func WebSocketHandler(c echo.Context) error {
 		select {
 		case msg := <-redisChannel:
 			if err := ws.WriteMessage(websocket.TextMessage, []byte(msg.Payload)); err != nil {
-				c.Logger().Error("Cliente desconectado o error de escritura:", err)
+				c.Logger().Error("Client disconnected or write error:", err)
 				return nil
 			}
 

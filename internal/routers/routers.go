@@ -12,12 +12,12 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	e.GET("/health", controller.RegisterHealth)
 
 	api := e.Group("/hornero")
-	api.GET("/ws/dashboard", controller.WebSocketHandler)
 	auth := api.Group("/auth")
 	auth.POST("/login", controller.LoginHandler)
-	//----------------------PRIVATE------------------------------
+	//----------------------LOGED------------------------------
 	protected := api.Group("/authed")
 	protected.Use(echojwt.WithConfig(jwtCfg))
+	protected.GET("/ws/dashboard", controller.WebSocketHandler)
 	//----------------------USER---------------------------------
 	user := protected.Group("/user")
 	user.PATCH("/updmyuser", controller.UpdateUserHandler)

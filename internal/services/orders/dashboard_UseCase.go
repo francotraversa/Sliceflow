@@ -11,7 +11,7 @@ func GetDashboardDataUseCase(userRole string, companyID uint) (*types.Production
 	db := storage.DatabaseInstance{}.Instance()
 	var response types.ProductionDashboardResponse
 
-	// --- 1. MÁQUINAS ---
+	// --- 1. MACHINES ---
 	var machines []types.Machine
 	if err := db.Where("id_company = ?", companyID).Find(&machines).Error; err != nil {
 		return &response, err
@@ -28,7 +28,7 @@ func GetDashboardDataUseCase(userRole string, companyID uint) (*types.Production
 		response.UtilizationRate = (busyMachines / float64(len(machines))) * 100
 	}
 
-	// --- 2. ÓRDENES ACTIVAS ---
+	// --- 2. ACTIVE ORDERS ---
 	var activeOrders []types.ProductionOrder
 
 	err := db.Preload("Items").
@@ -45,10 +45,10 @@ func GetDashboardDataUseCase(userRole string, companyID uint) (*types.Production
 	isAdmin := (userRole == "admin")
 
 	if isAdmin {
-		// --- 3. CÁLCULO DE REVENUE TOTAL DEL MES (Métrica Principal) ---
+		// --- 3. TOTAL MONTHLY REVENUE CALCULATION (Main Metric) ---
 		var monthlyRevenue float64
 
-		// Calculamos el inicio del mes actual
+		// Calculate the first day of the current month
 		now := time.Now()
 		firstDayOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 

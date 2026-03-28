@@ -29,12 +29,12 @@ type StockMovement struct {
 	StockItem   StockItem `gorm:"foreignKey:StockSKU;references:SKU" json:"-"`
 	LocationID  uint      `gorm:"index" json:"location_id"`
 	Type        string    `gorm:"size:20;not null" json:"type"` // IN, OUT, ADJUST
-	QtyDelta    int       `gorm:"not null" json:"qty_delta"`    // Cuánto cambió (+10, -5)
-	QtyBefore   int       `gorm:"not null" json:"qty_before"`   // Cuánto había (100)
-	QtyAfter    int       `gorm:"not null" json:"qty_after"`    // Cuánto quedó (110)
+	QtyDelta    int       `gorm:"not null" json:"qty_delta"`    // How much changed (+10, -5)
+	QtyBefore   int       `gorm:"not null" json:"qty_before"`   // Previous quantity (100)
+	QtyAfter    int       `gorm:"not null" json:"qty_after"`    // Resulting quantity (110)
 	Reason      string    `gorm:"size:255" json:"reason"`
 	CreatedBy   uint      `gorm:"index" json:"created_by"`
-	User        User      `gorm:"foreignKey:CreatedBy" json:"-"` // Opcional: relación con User
+	User        User      `gorm:"foreignKey:CreatedBy" json:"-"` // Optional: relation to User
 	CreatedAt   time.Time `gorm:"index" json:"created_at"`
 	Description string    `gorm:"null" json:"description"`
 }
@@ -69,8 +69,8 @@ type CreateMovementRequest struct {
 
 type HistoryFilter struct {
 	SKU       string `query:"sku"`
-	StartDate string `query:"start_date"` // Formato esperado: YYYY-MM-DD
-	EndDate   string `query:"end_date"`   // Formato esperado: YYYY-MM-DD
+	StartDate string `query:"start_date"` // Expected format: YYYY-MM-DD
+	EndDate   string `query:"end_date"`   // Expected format: YYYY-MM-DD
 	Type      string `query:"type"`
 }
 

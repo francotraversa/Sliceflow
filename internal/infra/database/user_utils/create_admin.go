@@ -26,7 +26,7 @@ func EnsureHardcodedUser() error {
 	}
 
 	if companyName == "" {
-		companyName = userAdmin // Usa el nombre del admin como nombre de empresa por defecto
+		companyName = userAdmin // Use admin name as default company name
 	}
 
 	a := strings.ToLower(userAdmin)
@@ -43,7 +43,7 @@ func EnsureHardcodedUser() error {
 		return fmt.Errorf("Error on DB")
 	}
 
-	// 4. Crear o buscar la empresa
+	// 4. Create or find the company
 	var company types.Company
 	err = db.Where("LOWER(name) = ?", strings.ToLower(companyName)).First(&company).Error
 
@@ -62,14 +62,14 @@ func EnsureHardcodedUser() error {
 		log.Printf("[seed] Company '%s' already exists (ID %d).", companyName, company.IdCompany)
 	}
 
-	// 5. Hashear la contraseña
+	// 5. Hash the password
 	hash, err := bcrypt.GenerateFromPassword([]byte(passAdmin), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("[seed] Error hashing password: %v", err)
 		return fmt.Errorf("Error hashing password")
 	}
 
-	// 6. Crear el nuevo usuario admin con la empresa
+	// 6. Create the new admin user with the company
 	newUser := types.User{
 		Username:  userAdmin,
 		Password:  string(hash),

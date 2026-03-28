@@ -12,14 +12,14 @@ import (
 
 const testCompanyIDOrder uint = 1
 
-// setupOrderTest: Prepara DB en memoria y tablas necesarias
+// setupOrderTest: Prepares an in-memory DB and required tables
 func setupOrderTest(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	if err != nil {
-		t.Fatalf("Error al iniciar DB de test: %v", err)
+		t.Fatalf("Failed to open test DB: %v", err)
 	}
 
-	// Migrar TODAS las tablas que el use case toca, incluyendo OrderItem
+	// Migrate ALL tables that the use case touches, including OrderItem
 	err = db.AutoMigrate(
 		&types.Material{},
 		&types.Machine{},
@@ -27,15 +27,15 @@ func setupOrderTest(t *testing.T) *gorm.DB {
 		&types.OrderItem{},
 	)
 	if err != nil {
-		t.Fatalf("Error al migrar tablas: %v", err)
+		t.Fatalf("Failed to migrate tables: %v", err)
 	}
 
-	// Inyectar DB
+	// Inject test DB
 	storage.OverrideDatabaseInstance(db)
 	return db
 }
 
-// Helper para crear dependencias rápidamente
+// Helper to quickly seed dependencies
 func seedDependencies(db *gorm.DB) (int, int) {
 	mat := types.Material{Name: "PLA Test", Type: "FDM", IdCompany: testCompanyIDOrder}
 	mac := types.Machine{Name: "Prusa Test", Type: "FDM", IdCompany: testCompanyIDOrder}
@@ -48,33 +48,33 @@ func seedDependencies(db *gorm.DB) (int, int) {
 
 func TestUpdateOrderUseCase(t *testing.T) {
 
-	t.Run("Actualizar Datos Básicos y Progreso", func(t *testing.T) {
+	t.Run("Update Basic Data and Progress", func(t *testing.T) {
 		db := setupOrderTest(t)
 		matID, macID := seedDependencies(db)
 
-		// 1. Crear una Orden Inicial con ID explícito
+		// 1. Create an initial order with explicit ID
 		initialOrder := types.ProductionOrder{
-			ID:               1,
+			IdOrder:          1,
 			IdCompany:        testCompanyIDOrder,
-			ClientName:       "Cliente Viejo",
+			ClientName:       "Old Client",
 			TotalPieces:      10,
 			Status:           "pending",
 			OperatorID:       1,
 			EstimatedMinutes: 60,
 			Items: []types.OrderItem{
-				{StlName: "Pieza A", Quantity: 5, MaterialID: &matID, MachineID: &macID},
+				{StlName: "Part A", Quantity: 5, MaterialID: &matID, MachineID: &macID},
 			},
 		}
 		db.Create(&initialOrder)
 
-		// 2. Preparar DTO de actualización
+		// 2. Prepare update DTO
 		orderID := uint(1)
-		clientName := "Cliente Nuevo"
+		clientName := "New Client"
 		totalPieces := 10
 		donePieces := 5
 		status := "in-progress"
 		priority := "P1"
-		notes := "Avanzando rápido"
+		notes := "Making fast progress"
 		operatorID := 1
 		estimatedMinutes := 120
 		deadlineString := "2025-12-31"
@@ -92,40 +92,40 @@ func TestUpdateOrderUseCase(t *testing.T) {
 			Deadline:         &deadlineString,
 		}
 
-		// 3. Ejecutar Update
-		err := UpdateOrderUseCase(int(initialOrder.ID), updateDTO, testCompanyIDOrder)
+		// 3. Execute Update
+		err := UpdateOrderUseCase(int(initialOrder.IdOrder), updateDTO, testCompanyIDOrder)
 		if err != nil {
-			t.Fatalf("Error al actualizar orden: %v", err)
+			t.Fatalf("Failed to update order: %v", err)
 		}
 
-		// 4. Verificar Cambios
+		// 4. Verify Changes
 		var order types.ProductionOrder
-		db.Preload("Items").First(&order, initialOrder.ID)
+		db.Preload("Items").First(&order, initialOrder.IdOrder)
 
-		if order.ClientName != "Cliente Nuevo" {
-			t.Errorf("No actualizó el cliente. Got: %s", order.ClientName)
+		if order.ClientName != "New Client" {
+			t.Errorf("Client name not updated. Got: %s", order.ClientName)
 		}
 		if order.DonePieces != 5 {
-			t.Errorf("No actualizó el progreso. Got: %d", order.DonePieces)
+			t.Errorf("Progress not updated. Got: %d", order.DonePieces)
 		}
 		if order.EstimatedMinutes != 120 {
-			t.Errorf("Error calculando tiempo. Esperaba 120, Got: %d", order.EstimatedMinutes)
+			t.Errorf("Time calculation error. Expected 120, Got: %d", order.EstimatedMinutes)
 		}
 
-		// Verificar fecha
+		// Verify deadline
 		expectedDate, _ := time.Parse("2006-01-02", "2025-12-31")
 		if !order.Deadline.Equal(expectedDate) {
-			t.Error("La fecha límite no se guardó bien")
+			t.Error("Deadline was not saved correctly")
 		}
 	})
 
-	t.Run("Auto-Completar Orden (Lógica de Negocio)", func(t *testing.T) {
+	t.Run("Auto-Complete Order (Business Logic)", func(t *testing.T) {
 		db := setupOrderTest(t)
 		matID, macID := seedDependencies(db)
 
-		// Crear orden con ID explícito (necesario por autoIncrement:false)
+		// Create order with explicit ID (required by autoIncrement:false)
 		order := types.ProductionOrder{
-			ID:          100,
+			IdOrder:     100,
 			IdCompany:   testCompanyIDOrder,
 			ClientName:  "Test Client",
 			TotalPieces: 10,
@@ -136,10 +136,10 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		}
 		db.Create(&order)
 
-		// Enviamos items con todas las piezas terminadas
+		// Send items with all pieces completed
 		items := []types.CreateOrderItemDTO{
-			{ID: 1, StlName: "Pieza A", Quantity: 5, DonePieces: 5, MaterialID: &matID, MachineID: &macID},
-			{ID: 2, StlName: "Pieza B", Quantity: 5, DonePieces: 5, MaterialID: &matID},
+			{ID: 1, StlName: "Part A", Quantity: 5, DonePieces: 5, MaterialID: &matID, MachineID: &macID},
+			{ID: 2, StlName: "Part B", Quantity: 5, DonePieces: 5, MaterialID: &matID},
 		}
 
 		status := "in-progress"
@@ -151,26 +151,26 @@ func TestUpdateOrderUseCase(t *testing.T) {
 			Items:      &items,
 		}
 
-		err := UpdateOrderUseCase(int(order.ID), dto, testCompanyIDOrder)
+		err := UpdateOrderUseCase(int(order.IdOrder), dto, testCompanyIDOrder)
 		if err != nil {
 			t.Fatalf("Error: %v", err)
 		}
 
 		var updatedOrder types.ProductionOrder
-		db.First(&updatedOrder, order.ID)
+		db.First(&updatedOrder, order.IdOrder)
 
-		// El UseCase detecta DonePieces >= TotalPieces y cambia Status a "ready"
+		// The UseCase detects DonePieces >= TotalPieces and changes Status to "ready"
 		if updatedOrder.Status != "ready" {
-			t.Errorf("La orden debió pasar a 'ready' automáticamente. Estado actual: %s", updatedOrder.Status)
+			t.Errorf("Order should have been auto-completed to 'ready'. Current status: %s", updatedOrder.Status)
 		}
 	})
 
-	t.Run("Actualizar Orden Inexistente", func(t *testing.T) {
-		setupOrderTest(t) // DB vacía
+	t.Run("Update Non-Existent Order", func(t *testing.T) {
+		setupOrderTest(t) // Empty DB
 
 		err := UpdateOrderUseCase(999, types.UpdateOrderDTO{}, testCompanyIDOrder)
 		if err == nil {
-			t.Error("Debió fallar porque la orden 999 no existe")
+			t.Error("Expected error because order 999 does not exist")
 		}
 	})
 }

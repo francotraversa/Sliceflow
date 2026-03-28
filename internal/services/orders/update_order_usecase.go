@@ -54,14 +54,14 @@ func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO, companyID uint) error 
 		totalPrice := 0.0
 
 		for _, itemDTO := range *dto.Items {
-			// Si el item tiene nueva máquina, liberar la máquina anterior
+			// If the item has a new machine, release the previous machine
 			if itemDTO.MachineID != nil {
 				oldMachineID := findOldMachineID(order.Items, itemDTO.ID)
 				if oldMachineID != nil && *oldMachineID != *itemDTO.MachineID {
-					// Liberar la máquina anterior
+					// Release the previous machine
 					db.Model(&types.Machine{}).Where("id = ?", *oldMachineID).Update("status", "idle")
 				}
-				// Asignar la nueva máquina
+				// Assign the new machine
 				if *itemDTO.MachineID != 0 {
 					db.Model(&types.Machine{}).Where("id = ?", *itemDTO.MachineID).Update("status", "printing")
 				}
@@ -69,7 +69,7 @@ func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO, companyID uint) error 
 
 			item := types.OrderItem{
 				ID:         itemDTO.ID,
-				OrderID:    order.ID,
+				OrderID:    order.Id,
 				StlName:    itemDTO.StlName,
 				Quantity:   itemDTO.Quantity,
 				DonePieces: itemDTO.DonePieces,
@@ -119,7 +119,7 @@ func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO, companyID uint) error 
 	return nil
 }
 
-// findOldMachineID busca el MachineID anterior de un item por su ID en la lista de items existentes
+// findOldMachineID finds the previous MachineID of an item by its ID in the existing items list
 func findOldMachineID(existingItems []types.OrderItem, itemID uint) *int {
 	for _, existing := range existingItems {
 		if existing.ID == itemID {

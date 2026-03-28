@@ -21,21 +21,21 @@ func GetStockUseCase(query string, companyID uint) (*[]types.StockItem, error) {
 		services.SetCache(cacheKey, &allProducts)
 	}
 
-	// 2. Si NO hay query, devolvemos todo
+	// 2. If there's no query, return everything
 	if query == "" {
 		return &allProducts, nil
 	}
 
-	// 3. FILTRADO (Acá es donde estaba fallando)
+	// 3. FILTERING
 	var filtered []types.StockItem
-	q := strings.ToLower(strings.TrimSpace(query)) // Limpiamos espacios y pasamos a minúsculas
+	q := strings.ToLower(strings.TrimSpace(query)) // Trim spaces and convert to lowercase
 
 	for _, p := range allProducts {
-		// Normalizamos los datos del producto para comparar
+		// Normalize product data for comparison
 		productName := strings.ToLower(p.Name)
 		productSKU := strings.ToLower(p.SKU)
 
-		// Verificamos si coincide el SKU exacto O si el nombre contiene la búsqueda
+		// Check for exact SKU match OR if the name contains the search term
 		if productSKU == q || strings.Contains(productName, q) {
 			filtered = append(filtered, p)
 		}

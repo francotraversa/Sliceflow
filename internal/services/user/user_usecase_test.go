@@ -14,7 +14,7 @@ const testCompanyIDUser int = 1
 func setupTest(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	if err != nil {
-		t.Fatalf("Error al abrir DB de test: %v", err)
+		t.Fatalf("Failed to open test DB: %v", err)
 	}
 	db.AutoMigrate(&types.User{})
 
@@ -25,26 +25,26 @@ func setupTest(t *testing.T) *gorm.DB {
 func TestDeleteUserUseCase(t *testing.T) {
 	db := setupTest(t)
 
-	user := types.User{Username: "borrame", Role: "user", Status: "active"}
+	user := types.User{Username: "deleteme", Role: "user", Status: "active"}
 	db.Create(&user)
 
-	t.Run("Usuario se borra a sí mismo (éxito)", func(t *testing.T) {
+	t.Run("User deletes themselves (success)", func(t *testing.T) {
 		err := DeleteUserUseCase(user.IdUser, user.IdUser, "user")
 		if err != nil {
-			t.Errorf("No debería haber error: %v", err)
+			t.Errorf("Should not have errored: %v", err)
 		}
 
 		var found types.User
 		db.First(&found, user.IdUser)
 		if found.Status != "disabled" {
-			t.Errorf("Se esperaba status disabled, se obtuvo %s", found.Status)
+			t.Errorf("Expected status disabled, got %s", found.Status)
 		}
 	})
 
-	t.Run("Usuario intenta borrar a otro (error)", func(t *testing.T) {
+	t.Run("User tries to delete another user (error)", func(t *testing.T) {
 		err := DeleteUserUseCase(user.IdUser, 999, "user")
 		if err == nil {
-			t.Error("Se esperaba error de permisos")
+			t.Error("Expected permission error")
 		}
 	})
 }
@@ -52,11 +52,11 @@ func TestDeleteUserUseCase(t *testing.T) {
 func TestUpdateUserUseCase(t *testing.T) {
 	db := setupTest(t)
 
-	u := types.User{Username: "antiguo", Role: "user", Status: "active"}
+	u := types.User{Username: "oldname", Role: "user", Status: "active"}
 	db.Create(&u)
 
-	t.Run("Cambio de Username exitoso", func(t *testing.T) {
-		update := types.UserUpdateCreds{Username: "nuevo"}
+	t.Run("Username Change Successful", func(t *testing.T) {
+		update := types.UserUpdateCreds{Username: "newname"}
 		err := UpdateUserUseCase(u.IdUser, u.IdUser, "user", update)
 		if err != nil {
 			t.Fatalf("Error: %v", err)
@@ -64,16 +64,16 @@ func TestUpdateUserUseCase(t *testing.T) {
 
 		var found types.User
 		db.First(&found, u.IdUser)
-		if found.Username != "nuevo" {
-			t.Errorf("Se esperaba 'nuevo', se obtuvo %s", found.Username)
+		if found.Username != "newname" {
+			t.Errorf("Expected 'newname', got %s", found.Username)
 		}
 	})
 
-	t.Run("Usuario intenta cambiar su Rol (denegado)", func(t *testing.T) {
+	t.Run("User tries to change own role (denied)", func(t *testing.T) {
 		update := types.UserUpdateCreds{Role: "admin"}
 		err := UpdateUserUseCase(u.IdUser, u.IdUser, "user", update)
 		if err == nil {
-			t.Error("Se esperaba error de restricción de admin")
+			t.Error("Expected admin restriction error")
 		}
 	})
 }
@@ -85,23 +85,23 @@ func TestGetAllUserUseCase(t *testing.T) {
 	db.Create(&types.User{Username: "user1", Role: "user", Status: "active", IdCompany: uint(testCompanyIDUser)})
 	db.Create(&types.User{Username: "user2", Role: "user", Status: "disabled", IdCompany: uint(testCompanyIDUser)})
 
-	t.Run("Listar solo Admins", func(t *testing.T) {
-		users, err := GetAllUserUserUseCase("admin", "admin", testCompanyIDUser, testCompanyIDUser)
+	t.Run("List Admins Only", func(t *testing.T) {
+		users, err := GetAllUserUserUseCase("admin", "admin", "admin", testCompanyIDUser)
 		if err != nil {
 			t.Fatalf("Error: %v", err)
 		}
 		if len(*users) != 1 || (*users)[0].Username != "admin1" {
-			t.Errorf("Filtro de admin falló. Obtenidos: %d", len(*users))
+			t.Errorf("Admin filter failed. Got: %d", len(*users))
 		}
 	})
 
-	t.Run("Listar Todos (sin filtro)", func(t *testing.T) {
-		users, err := GetAllUserUserUseCase("admin", "", testCompanyIDUser, testCompanyIDUser)
+	t.Run("List All (no filter)", func(t *testing.T) {
+		users, err := GetAllUserUserUseCase("admin", "", "admin", testCompanyIDUser)
 		if err != nil {
 			t.Fatalf("Error: %v", err)
 		}
 		if len(*users) != 3 {
-			t.Errorf("Se esperaban 3 usuarios, se obtuvieron %d", len(*users))
+			t.Errorf("Expected 3 users, got %d", len(*users))
 		}
 	})
 }

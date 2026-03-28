@@ -37,8 +37,8 @@ func InitRedis() {
 	defer cancel()
 
 	if err := RedisClient.Ping(ctx).Err(); err != nil {
-		fmt.Printf("⚠️  Error conecting Redis with Backend: %v\n", err)
+		fmt.Printf("⚠️  Error connecting Redis with Backend: %v\n", err)
 	} else {
-		fmt.Println("Conexion to Redis successfully!")
+		fmt.Println("Connection to Redis successfully!")
 	}
 }

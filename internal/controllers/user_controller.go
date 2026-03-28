@@ -12,13 +12,13 @@ import (
 )
 
 // CreateUserHandler godoc
-// @Summary      Registrar un nuevo usuario
-// @Description  Crea un usuario en la base de datos. Requiere rol de ADMIN.
+// @Summary      Register a new user
+// @Description  Creates a user in the database. Requires ADMIN role.
 // @Tags         Users
 // @Accept       json
 // @Produce      json
 // @Security BearerAuth
-// @Param        user  body      types.UserCreateCreds  true  "Credenciales del usuario"
+// @Param        user  body      types.UserCreateCreds  true  "User credentials"
 // @Success      200   {string}  string                 "The User [username] has been created"
 // @Failure      400   {string}  string                 "Error message"
 // @Router       /hornero/authed/admin/newuser [post]
@@ -43,14 +43,14 @@ func CreateUserHandler(c echo.Context) error {
 }
 
 // UpdateUserHandler godoc
-// @Summary      Actualizar usuario
-// @Description  Actualiza datos de un usuario. Si se pasa ID en la URL, requiere ser ADMIN. Si no, actualiza al usuario del token.
+// @Summary      Update user
+// @Description  Updates user data. If ID is in the URL, requires ADMIN role. Otherwise updates the token owner.
 // @Tags         Users
 // @Accept       json
 // @Produce      json
 // @Security BearerAuth
-// @Param        id    path      int                    false "ID del usuario a editar (solo para Admins)"
-// @Param        user  body      types.UserUpdateCreds  true  "Datos a actualizar"
+// @Param        id    path      int                    false "User ID to edit (Admins only)"
+// @Param        user  body      types.UserUpdateCreds  true  "Data to update"
 // @Success      200   {string}  string                 "The User ID [id] has been updated"
 // @Failure      400   {string}  string                 "Error message"
 // @Router       /hornero/authed/updmyuser [patch]
@@ -91,12 +91,12 @@ func UpdateUserHandler(c echo.Context) error {
 }
 
 // DeleteUserHandler godoc
-// @Summary      Borrado lógico de usuario
-// @Description  Cambia el estado del usuario a 'disabled'. Requiere ser el dueño de la cuenta o ADMIN.
+// @Summary      Soft-delete user
+// @Description  Sets the user status to 'disabled'. Requires account ownership or ADMIN role.
 // @Tags         Users
 // @Produce      json
 // @Security BearerAuth
-// @Param        id    path      int                    false "ID del usuario a borrar (solo para Admins)"
+// @Param        id    path      int                    false "User ID to delete (Admins only)"
 // @Success      200   {string}  string                 "The UserID [id] has been deleted"
 // @Failure      400   {string}  string                 "Error message"
 // @Router       /hornero/authed/deletemyuser [delete]
@@ -114,7 +114,10 @@ func DeleteUserHandler(c echo.Context) error {
 	var targetID uint
 
 	if idParam != "" {
-		id, _ := strconv.ParseUint(idParam, 10, 32)
+		id, err := strconv.ParseUint(idParam, 10, 32)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, types.Error{Error: "invalid user ID format in URL"})
+		}
 		targetID = uint(id)
 	} else {
 		targetID = requesterID
@@ -128,12 +131,12 @@ func DeleteUserHandler(c echo.Context) error {
 }
 
 // EnableUserHandler godoc
-// @Summary      Habilitar usuario por ID
-// @Description  Cambia el estado del usuario a 'active'. Requiere permisos de ADMIN.
+// @Summary      Enable user by ID
+// @Description  Sets the user status to 'active'. Requires ADMIN permissions.
 // @Tags         Users
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      types.UserIDRequest  true  "JSON con el ID del usuario"
+// @Param        request  body      types.UserIDRequest  true  "JSON with the user ID"
 // @Success      200   {object}  types.Response       "User with ID [id] has been enabled"
 // @Failure      400   {object}  types.Response       "Error message"
 // @Router       /hornero/authed/admin/enableuser [delete]
@@ -159,13 +162,13 @@ func EnableUserHandler(c echo.Context) error {
 }
 
 // GetAllUserHandler godoc
-// @Summary      Listar todos los usuarios
-// @Description  Obtiene una lista de usuarios filtrada por rol o estado. Solo accesible para ADMIN.
+// @Summary      List all users
+// @Description  Returns a list of users filtered by role or status. Admin only.
 // @Tags         Users
 // @Produce      json
 // @Security BearerAuth
-// @Param        role    query     string  false  "Filtrar por rol (admin/user)"
-// @Param        status  query     string  false  "Filtrar por estado (active/disabled)"
+// @Param        role    query     string  false  "Filter by role (admin/user)"
+// @Param        status  query     string  false  "Filter by status (active/disabled)"
 // @Success      200     {array}   types.User
 // @Failure      400     {string}  string  "Error en la solicitud"
 // @Router       /hornero/authed/admin/alluser [get]

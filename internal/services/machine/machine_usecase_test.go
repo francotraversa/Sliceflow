@@ -11,28 +11,28 @@ import (
 
 const testCompanyIDMachine uint = 1
 
-// setupMachineTest crea una DB limpia para cada prueba
+// setupMachineTest creates a clean in-memory DB for each test
 func setupMachineTest(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	if err != nil {
-		t.Fatalf("Error al iniciar DB de test: %v", err)
+		t.Fatalf("Failed to open test DB: %v", err)
 	}
 
-	// Migramos la tabla Machine
+	// Migrate Machine table
 	err = db.AutoMigrate(&types.Machine{})
 	if err != nil {
-		t.Fatalf("Error al migrar: %v", err)
+		t.Fatalf("Failed to migrate: %v", err)
 	}
 
-	// Inyectamos la DB en la instancia global
+	// Inject test DB into global instance
 	storage.OverrideDatabaseInstance(db)
 	return db
 }
 
 func TestMachineCRUD(t *testing.T) {
 
-	// --- 1. TEST DE CREACIÓN ---
-	t.Run("Crear Maquina Exitosa", func(t *testing.T) {
+	// --- 1. CREATE TESTS ---
+	t.Run("Create Machine Successfully", func(t *testing.T) {
 		db := setupMachineTest(t)
 
 		dto := types.CreateMachineDTO{
@@ -42,38 +42,38 @@ func TestMachineCRUD(t *testing.T) {
 
 		err := CreateMachineUseCase(dto, testCompanyIDMachine)
 		if err != nil {
-			t.Fatalf("Error inesperado al crear: %v", err)
+			t.Fatalf("Unexpected error creating machine: %v", err)
 		}
 
-		// Verificar que se guardó y el estado default es 'idle'
+		// Verify it was saved and default status is 'idle'
 		var machine types.Machine
 		db.First(&machine, "name = ?", dto.Name)
 
 		if machine.ID == 0 {
-			t.Error("No se guardó la máquina en la DB")
+			t.Error("Machine was not saved to the DB")
 		}
 		if machine.Status != "idle" {
-			t.Errorf("El estado inicial debió ser 'idle', fue: %s", machine.Status)
+			t.Errorf("Initial status should be 'idle', got: %s", machine.Status)
 		}
 	})
 
-	t.Run("Crear Maquina Duplicada (Debe fallar)", func(t *testing.T) {
+	t.Run("Create Duplicate Machine (Should Fail)", func(t *testing.T) {
 		setupMachineTest(t)
 
 		dto := types.CreateMachineDTO{Name: "Ender 3 V2", Type: "FDM"}
 
-		// Primera vez
+		// First insert
 		CreateMachineUseCase(dto, testCompanyIDMachine)
 
-		// Segunda vez (Mismo nombre)
+		// Second insert (Same name)
 		err := CreateMachineUseCase(dto, testCompanyIDMachine)
 		if err == nil {
-			t.Error("Debió fallar por nombre duplicado, pero pasó")
+			t.Error("Should have failed due to duplicate name, but passed")
 		}
 	})
 
-	// --- 2. TEST DE LECTURA ---
-	t.Run("Listar Maquinas", func(t *testing.T) {
+	// --- 2. READ TESTS ---
+	t.Run("List Machines", func(t *testing.T) {
 		setupMachineTest(t)
 
 		CreateMachineUseCase(types.CreateMachineDTO{Name: "M1", Type: "FDM"}, testCompanyIDMachine)
@@ -81,71 +81,71 @@ func TestMachineCRUD(t *testing.T) {
 
 		list, err := GetAllMachinesUseCase(types.MachineFilter{}, testCompanyIDMachine)
 		if err != nil {
-			t.Fatalf("Error al listar: %v", err)
+			t.Fatalf("Failed to list: %v", err)
 		}
 
 		if len(*list) != 2 {
-			t.Errorf("Esperaba 2 máquinas, obtuvo %d", len(*list))
+			t.Errorf("Expected 2 machines, got %d", len(*list))
 		}
 	})
 
-	// --- 3. TEST DE ACTUALIZACIÓN ---
-	t.Run("Actualizar Maquina", func(t *testing.T) {
+	// --- 3. UPDATE TESTS ---
+	t.Run("Update Machine", func(t *testing.T) {
 		db := setupMachineTest(t)
 
-		// Crear original
+		// Create original
 		CreateMachineUseCase(types.CreateMachineDTO{Name: "Original"}, testCompanyIDMachine)
 
 		// Update
 		id := 1
-		editada := "Editada"
+		editada := "Edited"
 		sla := "SLA"
 		maintenance := "maintenance"
 		updateDTO := types.UpdateMachineDTO{
 			Name:   &editada,
 			Type:   &sla,
-			Status: &maintenance, // Probamos cambiar estado manualmente
+			Status: &maintenance, // Test manual status change
 		}
 
 		err := UpdateMachineUseCase(id, updateDTO, testCompanyIDMachine)
 		if err != nil {
-			t.Fatalf("Error al actualizar: %v", err)
+			t.Fatalf("Failed to update: %v", err)
 		}
 
-		// Verificar
+		// Verify
 		var m types.Machine
 		db.First(&m, id)
 
-		if m.Name != "Editada" || m.Status != "maintenance" {
-			t.Errorf("Datos incorrectos. Name: %s, Status: %s", m.Name, m.Status)
+		if m.Name != "Edited" || m.Status != "maintenance" {
+			t.Errorf("Incorrect data. Name: %s, Status: %s", m.Name, m.Status)
 		}
 	})
 
-	// --- 4. TEST DE BORRADO (SOFT DELETE) ---
-	t.Run("Eliminar Maquina (Soft Delete)", func(t *testing.T) {
+	// --- 4. DELETE (SOFT DELETE) TESTS ---
+	t.Run("Delete Machine (Soft Delete)", func(t *testing.T) {
 		db := setupMachineTest(t)
 
-		// Crear
-		CreateMachineUseCase(types.CreateMachineDTO{Name: "Para Borrar", Type: "FDM"}, testCompanyIDMachine)
+		// Create
+		CreateMachineUseCase(types.CreateMachineDTO{Name: "To Delete", Type: "FDM"}, testCompanyIDMachine)
 
-		// Borrar ID 1
+		// Delete ID 1
 		err := DeleteMachineUseCase(1, testCompanyIDMachine)
 		if err != nil {
-			t.Fatalf("Error al borrar: %v", err)
+			t.Fatalf("Failed to delete: %v", err)
 		}
 
-		// A. Verificar que GetAll NO la trae
+		// A. Verify GetAll does NOT return it
 		list, _ := GetAllMachinesUseCase(types.MachineFilter{}, testCompanyIDMachine)
 
 		if len(*list) != 0 {
-			t.Errorf("El listado debió venir vacío, trajo %d", len(*list))
+			t.Errorf("List should be empty, got %d", len(*list))
 		}
 
-		// B. Verificar que sigue en DB con deleted_at (Unscoped)
+		// B. Verify it still exists in DB with deleted_at (Unscoped)
 		var count int64
 		db.Unscoped().Model(&types.Machine{}).Where("id = ?", 1).Count(&count)
 		if count != 1 {
-			t.Error("El registro físico desapareció (Debió ser borrado lógico)")
+			t.Error("Physical record disappeared (should have been soft deleted)")
 		}
 	})
 }

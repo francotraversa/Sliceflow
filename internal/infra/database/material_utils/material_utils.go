@@ -27,7 +27,7 @@ func GetMaterial(dto types.CreateMaterialDTO) (*types.Material, error) {
 	db := storage.DatabaseInstance{}.Instance()
 	var material types.Material
 
-	// Usamos First
+	// Use First to find by name
 	if err := db.Where("name = ?", dto.Name).First(&material).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -35,6 +35,6 @@ func GetMaterial(dto types.CreateMaterialDTO) (*types.Material, error) {
 		return nil, fmt.Errorf("error database lookup for machine %s: %w", dto.Name, err)
 	}
 
-	// 3. Si llegamos acá, la máquina existe.
+	// 3. If we get here, the material exists.
 	return &material, nil
 }

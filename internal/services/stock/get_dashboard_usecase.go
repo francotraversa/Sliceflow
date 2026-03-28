@@ -41,7 +41,7 @@ func GetDashboardStatsUseCase(companyID uint) (*types.DashboardResponse, error) 
 		Select("stock_sku, SUM(qty_delta) as total_sold").
 		Where("type = ?", "OUT").
 		Group("stock_sku").
-		Order("total_sold ASC"). // Orden ascendente porque son números negativos (ej: -100)
+		Order("total_sold ASC"). // Ascending order because values are negative (e.g. -100)
 		Scan(&results).Error
 
 	if err != nil {

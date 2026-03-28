@@ -15,7 +15,8 @@ type OrderFilter struct {
 }
 
 type ProductionOrder struct {
-	ID               uint           `gorm:"primaryKey;autoIncrement:false" json:"id"` // autoIncrement:false es clave para ID manual
+	Id               uint           `gorm:"primaryKey;autoIncrement:true" json:"id"`
+	IdOrder          uint           `gorm:"primaryKey;autoIncrement:false;index:idx_order_id" json:"id_order"` // autoIncrement:false is key for manual ID
 	IdCompany        uint           `gorm:"not null" json:"id_company"`
 	Company          *Company       `gorm:"foreignKey:IdCompany;references:IdCompany" json:"company,omitempty"`
 	CreatedAt        time.Time      `json:"created_at"`
@@ -51,7 +52,7 @@ type OrderItem struct {
 type CreateOrderDTO struct {
 	ID               *uint                `gorm:"primaryKey" json:"id"`
 	ClientName       string               `json:"client_name"`
-	Items            []CreateOrderItemDTO `json:"items"` // Lista de piezas
+	Items            []CreateOrderItemDTO `json:"items"` // List of pieces/parts
 	Priority         string               `json:"priority"`
 	Notes            string               `json:"notes"`
 	EstimatedHours   int                  `json:"estimated_hours"`
@@ -76,7 +77,7 @@ type UpdateOrderDTO struct {
 	ProductDetails   *string               `json:"product_details"`
 	TotalPieces      *int                  `json:"total_pieces"`
 	DonePieces       *int                  `json:"done_pieces"`
-	Priority         *string               `json:"priority"` // O int, segun como lo tengas
+	Priority         *string               `json:"priority"` // Can also be int depending on your setup
 	Notes            *string               `json:"notes"`
 	Status           *string               `json:"status"`
 	TotalPrice       *float64              `json:"total_price"`

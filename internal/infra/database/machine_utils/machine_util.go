@@ -31,7 +31,7 @@ func GetMachine(dto types.CreateMachineDTO) (*types.Machine, error) {
 	db := getDB()
 	var machine types.Machine
 
-	// Usamos First
+	// Use First to find by name
 	if err := db.Where("name = ?", dto.Name).First(&machine).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -39,7 +39,7 @@ func GetMachine(dto types.CreateMachineDTO) (*types.Machine, error) {
 		return nil, fmt.Errorf("error database lookup for machine %s: %w", dto.Name, err)
 	}
 
-	// 3. Si llegamos acá, la máquina existe.
+	// 3. If we get here, the machine exists.
 	return &machine, nil
 }
 

@@ -15,7 +15,10 @@ import (
 
 func CreateOrderUseCase(dtoOrder types.CreateOrderDTO, idCompany uint) error {
 	if dtoOrder.ID != nil {
-		order, _ := ordersutils.CheckOrder(dtoOrder)
+		order, err := ordersutils.CheckOrder(dtoOrder)
+		if err != nil {
+			return fmt.Errorf("error checking order: %w", err)
+		}
 		if order != nil {
 			return fmt.Errorf("The Order %d already exists", *dtoOrder.ID)
 		}
@@ -62,11 +65,11 @@ func CreateOrderUseCase(dtoOrder types.CreateOrderDTO, idCompany uint) error {
 	totalMinutes := (dtoOrder.EstimatedHours * 60) + dtoOrder.EstimatedMinutes
 
 	newOrder := types.ProductionOrder{
-		ID:               *dtoOrder.ID,
+		IdOrder:          *dtoOrder.ID,
 		IdCompany:        idCompany,
 		ClientName:       dtoOrder.ClientName,
-		Items:            itemsDB,               // La lista de piezas que armamos en el loop
-		TotalPieces:      totalPiecesCalculated, // Usamos la suma de las cantidades
+		Items:            itemsDB,               // Items list built in the loop
+		TotalPieces:      totalPiecesCalculated, // Sum of all item quantities
 		DonePieces:       0,
 		Priority:         dtoOrder.Priority,
 		Notes:            dtoOrder.Notes,

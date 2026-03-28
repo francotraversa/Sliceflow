@@ -20,7 +20,7 @@ func DeleteUserUseCase(targetID uint, requesterID uint, requesterRole string) er
 	}
 
 	if currentUser.Status == "disabled" {
-		return fmt.Errorf("The account is already disable")
+		return fmt.Errorf("The account is already disabled")
 	}
 
 	currentUser.Status = "disabled"

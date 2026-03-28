@@ -13,11 +13,11 @@ import (
 )
 
 // CreateOrderHandler godoc
-// @Summary      Crear Orden de Trabajo
+// @Summary      Create Production Order
 // @Tags         Orders
 // @Accept       json
 // @Produce      json
-// @Param        request body   types.CreateOrderDTO  true  "Formulario Orden"
+// @Param        request body   types.CreateOrderDTO  true  "Order Form"
 // @Router       /hornero/authed/orders/order [post]
 func CreateOrderHandler(c echo.Context) error {
 	var dto types.CreateOrderDTO
@@ -37,7 +37,7 @@ func CreateOrderHandler(c echo.Context) error {
 }
 
 // GetOrdersHandler godoc
-// @Summary      Listar Órdenes Activas
+// @Summary      List Active Orders
 // @Tags         Orders
 // @Produce      json
 // @Router       /hornero/authed/orders/list [get]
@@ -59,11 +59,11 @@ func GetOrdersHandler(c echo.Context) error {
 }
 
 // UpdateOrderHandler godoc
-// @Summary      Actualizar Orden de Trabajo
-// @Description  Permite editar detalles, asignar máquina o actualizar progreso (piezas hechas).
+// @Summary      Update Production Order
+// @Description  Allows editing details, assigning machines or updating progress (done pieces).
 // @Tags         Orders
-// @Param        id      path    int                   true  "ID de la Orden"
-// @Param        request body    types.UpdateOrderDTO  true  "Datos Nuevos"
+// @Param        id      path    int                   true  "Order ID"
+// @Param        request body    types.UpdateOrderDTO  true  "Updated data"
 // @Router      /hornero/authed/orders/updord/{id} [put]
 func UpdateOrderHandler(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -90,7 +90,7 @@ func UpdateOrderHandler(c echo.Context) error {
 
 // GetDashboardHandler godoc
 // @Summary      Dashboard Principal (Role-Based)
-// @Description  Muestra métricas y órdenes. Si es admin ve revenue, si no, ve $0.
+// @Description  Shows metrics and orders. Admins see revenue, others see $0.
 // @Security     BearerAuth
 // @Tags         Production
 // @Router       /hornero/authed/orders/dashboard [get]
@@ -107,10 +107,10 @@ func GetPrincipalDashboardHandler(c echo.Context) error {
 }
 
 // DeleteOrderHandler godoc
-// @Summary      Eliminar Orden de Trabajo
-// @Description  Elimina una orden por su ID. Solo para admins.
+// @Summary      Delete Production Order
+// @Description  Deletes an order by its ID. Admin only.
 // @Tags         Orders
-// @Param        id  path    int true "ID de la Orden"
+// @Param        id  path    int true "Order ID"
 // @Security     BearerAuth
 // @Router       /hornero/authed/orders/delord/{id} [delete]
 func DeleteOrderHandler(c echo.Context) error {

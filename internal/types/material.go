@@ -31,10 +31,10 @@ type Material struct {
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 
-	Name        string  `gorm:"type:varchar(100);not null;unique" json:"name"` // Ej: "PLA Negro"
-	Type        string  `gorm:"type:varchar(50);not null" json:"type"`         // Ej: "Filamento", "Resina"
-	Description string  `gorm:"type:text" json:"description"`                  // Ej: "Marca Grilon, temperatura 200°C"
-	Brand       string  `gorm:"type:text" json:"brand"`                        // Ej: "Marca Grilon, temperatura 200°C"
+	Name        string  `gorm:"type:varchar(100);not null;unique" json:"name"` // e.g. "PLA Black"
+	Type        string  `gorm:"type:varchar(50);not null" json:"type"`         // e.g. "Filament", "Resin"
+	Description string  `gorm:"type:text" json:"description"`                  // e.g. "Grilon brand, 200°C temp"
+	Brand       string  `gorm:"type:text" json:"brand"`                        // e.g. "Grilon"
 	IdCompany   uint     `gorm:"not null" json:"id_company"`
 	Company     *Company `gorm:"foreignKey:IdCompany;references:IdCompany" json:"company,omitempty"`
 }

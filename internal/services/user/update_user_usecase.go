@@ -40,7 +40,10 @@ func UpdateUserUseCase(targetID uint, requesterID uint, requesterRole string, da
 			if len(data.Password) < 6 {
 				return fmt.Errorf("new password too short (min 6 characters)")
 			}
-			hash, _ := bcrypt.GenerateFromPassword([]byte(data.Password), bcrypt.DefaultCost)
+			hash, err := bcrypt.GenerateFromPassword([]byte(data.Password), bcrypt.DefaultCost)
+			if err != nil {
+				return fmt.Errorf("Error generating password hash")
+			}
 			currentUser.Password = string(hash)
 			hasChanged = true
 		}

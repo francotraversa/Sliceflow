@@ -24,11 +24,11 @@ func setupTest(t *testing.T) *gorm.DB {
 func TestAuthUseCase(t *testing.T) {
 	db := setupTest(t)
 
-	// 1. Preparar contraseñas hasheadas
+	// 1. Prepare hashed passwords
 	hashedBytes, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
 	hashedPassword := string(hashedBytes)
 
-	// 2. Crear usuarios de prueba
+	// 2. Create test users
 	activeUser := types.User{
 		Username: "active_user",
 		Password: hashedPassword,
@@ -48,8 +48,8 @@ func TestAuthUseCase(t *testing.T) {
 	os.Setenv("JWT_SECRET", "test_secret")
 	os.Setenv("TTL", "60")
 
-	// 4. Casos de prueba
-	t.Run("Login exitoso con usuario activo", func(t *testing.T) {
+	// 4. Test cases
+	t.Run("Successful login with active user", func(t *testing.T) {
 		creds := types.UserLoginCreds{
 			Username: "active_user",
 			Password: "password123",
@@ -58,14 +58,14 @@ func TestAuthUseCase(t *testing.T) {
 		token, err := AuthUseCase(creds)
 
 		if err != nil {
-			t.Errorf("No debería haber error en login activo: %v", err)
+			t.Errorf("Should not have errored on active login: %v", err)
 		}
 		if token == nil || token.Token == "" {
-			t.Error("Se esperaba un token válido")
+			t.Error("Expected a valid token")
 		}
 	})
 
-	t.Run("Login fallido con usuario deshabilitado (Status Check)", func(t *testing.T) {
+	t.Run("Failed login with disabled user (Status Check)", func(t *testing.T) {
 		creds := types.UserLoginCreds{
 			Username: "banned_user",
 			Password: "password123",
@@ -74,14 +74,14 @@ func TestAuthUseCase(t *testing.T) {
 		token, err := AuthUseCase(creds)
 
 		if token != nil {
-			t.Error("No se debería generar un token para un usuario deshabilitado")
+			t.Error("Should not generate a token for a disabled user")
 		}
 		if err == nil || err.Error() != "this account is disabled, please contact support" {
-			t.Errorf("Se esperaba error de cuenta deshabilitada, se obtuvo: %v", err)
+			t.Errorf("Expected disabled account error, got: %v", err)
 		}
 	})
 
-	t.Run("Login fallido por contraseña incorrecta", func(t *testing.T) {
+	t.Run("Failed login due to wrong password", func(t *testing.T) {
 		creds := types.UserLoginCreds{
 			Username: "active_user",
 			Password: "wrong_password",
@@ -90,7 +90,7 @@ func TestAuthUseCase(t *testing.T) {
 		_, err := AuthUseCase(creds)
 
 		if err == nil || err.Error() != "Invalid username or password" {
-			t.Error("Se esperaba error de credenciales inválidas")
+			t.Error("Expected invalid credentials error")
 		}
 	})
 }
