@@ -14,7 +14,7 @@ import (
 func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO, companyID uint) error {
 	db := storage.DatabaseInstance{}.Instance()
 	var order types.ProductionOrder
-	if err := db.Preload("Items").Where("id_company = ?", companyID).First(&order, id).Error; err != nil {
+	if err := db.Preload("Items").Where("id_company = ? AND id_order = ?", companyID, id).First(&order).Error; err != nil {
 		return fmt.Errorf("order not found: %w", err)
 	}
 
