@@ -25,7 +25,7 @@ func InitRedis() {
 	redisPass := os.Getenv("REDIS_PASSWORD")
 
 	addr := fmt.Sprintf("%s:%s", redisHost, redisPort)
-	fmt.Printf("🔌 Conectando a Redis en: %s ...\n", addr)
+	fmt.Printf("🔌 Connecting to Redis at: %s ...\n", addr)
 
 	RedisClient = redis.NewClient(&redis.Options{
 		Addr:     addr,

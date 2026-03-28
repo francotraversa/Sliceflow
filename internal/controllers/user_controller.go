@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -25,20 +26,26 @@ import (
 func CreateUserHandler(c echo.Context) error {
 	var UserCreateCreds types.UserCreateCreds
 	if err := c.Bind(&UserCreateCreds); err != nil {
+		slog.Warn("users: invalid request body", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("users: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	if claims.Role != "owner" && claims.Role != "superadmin" {
+		slog.Warn("users: unauthorized creation attempt", "requester_role", claims.Role, "requester_id", claims.UserId)
 		return c.JSON(http.StatusForbidden, types.Error{Error: "Only owners can create new users"})
 	}
 
 	err = services.CreateUserUseCase(UserCreateCreds)
 	if err != nil {
+		slog.Error("users: creation failed", "username", UserCreateCreds.Username, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
+
+	slog.Info("users: created", "username", UserCreateCreds.Username, "by", claims.UserId)
 	return c.JSON(http.StatusCreated, types.Response{Message: fmt.Sprintf("The User %s has been created", UserCreateCreds.Username)})
 }
 
@@ -58,6 +65,7 @@ func CreateUserHandler(c echo.Context) error {
 func UpdateUserHandler(c echo.Context) error {
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("users: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusInternalServerError, types.Error{Error: "failed to parse custom claims"})
 	}
 
@@ -70,6 +78,7 @@ func UpdateUserHandler(c echo.Context) error {
 	if idParam != "" {
 		id, err := strconv.ParseUint(idParam, 10, 32)
 		if err != nil {
+			slog.Warn("users: invalid ID param", "param", idParam, "error", err)
 			return c.JSON(http.StatusInternalServerError, types.Error{Error: "invalid user ID format in URL"})
 		}
 		targetID = uint(id)
@@ -79,14 +88,17 @@ func UpdateUserHandler(c echo.Context) error {
 
 	var updateData types.UserUpdateCreds
 	if err := c.Bind(&updateData); err != nil {
+		slog.Warn("users: invalid request body", "target_id", targetID, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "invalid JSON body"})
 	}
 
 	err = services.UpdateUserUseCase(targetID, requesterID, requesterRole, updateData)
 	if err != nil {
+		slog.Error("users: update failed", "target_id", targetID, "requester_id", requesterID, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
+	slog.Info("users: updated", "target_id", targetID, "by", requesterID)
 	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The User %s has been updated", updateData.Username)})
 }
 
@@ -104,6 +116,7 @@ func UpdateUserHandler(c echo.Context) error {
 func DeleteUserHandler(c echo.Context) error {
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("users: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusInternalServerError, types.Error{Error: "failed to parse custom claims"})
 	}
 
@@ -116,6 +129,7 @@ func DeleteUserHandler(c echo.Context) error {
 	if idParam != "" {
 		id, err := strconv.ParseUint(idParam, 10, 32)
 		if err != nil {
+			slog.Warn("users: invalid ID param", "param", idParam, "error", err)
 			return c.JSON(http.StatusInternalServerError, types.Error{Error: "invalid user ID format in URL"})
 		}
 		targetID = uint(id)
@@ -125,8 +139,11 @@ func DeleteUserHandler(c echo.Context) error {
 
 	err = services.DeleteUserUseCase(targetID, requesterID, requesterRole)
 	if err != nil {
+		slog.Error("users: deletion failed", "target_id", targetID, "requester_id", requesterID, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
+
+	slog.Info("users: deleted (soft)", "target_id", targetID, "by", requesterID)
 	return c.JSON(http.StatusOK, types.Response{Message: fmt.Sprintf("The UserID %d has been deleted", targetID)})
 }
 
@@ -144,6 +161,7 @@ func EnableUserHandler(c echo.Context) error {
 	var req types.UserIDActivate
 
 	if err := c.Bind(&req); err != nil {
+		slog.Warn("users: invalid request body for enable", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Response{
 			Message: "Invalid input format",
 		})
@@ -151,11 +169,13 @@ func EnableUserHandler(c echo.Context) error {
 
 	err := services.EnableUserByIDUseCase(req)
 	if err != nil {
+		slog.Error("users: enable failed", "user_id", req.IdUser, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Response{
 			Message: err.Error(),
 		})
 	}
 
+	slog.Info("users: enabled", "user_id", req.IdUser)
 	return c.JSON(http.StatusOK, types.Response{
 		Message: fmt.Sprintf("User with ID %d has been enabled successfully", req.IdUser),
 	})
@@ -170,11 +190,12 @@ func EnableUserHandler(c echo.Context) error {
 // @Param        role    query     string  false  "Filter by role (admin/user)"
 // @Param        status  query     string  false  "Filter by status (active/disabled)"
 // @Success      200     {array}   types.User
-// @Failure      400     {string}  string  "Error en la solicitud"
+// @Failure      400     {string}  string  "Error message"
 // @Router       /hornero/authed/admin/alluser [get]
 func GetAllUserHandler(c echo.Context) error {
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("users: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusInternalServerError, types.Error{Error: "failed to parse custom claims"})
 	}
 
@@ -182,8 +203,10 @@ func GetAllUserHandler(c echo.Context) error {
 
 	users, err := services.GetAllUserUserUseCase(claims.Role, filterRole, claims.Role, int(claims.CompanyId))
 	if err != nil {
+		slog.Error("users: list failed", "company_id", claims.CompanyId, "filter_role", filterRole, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
+	slog.Info("users: listed", "count", len(*users), "company_id", claims.CompanyId)
 	return c.JSON(http.StatusOK, users)
 }
