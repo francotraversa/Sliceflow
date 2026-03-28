@@ -157,7 +157,7 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		}
 
 		var updatedOrder types.ProductionOrder
-		db.First(&updatedOrder, order.IdOrder)
+		db.Where("id_order = ?", order.IdOrder).First(&updatedOrder)
 
 		// The UseCase detects DonePieces >= TotalPieces and changes Status to "ready"
 		if updatedOrder.Status != "ready" {
