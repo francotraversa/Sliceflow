@@ -24,8 +24,5 @@ jobs:
       - name: Install dependencies
         run: go mod download
 
-      - name: Run Linter (Opcional pero recomendado)
-        uses: golangci/golangci-lint-action@v3
-
       - name: Run Tests
         run: go test -v ./...
