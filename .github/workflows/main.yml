@@ -25,4 +25,9 @@ jobs:
         run: go mod download
 
       - name: Run Tests
-        run: go test -v ./...
+        run: go test -v -race ./...
+      - name: golangci-lint
+      
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54
