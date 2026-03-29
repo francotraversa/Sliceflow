@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -18,7 +19,7 @@ func CheckAndSetPriorities() {
 	var orders []types.ProductionOrder
 
 	if err := db.Find(&orders).Error; err != nil {
-		fmt.Println("Error getting Orders in Routines:", err)
+		slog.Error("routine: failed to fetch orders", "error", err)
 		return
 	}
 
@@ -69,7 +70,7 @@ func CheckAndSetPriorities() {
 
 		if madeChanges {
 			if err := db_utils.CreateWithoutCompany(&order); err != nil {
-				fmt.Printf("Error saving order %d: %v\n", order.IdOrder, err)
+				slog.Error("routine: failed to save updated order", "order_id", order.IdOrder, "error", err)
 				continue
 			}
 			updatedCount++

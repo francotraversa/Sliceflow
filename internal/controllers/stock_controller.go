@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	middleware "github.com/francotraversa/Sliceflow/internal/middlewares"
@@ -26,32 +27,39 @@ func CreateProductHandler(c echo.Context) error {
 	var item types.ProductCreateRequest
 
 	if err := c.Bind(&item); err != nil {
+		slog.Warn("stock: invalid request body", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("stock: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	err = services.CreateProductUseCase(item, claims.CompanyId)
 	if err != nil {
+		slog.Error("stock: product creation failed", "sku", item.SKU, "company_id", claims.CompanyId, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
-	return c.JSON(http.StatusCreated, types.Response{Message: fmt.Sprintf("The product %s has been created", item.Name)})
 
+	slog.Info("stock: product created", "sku", item.SKU, "name", item.Name, "company_id", claims.CompanyId)
+	return c.JSON(http.StatusCreated, types.Response{Message: fmt.Sprintf("The product %s has been created", item.Name)})
 }
 
 func GetProductsHandler(c echo.Context) error {
 	search := c.QueryParam("q")
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("stock: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	result, err := services.GetStockUseCase(search, claims.CompanyId)
 	if err != nil {
+		slog.Error("stock: list failed", "company_id", claims.CompanyId, "query", search, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
+	slog.Info("stock: listed", "count", len(*result), "query", search, "company_id", claims.CompanyId)
 	return c.JSON(http.StatusOK, &result)
 }
 
@@ -68,16 +76,21 @@ func GetProductsHandler(c echo.Context) error {
 func DeleteIdProductHandler(c echo.Context) error {
 	sku := c.Param("sku")
 	if sku == "" {
+		slog.Warn("stock: missing SKU param")
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "SKU is required"})
 	}
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("stock: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	err = services.DeleteByIdUseCase(sku, claims.CompanyId)
 	if err != nil {
+		slog.Error("stock: deletion failed", "sku", sku, "company_id", claims.CompanyId, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
+
+	slog.Info("stock: product deleted (soft)", "sku", sku, "company_id", claims.CompanyId)
 	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The product %s has been deleted", sku)})
 }
 
@@ -97,23 +110,29 @@ func DeleteIdProductHandler(c echo.Context) error {
 func UpdateByIdProductHandler(c echo.Context) error {
 	sku := c.Param("sku")
 	if sku == "" {
+		slog.Warn("stock: missing SKU param")
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "SKU is required"})
 	}
 
 	var item types.ProductUpdateRequest
 
 	if err := c.Bind(&item); err != nil {
+		slog.Warn("stock: invalid request body", "sku", sku, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("stock: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
 	product, err := services.UpdateByIdProductUseCase(sku, item, claims.CompanyId)
 	if err != nil {
+		slog.Error("stock: update failed", "sku", sku, "company_id", claims.CompanyId, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
+
+	slog.Info("stock: product updated", "sku", sku, "company_id", claims.CompanyId)
 	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The Product %s has been updated", product.Name)})
 }
 
@@ -131,20 +150,24 @@ func CreateMovementHandler(c echo.Context) error {
 	var mov types.CreateMovementRequest
 
 	if err := c.Bind(&mov); err != nil {
+		slog.Warn("stock: invalid movement request body", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("stock: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	mov.UserID = claims.UserId
 
 	err = services.AddStockMovementUseCase(mov, claims.CompanyId)
 	if err != nil {
+		slog.Error("stock: movement failed", "sku", mov.SKU, "type", mov.Type, "qty", mov.Quantity, "company_id", claims.CompanyId, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
-	return c.JSON(http.StatusCreated, types.Response{Message: ("The Movement has been registered successfully")})
 
+	slog.Info("stock: movement registered", "sku", mov.SKU, "type", mov.Type, "qty", mov.Quantity, "company_id", claims.CompanyId)
+	return c.JSON(http.StatusCreated, types.Response{Message: ("The Movement has been registered successfully")})
 }
 
 // GetStockHistoryHandler godoc
@@ -164,18 +187,21 @@ func GetStockHistoryHandler(c echo.Context) error {
 	var filter types.HistoryFilter
 
 	if err := c.Bind(&filter); err != nil {
+		slog.Warn("stock: invalid filter params", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid query parameters"})
-
 	}
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("stock: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	history, err := services.GetStockHistoryUseCase(filter, claims.CompanyId)
 	if err != nil {
+		slog.Error("stock: history fetch failed", "company_id", claims.CompanyId, "filter", filter, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
+	slog.Info("stock: history listed", "count", len(*history), "company_id", claims.CompanyId)
 	return c.JSON(http.StatusOK, history)
 }
 
@@ -188,11 +214,15 @@ func GetStockHistoryHandler(c echo.Context) error {
 func GetDashboardHandler(c echo.Context) error {
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("stock: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	stats, err := services.GetDashboardStatsUseCase(claims.CompanyId)
 	if err != nil {
+		slog.Error("stock: dashboard failed", "company_id", claims.CompanyId, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
+
+	slog.Info("stock: dashboard retrieved", "company_id", claims.CompanyId)
 	return c.JSON(http.StatusOK, &stats)
 }

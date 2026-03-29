@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -25,18 +26,21 @@ func CreateMaterialHandler(c echo.Context) error {
 	var newmaterial types.CreateMaterialDTO
 
 	if err := c.Bind(&newmaterial); err != nil {
+		slog.Warn("materials: invalid request body", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("materials: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	if err := services.CreateMaterialUseCase(newmaterial, claims.CompanyId); err != nil {
+		slog.Error("materials: creation failed", "name", newmaterial.Name, "company_id", claims.CompanyId, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
+	slog.Info("materials: created", "name", newmaterial.Name, "company_id", claims.CompanyId)
 	return c.JSON(http.StatusCreated, types.Response{Message: fmt.Sprintf("The material %s has been created", newmaterial.Name)})
-
 }
 
 // UpdateMaterialHandler godoc
@@ -55,19 +59,25 @@ func UpdateMaterialHandler(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
+		slog.Warn("materials: invalid ID param", "param", idParam, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Param"})
 	}
 	var mat types.UpdateMaterialDTO
 	if err := c.Bind(&mat); err != nil {
+		slog.Warn("materials: invalid request body", "material_id", id, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("materials: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	if err := services.UpdateMaterialUseCase(id, mat, claims.CompanyId); err != nil {
+		slog.Error("materials: update failed", "material_id", id, "company_id", claims.CompanyId, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
+
+	slog.Info("materials: updated", "material_id", id, "company_id", claims.CompanyId)
 	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The material %s has been updated", mat.Name)})
 }
 
@@ -86,21 +96,26 @@ func DeleteMaterialHandler(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
+		slog.Warn("materials: invalid ID param", "param", idParam, "error", err)
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Id"})
 	}
 	var mat types.UpdateMaterialDTO
 	if err := c.Bind(&mat); err != nil {
+		slog.Warn("materials: invalid request body for delete", "material_id", id, "error", err)
 		return c.JSON(http.StatusBadRequest, "Invalid Json")
 	}
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("materials: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	if err := services.DeleteMaterialUseCase(id, claims.CompanyId); err != nil {
+		slog.Error("materials: deletion failed", "material_id", id, "company_id", claims.CompanyId, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
-	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The material %s has been deleted", mat.Name)})
 
+	slog.Info("materials: deleted (soft)", "material_id", id, "company_id", claims.CompanyId)
+	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("The material %s has been deleted", mat.Name)})
 }
 
 // GetMaterialsHandler godoc
@@ -116,16 +131,20 @@ func GetMaterialsHandler(c echo.Context) error {
 	var filter types.MaterialFilter
 
 	if err := c.Bind(&filter); err != nil {
+		slog.Warn("materials: invalid filter params", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Filters don't work"})
 	}
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("materials: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	materials, err := services.GetAllMaterialsUseCase(filter, claims.CompanyId)
 	if err != nil {
+		slog.Error("materials: list failed", "company_id", claims.CompanyId, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
+	slog.Info("materials: listed", "count", len(*materials), "company_id", claims.CompanyId)
 	return c.JSON(http.StatusOK, &materials)
 }
