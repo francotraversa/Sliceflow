@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -21,16 +22,21 @@ import (
 func CreateMachineHandler(c echo.Context) error {
 	var newmachine types.CreateMachineDTO
 	if err := c.Bind(&newmachine); err != nil {
+		slog.Warn("machines: invalid request body", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("machines: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
 	if err := services.CreateMachineUseCase(newmachine, claims.CompanyId); err != nil {
+		slog.Error("machines: creation failed", "name", newmachine.Name, "company_id", claims.CompanyId, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
+
+	slog.Info("machines: created", "name", newmachine.Name, "company_id", claims.CompanyId)
 	return c.JSON(http.StatusCreated, types.Response{Message: fmt.Sprintf("Machine %s has been created", newmachine.Name)})
 }
 
@@ -43,20 +49,25 @@ func GetMachinesHandler(c echo.Context) error {
 	var filter types.MachineFilter
 
 	if err := c.Bind(&filter); err != nil {
+		slog.Warn("machines: invalid filter params", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Filters don't work"})
 	}
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("machines: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 	machines, err := services.GetAllMachinesUseCase(filter, claims.CompanyId)
 	if err != nil {
+		slog.Error("machines: list failed", "company_id", claims.CompanyId, "error", err)
 		return c.JSON(http.StatusInternalServerError, types.Error{Error: err.Error()})
 	}
+
+	slog.Info("machines: listed", "count", len(*machines), "company_id", claims.CompanyId)
 	return c.JSON(http.StatusOK, machines)
 }
 
-// UpdateMachineHandler godoc
+// UpdateMachineHaHndler godoc
 // @Summary      Update printer
 // @Tags         Machines
 // @Param        id      path    int                     true  "Machine ID"
@@ -65,22 +76,28 @@ func GetMachinesHandler(c echo.Context) error {
 func UpdateMachineHandler(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
+		slog.Warn("machines: invalid ID param", "param", c.Param("id"), "error", err)
 		return c.JSON(http.StatusInternalServerError, types.Error{Error: "invalid machine ID format in URL"})
 	}
 	var dto types.UpdateMachineDTO
 
 	if err := c.Bind(&dto); err != nil {
+		slog.Warn("machines: invalid request body", "machine_id", id, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
 	}
 
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("machines: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
 	if err := services.UpdateMachineUseCase(id, dto, claims.CompanyId); err != nil {
+		slog.Error("machines: update failed", "machine_id", id, "company_id", claims.CompanyId, "error", err)
 		return c.JSON(http.StatusInternalServerError, types.Error{Error: err.Error()})
 	}
+
+	slog.Info("machines: updated", "machine_id", id, "company_id", claims.CompanyId)
 	return c.JSON(http.StatusOK, types.Response{Message: fmt.Sprintf("Machine %d has been updated", id)})
 }
 
@@ -94,17 +111,21 @@ func UpdateMachineHandler(c echo.Context) error {
 func DeleteMachineHandler(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
+		slog.Warn("machines: invalid ID param", "param", c.Param("id"), "error", err)
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Id"})
 	}
 
 	claims, err := middleware.GetClaimsFromContext(c)
 	if err != nil {
+		slog.Warn("machines: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
 
 	if err := services.DeleteMachineUseCase(id, claims.CompanyId); err != nil {
+		slog.Error("machines: deletion failed", "machine_id", id, "company_id", claims.CompanyId, "error", err)
 		return c.JSON(http.StatusInternalServerError, types.Error{Error: err.Error()})
 	}
 
+	slog.Info("machines: deleted (soft)", "machine_id", id, "company_id", claims.CompanyId)
 	return c.JSON(http.StatusAccepted, types.Response{Message: fmt.Sprintf("Machine %d has been deleted", id)})
 }
