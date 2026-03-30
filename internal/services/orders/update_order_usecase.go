@@ -87,6 +87,8 @@ func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO, companyID uint) error 
 				MaterialID: itemDTO.MaterialID,
 				MachineID:  itemDTO.MachineID,
 				Price:      &price,
+				Weight:     itemDTO.Weight,
+				Time:       itemDTO.Time,
 			})
 		}
 

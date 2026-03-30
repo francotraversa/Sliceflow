@@ -47,6 +47,8 @@ type OrderItem struct {
 	MachineID  *int      `gorm:"index" json:"machine_id"`
 	Material   *Material `gorm:"foreignKey:MaterialID" json:"material"`
 	Machine    *Machine  `gorm:"foreignKey:MachineID" json:"machine,omitempty"`
+	Weight     *float64  `gorm:"type:decimal(12,2)" json:"weight,omitempty"`
+	Time       *int      `gorm:"type:int" json:"time,omitempty"`
 }
 
 type CreateOrderDTO struct {
@@ -62,13 +64,15 @@ type CreateOrderDTO struct {
 	TotalPrice       *float64             `json:"total_price,omitempty"`
 }
 type CreateOrderItemDTO struct {
-	ID         uint    `json:"id"`
-	StlName    string  `json:"stl_name"`
-	Quantity   int     `json:"quantity"`
-	DonePieces int     `json:"done_pieces"`
-	MachineID  *int    `json:"machine_id"`
-	MaterialID *int    `json:"material_id"`
-	Price      float64 `json:"price"`
+	ID         uint     `json:"id"`
+	StlName    string   `json:"stl_name"`
+	Quantity   int      `json:"quantity"`
+	DonePieces int      `json:"done_pieces"`
+	MachineID  *int     `json:"machine_id"`
+	MaterialID *int     `json:"material_id"`
+	Price      float64  `json:"price"`
+	Weight     *float64 `json:"weight,omitempty"`
+	Time       *int     `json:"time,omitempty"`
 }
 
 type UpdateOrderDTO struct {
