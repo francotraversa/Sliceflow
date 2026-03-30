@@ -93,7 +93,7 @@ func TestUpdateOrderUseCase(t *testing.T) {
 		}
 
 		// 3. Execute Update
-		err := UpdateOrderUseCase(int(initialOrder.IdOrder), updateDTO, testCompanyIDOrder)
+		err := UpdateOrderUseCase(int(initialOrder.Id), updateDTO, testCompanyIDOrder)
 		if err != nil {
 			t.Fatalf("Failed to update order: %v", err)
 		}
@@ -151,7 +151,7 @@ func TestUpdateOrderUseCase(t *testing.T) {
 			Items:      &items,
 		}
 
-		err := UpdateOrderUseCase(int(order.IdOrder), dto, testCompanyIDOrder)
+		err := UpdateOrderUseCase(int(order.Id), dto, testCompanyIDOrder)
 		if err != nil {
 			t.Fatalf("Error: %v", err)
 		}

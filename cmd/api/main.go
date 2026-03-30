@@ -50,6 +50,9 @@ func main() {
 		},
 		SigningKey:    []byte(os.Getenv("JWT_SECRET")),
 		SigningMethod: "HS256",
+		// WebSocket no puede enviar el header Authorization desde el browser:
+		// busca el token también en ?token= como fallback
+		TokenLookup: "header:Authorization,query:token",
 	}
 	swagger.RegisterSwagger(e)
 	routers.RegisterRouters(e, jwtCfg)
