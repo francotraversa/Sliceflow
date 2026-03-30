@@ -37,7 +37,7 @@ type ProductionOrder struct {
 }
 
 type OrderItem struct {
-	ID         uint      `gorm:"primaryKey" json:"id"`
+	ID         uint      `gorm:"primaryKey;autoIncrement:true" json:"id"`
 	OrderID    uint      `gorm:"index" json:"order_id"`
 	StlName    string    `gorm:"type:varchar(150);not null" json:"product_name"`
 	Quantity   int       `gorm:"not null" json:"quantity"`
