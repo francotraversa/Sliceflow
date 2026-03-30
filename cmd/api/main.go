@@ -10,7 +10,6 @@ import (
 	enviroment "github.com/francotraversa/Sliceflow/internal/environment"
 	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
 	userStorage "github.com/francotraversa/Sliceflow/internal/infra/database/user_utils"
-	redis "github.com/francotraversa/Sliceflow/internal/infra/cache"
 	"github.com/francotraversa/Sliceflow/internal/routers"
 	services "github.com/francotraversa/Sliceflow/internal/services/routines"
 	"github.com/francotraversa/Sliceflow/internal/swagger"
@@ -34,7 +33,7 @@ import (
 func main() {
 	enviroment.LoadEnvironment("dev")
 	storage.DatabaseInstance{}.NewDataBase()
-	redis.InitRedis()
+	//redis.InitRedis()
 	e := echo.New()
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -51,8 +50,6 @@ func main() {
 		},
 		SigningKey:    []byte(os.Getenv("JWT_SECRET")),
 		SigningMethod: "HS256",
-		// WebSocket no puede enviar headers: busca el token también en ?token=
-		TokenLookup: "header:Authorization,query:token",
 	}
 	swagger.RegisterSwagger(e)
 	routers.RegisterRouters(e, jwtCfg)
