@@ -1,0 +1,28 @@
+meta {
+  name: CreateProductDTO
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/hornero/authed/stock/addprod
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "sku": "PLA-BLK-1KG",
+    "name": "PLA Black 1kg",
+    "description": "Standard PLA filament, black, 1.75mm",
+    "quantity": 50,
+    "price": 18.99,
+    "min_qty": 5
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

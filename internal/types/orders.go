@@ -15,7 +15,7 @@ type OrderFilter struct {
 }
 
 type ProductionOrder struct {
-	Id               uint           `gorm:"primaryKey;autoIncrement:true" json:"id"`
+	Id               uint           `gorm:"primaryKey;autoIncrement:true;type:serial" json:"id"`
 	IdOrder          uint           `gorm:"primaryKey;autoIncrement:false;index:idx_order_id" json:"id_order"` // autoIncrement:false is key for manual ID
 	IdCompany        uint           `gorm:"not null" json:"id_company"`
 	Company          *Company       `gorm:"foreignKey:IdCompany;references:IdCompany" json:"company,omitempty"`
@@ -23,7 +23,7 @@ type ProductionOrder struct {
 	UpdatedAt        time.Time      `json:"updated_at"`
 	DeletedAt        gorm.DeletedAt `gorm:"index" json:"-"`
 	ClientName       string         `gorm:"type:varchar(150);not null" json:"client_name"`
-	Items            []OrderItem    `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE;" json:"items"`
+	Items            []OrderItem    `gorm:"foreignKey:OrderID;references:Id;constraint:OnDelete:CASCADE;" json:"items"`
 	Priority         string         `gorm:"type:varchar(10);default:'P3'" json:"priority"`
 	Notes            string         `gorm:"type:text" json:"notes"`
 	TotalPieces      int            `gorm:"not null" json:"total_pieces"`
@@ -50,7 +50,7 @@ type OrderItem struct {
 }
 
 type CreateOrderDTO struct {
-	ID               *uint                `gorm:"primaryKey" json:"id"`
+	ID               *uint                `json:"id"`
 	ClientName       string               `json:"client_name"`
 	Items            []CreateOrderItemDTO `json:"items"` // List of pieces/parts
 	Priority         string               `json:"priority"`
@@ -62,13 +62,13 @@ type CreateOrderDTO struct {
 	TotalPrice       *float64             `json:"total_price,omitempty"`
 }
 type CreateOrderItemDTO struct {
-	ID         uint     `json:"id"`
-	StlName    string   `json:"stl_name"`
-	Quantity   int      `json:"quantity"`
-	DonePieces int      `json:"done_pieces"`
-	MachineID  *int     `json:"machine_id"`
-	MaterialID *int     `json:"material_id"`
-	Price      *float64 `gorm:"type:decimal(12,2)" json:"price,omitempty"`
+	ID         uint    `json:"id"`
+	StlName    string  `json:"stl_name"`
+	Quantity   int     `json:"quantity"`
+	DonePieces int     `json:"done_pieces"`
+	MachineID  *int    `json:"machine_id"`
+	MaterialID *int    `json:"material_id"`
+	Price      float64 `json:"price"`
 }
 
 type UpdateOrderDTO struct {

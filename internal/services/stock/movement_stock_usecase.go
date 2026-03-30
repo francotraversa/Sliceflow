@@ -23,11 +23,14 @@ func AddStockMovementUseCase(req types.CreateMovementRequest, companyID uint) er
 		// clause.Locking{Strength: "UPDATE"} le dice a la DB:
 		// "Lock this row for writing until the transaction is complete".
 		// Evita condiciones de carrera (Race Conditions).
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&item, "sku = ?", req.SKU).Error; err != nil {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&item, "sku = ? AND id_company = ?", req.SKU, companyID).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return errors.New("producto no encontrado")
+				return fmt.Errorf("product with SKU '%s' not found", req.SKU)
 			}
 			return err
+		}
+		if item.Id == 0 {
+			return fmt.Errorf("product with SKU '%s' has invalid ID (schema migration may be pending)", req.SKU)
 		}
 
 		// 2. PREPARE AUDIT DATA
@@ -60,11 +63,12 @@ func AddStockMovementUseCase(req types.CreateMovementRequest, companyID uint) er
 
 		// 5. CREAR EL OBJETO MOVIMIENTO
 		movement := types.StockMovement{
-			StockSKU:    item.SKU, // String relation
+			StockItemID: item.Id,   // FK by DB Id (resolved from SKU + companyID)
+			StockSKU:    item.SKU,  // kept for display
 			Type:        req.Type,
-			QtyDelta:    qtyDelta,  // ej: +5 o -5
-			QtyBefore:   qtyBefore, // ej: 100
-			QtyAfter:    qtyAfter,  // ej: 105 o 95
+			QtyDelta:    qtyDelta,
+			QtyBefore:   qtyBefore,
+			QtyAfter:    qtyAfter,
 			Description: req.Description,
 			IdCompany:   companyID,
 			Reason:      req.Reason,

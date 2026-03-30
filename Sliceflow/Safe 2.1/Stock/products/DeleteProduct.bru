@@ -1,0 +1,20 @@
+meta {
+  name: DeleteProduct
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/hornero/authed/stock/delprod/PLA-BLK-1KG
+  body: none
+  auth: inherit
+}
+
+headers {
+  sku: PLA-BLK-1KG
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
