@@ -8,13 +8,12 @@ import (
 	servicesWeb "github.com/francotraversa/Sliceflow/internal/services/common"
 	servicesMachine "github.com/francotraversa/Sliceflow/internal/services/machine"
 	"github.com/francotraversa/Sliceflow/internal/types"
-	"gorm.io/gorm"
 )
 
 func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO, companyID uint) error {
 	db := storage.DatabaseInstance{}.Instance()
 	var order types.ProductionOrder
-	if err := db.Preload("Items").Where("id_company = ? AND id = ?", companyID, id).First(&order).Error; err != nil {
+	if err := db.Preload("Items").Where("id = ?", id).First(&order).Error; err != nil {
 		return fmt.Errorf("order not found: %w", err)
 	}
 
@@ -106,9 +105,19 @@ func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO, companyID uint) error 
 		order.FinishTime = &now
 	}
 
-	err := db.Session(&gorm.Session{FullSaveAssociations: true}).Save(&order).Error
-	if err != nil {
-		return fmt.Errorf("failed to update order and items: %w", err)
+	// Guardar el order sin los items primero para evitar conflictos de constraint
+	itemsToSave := order.Items
+	order.Items = nil
+	if err := db.Save(&order).Error; err != nil {
+		return fmt.Errorf("failed to update order: %w", err)
+	}
+
+	// Upsert explícito de cada item
+	for i := range itemsToSave {
+		itemsToSave[i].OrderID = order.Id
+		if err := db.Save(&itemsToSave[i]).Error; err != nil {
+			return fmt.Errorf("failed to update order item %d: %w", itemsToSave[i].ID, err)
+		}
 	}
 
 	servicesWeb.InvalidateCache("orders:list:*")
