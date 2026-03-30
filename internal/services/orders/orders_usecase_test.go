@@ -100,7 +100,7 @@ func TestUpdateOrderUseCase(t *testing.T) {
 
 		// 4. Verify Changes
 		var order types.ProductionOrder
-		db.Preload("Items").First(&order, initialOrder.IdOrder)
+		db.Preload("Items").Where("id_order = ?", initialOrder.IdOrder).First(&order)
 
 		if order.ClientName != "New Client" {
 			t.Errorf("Client name not updated. Got: %s", order.ClientName)
