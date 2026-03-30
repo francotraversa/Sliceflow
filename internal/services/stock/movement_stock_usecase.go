@@ -63,8 +63,8 @@ func AddStockMovementUseCase(req types.CreateMovementRequest, companyID uint) er
 
 		// 5. CREAR EL OBJETO MOVIMIENTO
 		movement := types.StockMovement{
-			StockItemID: item.Id,   // FK by DB Id (resolved from SKU + companyID)
-			StockSKU:    item.SKU,  // kept for display
+			StockItemID: item.Id,  // FK by DB Id (resolved from SKU + companyID)
+			StockSKU:    item.SKU, // kept for display
 			Type:        req.Type,
 			QtyDelta:    qtyDelta,
 			QtyBefore:   qtyBefore,
@@ -88,7 +88,7 @@ func AddStockMovementUseCase(req types.CreateMovementRequest, companyID uint) er
 			return err // Dispara Rollback
 		}
 		services.InvalidateCache(fmt.Sprintf("stock:list:%d", companyID))
-		services.InvalidateCache(fmt.Sprintf("historic:list:%d", companyID))
+		services.InvalidateCache(fmt.Sprintf("historic:list:*company=%d", companyID))
 		services.InvalidateCache("dashboard:*")
 		services.PublishEvent("dashboard_updates", `{"type": "STOCK_MOVEMENT", "message": "STOCK MOVEMENT CREATED"}`)
 		return nil
