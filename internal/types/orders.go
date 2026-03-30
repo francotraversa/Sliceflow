@@ -16,8 +16,8 @@ type OrderFilter struct {
 
 type ProductionOrder struct {
 	Id               uint           `gorm:"primaryKey;autoIncrement:true" json:"id"`
-	IdOrder          uint           `gorm:"primaryKey;autoIncrement:false;index:idx_order_id" json:"id_order"` // autoIncrement:false is key for manual ID
-	IdCompany        uint           `gorm:"not null" json:"id_company"`
+	IdOrder          uint           `gorm:"not null;uniqueIndex:idx_order_company" json:"id_order"` // business key, unique per company
+	IdCompany        uint           `gorm:"not null;uniqueIndex:idx_order_company" json:"id_company"`
 	Company          *Company       `gorm:"foreignKey:IdCompany;references:IdCompany" json:"company,omitempty"`
 	CreatedAt        time.Time      `json:"created_at"`
 	UpdatedAt        time.Time      `json:"updated_at"`
