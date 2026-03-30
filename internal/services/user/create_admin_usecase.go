@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func CreateUserUseCase(user types.UserCreateCreds) error {
+func CreateAdminUseCase(user types.UserCreateCreds) error {
 	db := storage.DatabaseInstance{}.Instance()
 
 	if user.Username == "" || user.Password == "" {
@@ -21,10 +21,10 @@ func CreateUserUseCase(user types.UserCreateCreds) error {
 	}
 
 	if user.Role == "" {
-		user.Role = "user"
+		user.Role = "admin"
 	} else {
 		normalized := strings.ToLower(strings.TrimSpace(user.Role))
-		if normalized == "user" {
+		if normalized == "admin" {
 			user.Role = normalized
 		} else {
 			return fmt.Errorf("invalid user role")
@@ -51,5 +51,4 @@ func CreateUserUseCase(user types.UserCreateCreds) error {
 		return fmt.Errorf("Error creating user")
 	}
 	return nil
-
 }

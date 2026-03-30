@@ -75,14 +75,12 @@ func UpdateOrderUseCase(id int, dto types.UpdateOrderDTO, companyID uint) error 
 				DonePieces: itemDTO.DonePieces,
 				MaterialID: itemDTO.MaterialID,
 				MachineID:  itemDTO.MachineID,
-				Price:      itemDTO.Price,
+				Price:      &itemDTO.Price,
 			}
 			updatedItems = append(updatedItems, item)
 			currentTotalDone += item.DonePieces
 			currentTotalPieces += item.Quantity
-			if item.Price != nil {
-				totalPrice += *item.Price
-			}
+			totalPrice += itemDTO.Price
 		}
 		order.Items = updatedItems
 		order.DonePieces = currentTotalDone

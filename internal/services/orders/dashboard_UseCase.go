@@ -32,8 +32,8 @@ func GetDashboardDataUseCase(userRole string, companyID uint) (*types.Production
 	var activeOrders []types.ProductionOrder
 
 	err := db.Preload("Items").
-		Preload("Material").
-		Preload("Machine").
+		Preload("Items.Material").
+		Preload("Items.Machine").
 		Where("id_company = ? AND status IN ?", companyID, []string{"in-progress", "queued", "ready", "pending"}).
 		Order("priority ASC").
 		Find(&activeOrders).Error

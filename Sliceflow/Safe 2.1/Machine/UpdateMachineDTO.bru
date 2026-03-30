@@ -1,0 +1,25 @@
+meta {
+  name: UpdateMachineDTO
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/hornero/loged/machine/updmac/1
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Prusa MK4",
+    "type": "FDM",
+    "status": "maintenance"
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

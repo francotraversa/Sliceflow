@@ -64,6 +64,9 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	owner := protected.Group("/owner")
 	owner.Use(middlewares.RequireRole("owner"))
 	owner.POST("/newcompany", controller.CreateCompanyHandler)
+	owner.POST("/newadmin", controller.CreateAdminHandler)
+	owner.DELETE("/deladmin/:id", controller.DeleteAdminHandler)
+	owner.GET("/alladmin", controller.GetAllAdminHandler)
 	owner.GET("/allcompany", controller.GetAllCompanyHandler)
 	owner.DELETE("/deletecompany/:id", controller.DeleteCompanyHandler)
 }

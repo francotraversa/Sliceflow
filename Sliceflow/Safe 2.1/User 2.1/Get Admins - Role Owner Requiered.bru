@@ -1,0 +1,16 @@
+meta {
+  name: Get Admins - Role Owner Requiered
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/hornero/authed/owner/alladmin
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

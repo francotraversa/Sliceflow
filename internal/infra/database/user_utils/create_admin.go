@@ -20,13 +20,9 @@ func EnsureHardcodedUser() error {
 	roleAdmin := os.Getenv("ROLEADMIN")
 	companyName := os.Getenv("COMPANYADMIN")
 
-	if userAdmin == "" || passAdmin == "" {
+	if userAdmin == "" || passAdmin == "" || roleAdmin == "" || companyName == "" {
 		log.Println("[seed] WARNING: USERADMIN or PASSWORDADMIN are not definitive. Ommiting seeding...")
 		return fmt.Errorf("Error Get Env")
-	}
-
-	if companyName == "" {
-		companyName = userAdmin // Use admin name as default company name
 	}
 
 	a := strings.ToLower(userAdmin)

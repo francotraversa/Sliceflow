@@ -1,0 +1,51 @@
+meta {
+  name: UpdateOrderDTO
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/hornero/authed/orders/updord/1
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "client_name": "Acme Corp Updated",
+    "priority": "P2",
+    "notes": "Updated notes",
+    "status": "in-progress",
+    "deadline": "2026-05-01",
+    "operator_id": 2,
+    "done_pieces": 5,
+    "estimated_hours": 4,
+    "estimated_minutes": 0,
+    "total_price": 300.00,
+    "items": [
+      {
+        "id": 1,
+        "stl_name": "bracket_v2.stl",
+        "quantity": 10,
+        "done_pieces": 5,
+        "machine_id": 1,
+        "material_id": 1,
+        "price": 15.50
+      },
+      {
+        "id": 2,
+        "stl_name": "cover_plate.stl",
+        "quantity": 5,
+        "done_pieces": 0,
+        "machine_id": null,
+        "material_id": null,
+        "price": 8.00
+      }
+    ]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

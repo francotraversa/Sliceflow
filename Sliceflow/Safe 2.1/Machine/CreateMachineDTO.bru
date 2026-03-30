@@ -1,20 +1,21 @@
 meta {
-  name: Create User
+  name: CreateMachineDTO
   type: http
   seq: 1
 }
 
 post {
-  url: {{baseUrl}}/hornero/authed/admin/newuser
+  url: {{baseUrl}}/hornero/authed/machine/addmac
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "username": "usertes1t12a3",
-    "password": "usertest12"
+    "name": "Prusa i3 MK3S+",
+    "type": "FDM"
   }
+  
 }
 
 settings {
