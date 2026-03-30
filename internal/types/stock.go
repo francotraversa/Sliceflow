@@ -7,7 +7,7 @@ import (
 )
 
 type StockItem struct {
-	Id          uint           `gorm:"primaryKey;autoIncrement:true;type:serial" json:"id"`
+	Id          uint           `gorm:"primaryKey;autoIncrement:true" json:"id"`
 	SKU         string         `gorm:"size:50;not null;uniqueIndex:idx_sku_company" json:"sku"`
 	Name        string         `gorm:"not null;index" json:"name"`
 	Quantity    int            `gorm:"default:0" json:"quantity"`
@@ -23,7 +23,7 @@ type StockItem struct {
 }
 
 type StockMovement struct {
-	ID          uint      `gorm:"primaryKey;autoIncrement:true;type:serial" json:"id"`
+	ID          uint      `gorm:"primaryKey;autoIncrement:true" json:"id"`
 	IdCompany   uint      `gorm:"not null" json:"id_company"`
 	Company     *Company  `gorm:"foreignKey:IdCompany;references:IdCompany"`
 	StockItemID uint      `gorm:"not null;index" json:"stock_item_id"`
