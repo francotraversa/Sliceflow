@@ -16,7 +16,7 @@ func DeleteOrderUseCase(id int, companyID uint) error {
 	return db.Transaction(func(tx *gorm.DB) error {
 		var order types.ProductionOrder
 
-		if err := tx.Preload("Items").Where("id_company = ? AND id_order = ?", companyID, id).First(&order).Error; err != nil {
+		if err := tx.Preload("Items").Where("id_company = ? AND id = ?", companyID, id).First(&order).Error; err != nil {
 			return fmt.Errorf("order not found: %w", err)
 		}
 
