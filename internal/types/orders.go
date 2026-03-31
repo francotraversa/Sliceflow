@@ -47,8 +47,8 @@ type OrderItem struct {
 	MachineID  *int      `gorm:"index" json:"machine_id"`
 	Material   *Material `gorm:"foreignKey:MaterialID" json:"material"`
 	Machine    *Machine  `gorm:"foreignKey:MachineID" json:"machine,omitempty"`
-	Weight     *float64  `gorm:"type:decimal(12,2)" json:"weight,omitempty"`
-	Time       *int      `gorm:"type:int" json:"time,omitempty"`
+	Weight     *float64  `gorm:"type:decimal(12,2);column:weight" json:"weight,omitempty"`
+	Time       *int      `gorm:"type:int;column:print_time" json:"time,omitempty"`
 }
 
 type CreateOrderDTO struct {
