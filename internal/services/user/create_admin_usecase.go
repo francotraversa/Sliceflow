@@ -31,7 +31,7 @@ func CreateAdminUseCase(user types.UserCreateCreds) error {
 		}
 	}
 
-	if user.IdCompany != nil {
+	if user.IdCompany == nil {
 		return fmt.Errorf("Company ID is required")
 	}
 
