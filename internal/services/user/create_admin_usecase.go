@@ -31,6 +31,10 @@ func CreateAdminUseCase(user types.UserCreateCreds) error {
 		}
 	}
 
+	if user.IdCompany != nil {
+		return fmt.Errorf("Company ID is required")
+	}
+
 	usercheck := userStorage.FindUserByUsername(user.Username)
 
 	if usercheck != nil {
@@ -43,9 +47,10 @@ func CreateAdminUseCase(user types.UserCreateCreds) error {
 	}
 
 	u := types.User{
-		Username: user.Username,
-		Password: string(hash),
-		Role:     user.Role,
+		Username:  user.Username,
+		Password:  string(hash),
+		Role:      user.Role,
+		IdCompany: *user.IdCompany,
 	}
 	if err := db.Create(&u).Error; err != nil {
 		return fmt.Errorf("Error creating user")

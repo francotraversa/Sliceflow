@@ -53,6 +53,7 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	orders.PATCH("/updord/:id", controller.UpdateOrderHandler)
 	orders.GET("/dashboard", controller.GetPrincipalDashboardHandler)
 	orders.DELETE("/delord/:id", controller.DeleteOrderHandler)
+	orders.GET("/metrics", controller.GetMetricsHandler)
 	//----------------------PRIVATE && ROLE----------------------
 	admin := protected.Group("/admin")
 	admin.Use(middlewares.RequireRole("admin"))

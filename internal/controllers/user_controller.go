@@ -34,12 +34,12 @@ func CreateUserHandler(c echo.Context) error {
 		slog.Warn("users: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
-	if claims.Role != "owner" && claims.Role != "superadmin" {
+	if claims.Role != "owner" && claims.Role != "admin" {
 		slog.Warn("users: unauthorized creation attempt", "requester_role", claims.Role, "requester_id", claims.UserId)
 		return c.JSON(http.StatusForbidden, types.Error{Error: "Only owners can create new users"})
 	}
 
-	err = services.CreateUserUseCase(UserCreateCreds)
+	err = services.CreateUserUseCase(UserCreateCreds, claims.CompanyId)
 	if err != nil {
 		slog.Error("users: creation failed", "username", UserCreateCreds.Username, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})

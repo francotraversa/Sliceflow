@@ -49,7 +49,7 @@ vet:
 
 # go install github.com/swaggo/swag/cmd/swag@latest
 swagger:
-	swag init -g $(CMD_PATH)/main.go --output ./docs
+	swag init -g $(CMD_PATH)/main.go --output ./Sliceflow/docs
 
 ## ── Docker ──────────────────────────────────────────────────
 

@@ -52,7 +52,7 @@ type UserCreateCreds struct {
 	Username  string `json:"username" example:"usertest"`
 	Password  string `json:"password" example:"usertest"`
 	Role      string `json:"role" example:"user"`
-	IdCompany uint   `json:"id_company" example:"1"`
+	IdCompany *uint  `json:"id_company" example:"1"`
 }
 type UserUpdateCreds struct {
 	Username string `json:"username"`
