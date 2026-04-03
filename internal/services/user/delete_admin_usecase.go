@@ -14,7 +14,7 @@ func DeleteAdminUseCase(id uint) error {
 	if user == nil {
 		return fmt.Errorf("The user does not exist")
 	}
-	if user.Role == "owner" {
+	if user.Role != "owner" {
 		return fmt.Errorf("You are not allowed to delete this user")
 	}
 	if err := db.Model(&user).Update("status", "disabled").Error; err != nil {

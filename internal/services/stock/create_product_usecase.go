@@ -59,7 +59,7 @@ func CreateProductUseCase(item types.ProductCreateRequest, companyID uint) error
 	if err := db_utils.Create(&product); err != nil {
 		return fmt.Errorf("Error Create Product")
 	}
-	services.InvalidateCache("stock:list:all")
+	services.InvalidateCache(fmt.Sprintf("stock:list:%d", companyID))
 	services.PublishEvent("dashboard_updates", `{"type": "PRODUCT_CREATED", "message": "PRODUCT CREATED"}`)
 	return nil
 }

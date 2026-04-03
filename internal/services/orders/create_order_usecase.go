@@ -38,6 +38,8 @@ func CreateOrderUseCase(dtoOrder types.CreateOrderDTO, idCompany uint) error {
 			MaterialID: itemDTO.MaterialID,
 			MachineID:  itemDTO.MachineID,
 			Price:      &itemDTO.Price,
+			Weight:     itemDTO.Weight,
+			Time:       itemDTO.Time,
 		})
 
 		if itemDTO.MachineID != nil {
