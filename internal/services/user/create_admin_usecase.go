@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func CreateUserUseCase(user types.UserCreateCreds, companyID uint) error {
+func CreateAdminUseCase(user types.UserCreateCreds) error {
 	db := storage.DatabaseInstance{}.Instance()
 
 	if user.Username == "" || user.Password == "" {
@@ -21,14 +21,18 @@ func CreateUserUseCase(user types.UserCreateCreds, companyID uint) error {
 	}
 
 	if user.Role == "" {
-		user.Role = "user"
+		user.Role = "admin"
 	} else {
 		normalized := strings.ToLower(strings.TrimSpace(user.Role))
-		if normalized == "user" {
+		if normalized == "admin" {
 			user.Role = normalized
 		} else {
 			return fmt.Errorf("invalid user role")
 		}
+	}
+
+	if user.IdCompany == nil {
+		return fmt.Errorf("Company ID is required")
 	}
 
 	usercheck := userStorage.FindUserByUsername(user.Username)
@@ -41,15 +45,6 @@ func CreateUserUseCase(user types.UserCreateCreds, companyID uint) error {
 	if err != nil {
 		return fmt.Errorf("Error generating password hash")
 	}
-	if user.IdCompany == nil {
-		user.IdCompany = &companyID
-	}
-
-	if user.Role == "admin" {
-		if *user.IdCompany != companyID {
-			return fmt.Errorf("You can only create users for your own company")
-		}
-	}
 
 	u := types.User{
 		Username:  user.Username,
@@ -61,5 +56,4 @@ func CreateUserUseCase(user types.UserCreateCreds, companyID uint) error {
 		return fmt.Errorf("Error creating user")
 	}
 	return nil
-
 }

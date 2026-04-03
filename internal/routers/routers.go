@@ -14,10 +14,11 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	api := e.Group("/hornero")
 	auth := api.Group("/auth")
 	auth.POST("/login", controller.LoginHandler)
+	//----------------------WEBSOCKET (JWT via query param) ----
+	api.GET("/ws/dashboard", controller.WebSocketHandler)
 	//----------------------LOGED------------------------------
 	protected := api.Group("/authed")
 	protected.Use(echojwt.WithConfig(jwtCfg))
-	protected.GET("/ws/dashboard", controller.WebSocketHandler)
 	//----------------------USER---------------------------------
 	user := protected.Group("/user")
 	user.PATCH("/updmyuser", controller.UpdateUserHandler)
@@ -52,6 +53,7 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	orders.PATCH("/updord/:id", controller.UpdateOrderHandler)
 	orders.GET("/dashboard", controller.GetPrincipalDashboardHandler)
 	orders.DELETE("/delord/:id", controller.DeleteOrderHandler)
+	orders.GET("/metrics", controller.GetMetricsHandler)
 	//----------------------PRIVATE && ROLE----------------------
 	admin := protected.Group("/admin")
 	admin.Use(middlewares.RequireRole("admin"))
@@ -64,6 +66,9 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	owner := protected.Group("/owner")
 	owner.Use(middlewares.RequireRole("owner"))
 	owner.POST("/newcompany", controller.CreateCompanyHandler)
+	owner.POST("/newadmin", controller.CreateAdminHandler)
+	owner.DELETE("/deladmin/:id", controller.DeleteAdminHandler)
+	owner.GET("/alladmin", controller.GetAllAdminHandler)
 	owner.GET("/allcompany", controller.GetAllCompanyHandler)
 	owner.DELETE("/deletecompany/:id", controller.DeleteCompanyHandler)
 }

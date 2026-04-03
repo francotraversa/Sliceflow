@@ -34,12 +34,12 @@ func CreateUserHandler(c echo.Context) error {
 		slog.Warn("users: failed to extract JWT claims", "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
 	}
-	if claims.Role != "owner" && claims.Role != "superadmin" {
+	if claims.Role != "owner" && claims.Role != "admin" {
 		slog.Warn("users: unauthorized creation attempt", "requester_role", claims.Role, "requester_id", claims.UserId)
 		return c.JSON(http.StatusForbidden, types.Error{Error: "Only owners can create new users"})
 	}
 
-	err = services.CreateUserUseCase(UserCreateCreds)
+	err = services.CreateUserUseCase(UserCreateCreds, claims.CompanyId)
 	if err != nil {
 		slog.Error("users: creation failed", "username", UserCreateCreds.Username, "error", err)
 		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
@@ -208,5 +208,103 @@ func GetAllUserHandler(c echo.Context) error {
 	}
 
 	slog.Info("users: listed", "count", len(*users), "company_id", claims.CompanyId)
+	return c.JSON(http.StatusOK, users)
+}
+
+// CreateAdminHandler godoc
+// @Summary      Create new admin
+// @Description  Creates a new admin user. Requires owner permissions.
+// @Tags         Users
+// @Produce      json
+// @Security BearerAuth
+// @Param        request  body      types.UserCreateCreds  true  "Admin credentials"
+// @Success      200   {object}  types.Response       "Admin created successfully"
+// @Failure      400   {object}  types.Response       "Error message"
+// @Router       /hornero/authed/owner/newadmin [post]
+func CreateAdminHandler(c echo.Context) error {
+	var UserCreateCreds types.UserCreateCreds
+	if err := c.Bind(&UserCreateCreds); err != nil {
+		slog.Warn("users: invalid request body", "error", err)
+		return c.JSON(http.StatusBadRequest, types.Error{Error: "Invalid Json"})
+	}
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		slog.Warn("users: failed to extract JWT claims", "error", err)
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+	if claims.Role != "owner" {
+		slog.Warn("users: unauthorized creation attempt", "requester_role", claims.Role, "requester_id", claims.UserId)
+		return c.JSON(http.StatusForbidden, types.Error{Error: "Only owners can create new users"})
+	}
+
+	err = services.CreateAdminUseCase(UserCreateCreds)
+	if err != nil {
+		slog.Error("users: creation failed", "username", UserCreateCreds.Username, "error", err)
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+
+	slog.Info("users: created", "username", UserCreateCreds.Username, "by", claims.UserId)
+	return c.JSON(http.StatusCreated, types.Response{Message: fmt.Sprintf("The User %s has been created", UserCreateCreds.Username)})
+}
+
+// DeleteAdminHandler godoc
+// @Summary      Delete admin by ID
+// @Description  Sets the user status to 'disabled'. Requires owner permissions.
+// @Tags         Users
+// @Produce      json
+// @Security BearerAuth
+// @Param        id    path      int                    false "User ID to delete (Admins only)"
+// @Success      200   {string}  string                 "The UserID [id] has been deleted"
+// @Failure      400   {string}  string                 "Error message"
+// @Router       /hornero/authed/owner/deleteadmin/{id} [delete]
+func DeleteAdminHandler(c echo.Context) error {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		slog.Warn("users: failed to extract JWT claims", "error", err)
+		return c.JSON(http.StatusInternalServerError, types.Error{Error: "failed to parse custom claims"})
+	}
+
+	idParam := c.Param("id")
+	var targetID uint
+
+	if idParam != "" {
+		id, err := strconv.ParseUint(idParam, 10, 32)
+		if err != nil {
+			slog.Warn("users: invalid ID param", "param", idParam, "error", err)
+			return c.JSON(http.StatusInternalServerError, types.Error{Error: "invalid user ID format in URL"})
+		}
+		targetID = uint(id)
+	} else {
+		targetID = claims.UserId
+	}
+
+	err = services.DeleteAdminUseCase(targetID)
+	if err != nil {
+		slog.Error("users: deletion failed", "target_id", targetID, "requester_id", claims.UserId, "error", err)
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+
+	slog.Info("users: deleted (soft)", "target_id", targetID, "by", claims.UserId)
+	return c.JSON(http.StatusOK, types.Response{Message: fmt.Sprintf("The UserID %d has been deleted", targetID)})
+}
+
+func GetAllAdminHandler(c echo.Context) error {
+	claims, err := middleware.GetClaimsFromContext(c)
+	if err != nil {
+		slog.Warn("users: failed to extract JWT claims", "error", err)
+		return c.JSON(http.StatusInternalServerError, types.Error{Error: "failed to parse custom claims"})
+	}
+	if claims.Role != "owner" {
+		slog.Warn("users: unauthorized list attempt", "requester_role", claims.Role, "requester_id", claims.UserId)
+		return c.JSON(http.StatusForbidden, types.Error{Error: "Only owners can list admins"})
+	}
+
+	users, err := services.GetAllAdminUserUseCase()
+	if err != nil {
+		slog.Error("users: list failed", "error", err)
+		return c.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+
+	slog.Info("users: listed", "count", len(*users))
 	return c.JSON(http.StatusOK, users)
 }

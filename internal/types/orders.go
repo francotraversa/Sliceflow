@@ -16,14 +16,14 @@ type OrderFilter struct {
 
 type ProductionOrder struct {
 	Id               uint           `gorm:"primaryKey;autoIncrement:true" json:"id"`
-	IdOrder          uint           `gorm:"primaryKey;autoIncrement:false;index:idx_order_id" json:"id_order"` // autoIncrement:false is key for manual ID
-	IdCompany        uint           `gorm:"not null" json:"id_company"`
+	IdOrder          uint           `gorm:"not null;uniqueIndex:idx_order_company" json:"id_order"` // business key, unique per company
+	IdCompany        uint           `gorm:"not null;uniqueIndex:idx_order_company" json:"id_company"`
 	Company          *Company       `gorm:"foreignKey:IdCompany;references:IdCompany" json:"company,omitempty"`
 	CreatedAt        time.Time      `json:"created_at"`
 	UpdatedAt        time.Time      `json:"updated_at"`
 	DeletedAt        gorm.DeletedAt `gorm:"index" json:"-"`
 	ClientName       string         `gorm:"type:varchar(150);not null" json:"client_name"`
-	Items            []OrderItem    `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE;" json:"items"`
+	Items            []OrderItem    `gorm:"foreignKey:OrderID;references:Id;constraint:OnDelete:CASCADE;" json:"items"`
 	Priority         string         `gorm:"type:varchar(10);default:'P3'" json:"priority"`
 	Notes            string         `gorm:"type:text" json:"notes"`
 	TotalPieces      int            `gorm:"not null" json:"total_pieces"`
@@ -37,7 +37,7 @@ type ProductionOrder struct {
 }
 
 type OrderItem struct {
-	ID         uint      `gorm:"primaryKey" json:"id"`
+	ID         uint      `gorm:"primaryKey;autoIncrement:true" json:"id"`
 	OrderID    uint      `gorm:"index" json:"order_id"`
 	StlName    string    `gorm:"type:varchar(150);not null" json:"product_name"`
 	Quantity   int       `gorm:"not null" json:"quantity"`
@@ -47,10 +47,12 @@ type OrderItem struct {
 	MachineID  *int      `gorm:"index" json:"machine_id"`
 	Material   *Material `gorm:"foreignKey:MaterialID" json:"material"`
 	Machine    *Machine  `gorm:"foreignKey:MachineID" json:"machine,omitempty"`
+	Weight     *float64  `gorm:"type:decimal(12,2);column:weight" json:"weight,omitempty"`
+	Time       *int      `gorm:"type:int;column:print_time" json:"time,omitempty"`
 }
 
 type CreateOrderDTO struct {
-	ID               *uint                `gorm:"primaryKey" json:"id"`
+	ID               *uint                `json:"id"`
 	ClientName       string               `json:"client_name"`
 	Items            []CreateOrderItemDTO `json:"items"` // List of pieces/parts
 	Priority         string               `json:"priority"`
@@ -68,7 +70,9 @@ type CreateOrderItemDTO struct {
 	DonePieces int      `json:"done_pieces"`
 	MachineID  *int     `json:"machine_id"`
 	MaterialID *int     `json:"material_id"`
-	Price      *float64 `gorm:"type:decimal(12,2)" json:"price,omitempty"`
+	Price      float64  `json:"price"`
+	Weight     *float64 `json:"weight,omitempty"`
+	Time       *int     `json:"time,omitempty"`
 }
 
 type UpdateOrderDTO struct {

@@ -1,0 +1,48 @@
+meta {
+  name: Create Order
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/hornero/authed/orders/order
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": 1,
+    "client_name": "Acme Corp",
+    "priority": "P1",
+    "notes": "Urgent batch",
+    "estimated_hours": 3,
+    "estimated_minutes": 30,
+    "deadline": "2026-04-15",
+    "operator_id": 1,
+    "items": [
+      {
+        "stl_name": "bracket_v2.stl",
+        "quantity": 10,
+        "machine_id": 1,
+        "material_id": 1,
+        "price": 15.50,
+        "weight": 20,
+        "time": 20
+      },
+      {
+        "stl_name": "cover_plate.stl",
+        "quantity": 5,
+        "machine_id": null,
+        "material_id": null,
+        "price": 8.00
+      }
+    ]
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

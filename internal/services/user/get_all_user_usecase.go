@@ -30,6 +30,7 @@ func GetAllUserUserUseCase(requesterRole string, filterRole string, role string,
 			Status:    u.Status,
 			CreatedAt: u.CreatedAt,
 			UpdatedAt: u.UpdatedAt,
+			IdCompany: u.IdCompany,
 		})
 	}
 

@@ -1,0 +1,29 @@
+meta {
+  name: CreateMovemenRequestDTO
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/hornero/authed/stock/movement/addmov
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "sku": "PLA-BLK-1KGD",
+    "quantity": 20,
+    "type": "IN",
+    "reason": "Supplier delivery",
+    "description": "Invoice #4421",
+    "user_id": 1,
+    "location_id": 1
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

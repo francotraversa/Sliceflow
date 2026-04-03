@@ -14,14 +14,15 @@ import (
 )
 
 func CreateOrderUseCase(dtoOrder types.CreateOrderDTO, idCompany uint) error {
-	if dtoOrder.ID != nil {
-		order, err := ordersutils.CheckOrder(dtoOrder)
-		if err != nil {
-			return fmt.Errorf("error checking order: %w", err)
-		}
-		if order != nil {
-			return fmt.Errorf("The Order %d already exists", *dtoOrder.ID)
-		}
+	if dtoOrder.ID == nil {
+		return fmt.Errorf("order id is required")
+	}
+	order, err := ordersutils.CheckOrder(dtoOrder)
+	if err != nil {
+		return fmt.Errorf("error checking order: %w", err)
+	}
+	if order != nil {
+		return fmt.Errorf("The Order %d already exists", *dtoOrder.ID)
 	}
 	initialStatus := "pending"
 	var itemsDB []types.OrderItem
@@ -29,14 +30,16 @@ func CreateOrderUseCase(dtoOrder types.CreateOrderDTO, idCompany uint) error {
 	totalPriceCalculated := 0.0
 	for _, itemDTO := range dtoOrder.Items {
 		totalPiecesCalculated += itemDTO.Quantity
-		totalPriceCalculated += *itemDTO.Price
+		totalPriceCalculated += itemDTO.Price
 		itemsDB = append(itemsDB, types.OrderItem{
 			StlName:    itemDTO.StlName,
 			Quantity:   itemDTO.Quantity,
 			DonePieces: 0,
 			MaterialID: itemDTO.MaterialID,
 			MachineID:  itemDTO.MachineID,
-			Price:      itemDTO.Price,
+			Price:      &itemDTO.Price,
+			Weight:     itemDTO.Weight,
+			Time:       itemDTO.Time,
 		})
 
 		if itemDTO.MachineID != nil {

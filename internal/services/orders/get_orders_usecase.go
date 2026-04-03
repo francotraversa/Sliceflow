@@ -19,7 +19,7 @@ func GetAllOrdersUseCase(filter types.OrderFilter, companyID uint) (*[]types.Pro
 		return &orders, nil
 	}
 
-	query := db.Preload("Material").Preload("Machine").Preload("Items").Where("id_company = ?", companyID)
+	query := db.Preload("Items.Material").Preload("Items.Machine").Preload("Items").Where("id_company = ?", companyID)
 
 	// 1. Filtro por ID (Prioridad absoluta)
 	if filter.ID != 0 {

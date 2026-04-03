@@ -7,14 +7,15 @@ import (
 )
 
 type StockItem struct {
-	SKU         string         `gorm:"primaryKey;size:50;not null" json:"sku"`
+	Id          uint           `gorm:"primaryKey;autoIncrement:true" json:"id"`
+	SKU         string         `gorm:"size:50;not null;uniqueIndex:idx_sku_company" json:"sku"`
 	Name        string         `gorm:"not null;index" json:"name"`
 	Quantity    int            `gorm:"default:0" json:"quantity"`
 	Price       float64        `gorm:"type:decimal(10,2);default:0" json:"price"`
 	MinQty      float64        `gorm:"default:5" json:"min_qty"`
 	Description string         `gorm:"null" json:"description"`
 	Status      string         `gorm:"size:16;default:'active';index" json:"status"`
-	IdCompany   uint           `gorm:"not null" json:"id_company"`
+	IdCompany   uint           `gorm:"not null;uniqueIndex:idx_sku_company" json:"id_company"`
 	Company     *Company       `gorm:"foreignKey:IdCompany;references:IdCompany"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
@@ -22,11 +23,12 @@ type StockItem struct {
 }
 
 type StockMovement struct {
-	ID          uint      `gorm:"primaryKey" json:"id"`
+	ID          uint      `gorm:"primaryKey;autoIncrement:true" json:"id"`
 	IdCompany   uint      `gorm:"not null" json:"id_company"`
 	Company     *Company  `gorm:"foreignKey:IdCompany;references:IdCompany"`
-	StockSKU    string    `gorm:"size:50;index;not null" json:"stock_sku"`
-	StockItem   StockItem `gorm:"foreignKey:StockSKU;references:SKU" json:"-"`
+	StockItemID uint      `gorm:"not null;index" json:"stock_item_id"`
+	StockItem   StockItem `gorm:"foreignKey:StockItemID" json:"-"`
+	StockSKU    string    `gorm:"size:50;index;not null" json:"stock_sku"` // kept for readability/display
 	LocationID  uint      `gorm:"index" json:"location_id"`
 	Type        string    `gorm:"size:20;not null" json:"type"` // IN, OUT, ADJUST
 	QtyDelta    int       `gorm:"not null" json:"qty_delta"`    // How much changed (+10, -5)
