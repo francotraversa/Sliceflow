@@ -6,12 +6,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/francotraversa/Sliceflow/cmd/routers"
 	_ "github.com/francotraversa/Sliceflow/docs"
 	enviroment "github.com/francotraversa/Sliceflow/internal/environment"
 	redis "github.com/francotraversa/Sliceflow/internal/infra/cache"
 	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
 	userStorage "github.com/francotraversa/Sliceflow/internal/infra/database/user_utils"
-	"github.com/francotraversa/Sliceflow/internal/routers"
 	services "github.com/francotraversa/Sliceflow/internal/services/routines"
 	"github.com/francotraversa/Sliceflow/internal/swagger"
 	"github.com/francotraversa/Sliceflow/internal/types"
