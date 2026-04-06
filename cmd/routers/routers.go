@@ -2,18 +2,24 @@ package routers
 
 import (
 	controller "github.com/francotraversa/Sliceflow/internal/controllers"
+	storage "github.com/francotraversa/Sliceflow/internal/infra/database"
 	"github.com/francotraversa/Sliceflow/internal/middlewares"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 )
 
 func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
+
+	db := storage.DBInstance.Instance()
+
+	AppControllers := BuildDependencies(db)
+
 	//---------------------PUBLIC---------------------------------
 	e.GET("/health", controller.RegisterHealth)
 
 	api := e.Group("/hornero")
 	auth := api.Group("/auth")
-	auth.POST("/login", controller.LoginHandler)
+	auth.POST("/login", AppControllers.Auth.LoginHandler)
 	//----------------------WEBSOCKET (JWT via query param) ----
 	api.GET("/ws/dashboard", controller.WebSocketHandler)
 	//----------------------LOGED------------------------------
@@ -36,16 +42,16 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	movement.GET("/dashboard", controller.GetDashboardHandler)
 	//----------------------MATERIAL---------------------------
 	production := protected.Group("/materials")
-	production.POST("/addmat", controller.CreateMaterialHandler)
-	production.PATCH("/updmat/:id", controller.UpdateMaterialHandler)
-	production.DELETE("/delmat/:id", controller.DeleteMaterialHandler)
-	production.GET("/list", controller.GetMaterialsHandler)
+	production.POST("/addmat", AppControllers.Material.CreateMaterialHandler)
+	production.PATCH("/updmat/:id", AppControllers.Material.UpdateMaterialHandler)
+	production.DELETE("/delmat/:id", AppControllers.Material.DeleteMaterialHandler)
+	production.GET("/list", AppControllers.Material.GetMaterialsHandler)
 	//----------------------MACHINE-------------------------------
 	machine := protected.Group("/machine")
-	machine.POST("/addmac", controller.CreateMachineHandler)
-	machine.PATCH("/updmac/:id", controller.UpdateMachineHandler)
-	machine.GET("/list", controller.GetMachinesHandler)
-	machine.DELETE("/delmac/:id", controller.DeleteMachineHandler)
+	machine.POST("/addmac", AppControllers.Machine.CreateMachineHandler)
+	machine.PATCH("/updmac/:id", AppControllers.Machine.UpdateMachineHandler)
+	machine.GET("/list", AppControllers.Machine.GetMachinesHandler)
+	machine.DELETE("/delmac/:id", AppControllers.Machine.DeleteMachineHandler)
 	//----------------------ORDERS------------------------------
 	orders := protected.Group("/orders")
 	orders.POST("/order", controller.CreateOrderHandler)
@@ -53,7 +59,7 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	orders.PATCH("/updord/:id", controller.UpdateOrderHandler)
 	orders.GET("/dashboard", controller.GetPrincipalDashboardHandler)
 	orders.DELETE("/delord/:id", controller.DeleteOrderHandler)
-	orders.GET("/metrics", controller.GetMetricsHandler)
+	orders.GET("/metrics", AppControllers.Metrics.GetMetricsHandler)
 	//----------------------PRIVATE && ROLE----------------------
 	admin := protected.Group("/admin")
 	admin.Use(middlewares.RequireRole("admin"))
