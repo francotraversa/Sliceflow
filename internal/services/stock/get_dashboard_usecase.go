@@ -18,7 +18,7 @@ func GetDashboardStatsUseCase(companyID uint) (*types.DashboardResponse, error) 
 		Select("COALESCE(SUM(quantity * price), 0)").
 		Scan(&response.TotalValue)
 
-	db.Where("quantity <= min_qty AND status = ?", "active").
+	db.Where("quantity <= min_qty AND status = ? AND id_company = ?", "active", companyID).
 		Find(&response.LowStockItems)
 
 	response.LowStockCount = int64(len(response.LowStockItems))
@@ -26,10 +26,10 @@ func GetDashboardStatsUseCase(companyID uint) (*types.DashboardResponse, error) 
 	startOfDay := time.Now().Truncate(24 * time.Hour)
 
 	db.Model(&types.StockMovement{}).
-		Where("created_at >= ?", startOfDay).
+		Where("created_at >= ? AND id_company = ?", startOfDay, companyID).
 		Count(&response.MovementsToday)
 
-	db.Model(&types.User{}).Count(&response.ActiveUsers)
+	db.Model(&types.User{}).Where("id_company = ?", companyID).Count(&response.ActiveUsers)
 
 	type Result struct {
 		StockSKU  string
@@ -39,7 +39,7 @@ func GetDashboardStatsUseCase(companyID uint) (*types.DashboardResponse, error) 
 
 	err := db.Table("stock_movements").
 		Select("stock_sku, SUM(qty_delta) as total_sold").
-		Where("type = ?", "OUT").
+		Where("type = ? AND id_company = ?", "OUT", companyID).
 		Group("stock_sku").
 		Order("total_sold ASC"). // Ascending order because values are negative (e.g. -100)
 		Scan(&results).Error
@@ -50,7 +50,7 @@ func GetDashboardStatsUseCase(companyID uint) (*types.DashboardResponse, error) 
 
 	for _, res := range results {
 		var item types.StockItem
-		db.Select("Name").First(&item, "sku = ?", res.StockSKU)
+		db.Select("Name").First(&item, "sku = ? AND id_company = ?", res.StockSKU, companyID)
 
 		response.TopSellingItems = append(response.TopSellingItems, types.TopProduct{
 			SKU:       res.StockSKU,
