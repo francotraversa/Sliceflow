@@ -10,7 +10,7 @@ import (
 
 func GetAllUserUserUseCase(requesterRole string, filterRole string, role string, companyId int) (*[]types.User, error) {
 	if requesterRole == "owner" {
-		usersDB := userStorage.FindAllUsers()
+		usersDB := userStorage.FindAllUsers(uint(companyId))
 		return &usersDB, nil
 	}
 
