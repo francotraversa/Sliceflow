@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/francotraversa/Sliceflow/internal/services/domain"
@@ -18,15 +19,18 @@ func NewAuthRepository(db *gorm.DB) domain.AuthRepository {
 }
 
 func (r *authRepository) Login(userCreds types.UserLoginCreds) (*types.TokenResponse, error) {
-	// TODO: Implement the repository logic referencing r.db
+	// TODO: Implement if needed
 	return nil, nil
 }
 
 func (r *authRepository) CheckUser(userCreds types.UserLoginCreds) (bool, error) {
 	var user types.User
-
-	query := r.db.Where("username = ?", strings.ToLower(strings.TrimSpace(userCreds.Username)))
-	if err := query.Scan(&user).Error; err != nil {
+	err := r.db.Where("username = ?", strings.ToLower(strings.TrimSpace(userCreds.Username))).
+		First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil // usuario no existe → credenciales inválidas
+		}
 		return false, err
 	}
 	return true, nil
@@ -34,23 +38,28 @@ func (r *authRepository) CheckUser(userCreds types.UserLoginCreds) (bool, error)
 
 func (r *authRepository) CheckPassword(userCreds types.UserLoginCreds) (bool, error) {
 	var user types.User
-
-	query := r.db.Where("username = ?", strings.ToLower(strings.TrimSpace(userCreds.Username)))
-	if err := query.Scan(&user).Error; err != nil {
+	err := r.db.Where("username = ?", strings.ToLower(strings.TrimSpace(userCreds.Username))).
+		First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
 		return false, err
 	}
-	err := utils.CheckPassword(user.Password, userCreds.Password)
-	if err != nil {
-		return false, err
+	if err := utils.CheckPassword(user.Password, userCreds.Password); err != nil {
+		return false, nil // contraseña incorrecta → no revelar el tipo de error
 	}
 	return true, nil
 }
 
 func (r *authRepository) GetUser(username string) (*types.User, error) {
 	var user types.User
-
-	query := r.db.Where("username = ?", strings.ToLower(strings.TrimSpace(username)))
-	if err := query.Scan(&user).Error; err != nil {
+	err := r.db.Where("username = ?", strings.ToLower(strings.TrimSpace(username))).
+		First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
 		return nil, err
 	}
 	return &user, nil
