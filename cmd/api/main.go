@@ -71,7 +71,6 @@ func main() {
 		log.Fatalf("Error creando usuario hardcodeado: %v", err)
 	}
 
-	port := os.Getenv("PORT")
-	e.Logger.Fatal(e.Start(":" + port))
+	e.Logger.Fatal(e.Start(":" + os.Getenv("PORT")))
 
 }

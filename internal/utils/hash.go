@@ -8,7 +8,7 @@ import (
 
 func CheckPassword(hash, plain string) error {
 	if bcrypt.CompareHashAndPassword([]byte(hash), []byte(plain)) != nil {
-		return fmt.Errorf("Incorrect Password")
+		return fmt.Errorf("Something went wrong, please try again later")
 	}
 	return nil
 }
