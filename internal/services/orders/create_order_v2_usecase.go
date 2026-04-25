@@ -80,7 +80,6 @@ func (s *OrderService) CreateOrder(dtoOrder types.CreateOrderDTO, companyID uint
 	if err := s.repo.Create(&newOrder); err != nil {
 		return fmt.Errorf("could not save order and items: %w", err)
 	}
-	servicesWeb.InvalidateCache("orders:list:*")
 	servicesWeb.PublishEvent("dashboard_CreateOrder", `{"type": "ORDER_CREATED", "message": "ORDER CREATED"}`)
 	return nil
 }

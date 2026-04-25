@@ -89,7 +89,28 @@ func (c *OrderController) GetOrdersByStatusHandler(ctx echo.Context) error {
 	} else {
 		return ctx.JSON(http.StatusOK, orders)
 	}
+}
 
+func (c *OrderController) DeleteOrderHandler(ctx echo.Context) error {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		slog.Warn("orders: invalid ID param", "param", ctx.Param("id"), "error", err)
+		return ctx.JSON(http.StatusBadRequest, types.Error{Error: "ID param invalid"})
+	}
+
+	claims, err := middleware.GetClaimsFromContext(ctx)
+	if err != nil {
+		slog.Warn("orders: failed to extract JWT claims", "error", err)
+		return ctx.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+
+	if err := c.useCase.DeleteOrder(uint(id), claims.CompanyId); err != nil {
+		slog.Error("orders: delete failed", "order_id", id, "company_id", claims.CompanyId, "error", err)
+		return ctx.JSON(http.StatusBadRequest, types.Error{Error: err.Error()})
+	}
+
+	slog.Info("orders: deleted", "order_id", id, "company_id", claims.CompanyId)
+	return ctx.JSON(http.StatusOK, types.Response{Message: fmt.Sprintf("The Order %d has been deleted", id)})
 }
 
 func (c *OrderController) DashboardOrdersHandler(ctx echo.Context) error {
