@@ -8,6 +8,7 @@ import (
 	materialService "github.com/francotraversa/Sliceflow/internal/services/material"
 	metricsService "github.com/francotraversa/Sliceflow/internal/services/metrics"
 	orderService "github.com/francotraversa/Sliceflow/internal/services/orders"
+	ownerService "github.com/francotraversa/Sliceflow/internal/services/owner"
 	stockService "github.com/francotraversa/Sliceflow/internal/services/stock"
 	userService "github.com/francotraversa/Sliceflow/internal/services/user"
 	"gorm.io/gorm"
@@ -22,6 +23,7 @@ type AppControllers struct {
 	User       *controller.UserController
 	Stock      *controller.StockController
 	StockAudit *controller.StockAuditController
+	Owner      *controller.OwnerController
 }
 
 func BuildDependencies(db *gorm.DB) *AppControllers {
@@ -36,5 +38,6 @@ func BuildDependencies(db *gorm.DB) *AppControllers {
 		User:       controller.NewUserController(userService.NewUserServices(repository.NewUserRepository(db))),
 		Stock:      controller.NewStockController(stockService.NewStockService(stockRepo)),
 		StockAudit: controller.NewStockAuditController(stockService.NewStockAuditService(repository.NewStockAuditRepository(db))),
+		Owner:      controller.NewOwnerController(ownerService.NewOwnerService(repository.NewOwnerRepository(db))),
 	}
 }

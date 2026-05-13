@@ -54,11 +54,11 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	machine.DELETE("/delmac/:id", AppControllers.Machine.DeleteMachineHandler)
 	//----------------------ORDERS------------------------------
 	orders := protected.Group("/orders")
-	orders.POST("/order", controller.CreateOrderHandler)
-	orders.GET("/list", controller.GetOrdersHandler)
-	orders.PATCH("/updord/:id", controller.UpdateOrderHandler)
-	orders.GET("/dashboard", controller.GetPrincipalDashboardHandler)
-	orders.DELETE("/delord/:id", controller.DeleteOrderHandler)
+	orders.POST("/order", AppControllers.Order.CreateOrderHandler)
+	orders.GET("/list", AppControllers.Order.GetOrdersByStatusHandler)
+	orders.PATCH("/updord/:id", AppControllers.Order.UpdateOrderHandler)
+	orders.GET("/dashboard", AppControllers.Order.DashboardOrdersHandler)
+	orders.DELETE("/delord/:id", AppControllers.Order.DeleteOrderHandler)
 	orders.GET("/metrics", AppControllers.Metrics.GetMetricsHandler)
 	//----------------------PRIVATE && ROLE----------------------
 	admin := protected.Group("/admin")
@@ -77,4 +77,5 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	owner.GET("/alladmin", controller.GetAllAdminHandler)
 	owner.GET("/allcompany", controller.GetAllCompanyHandler)
 	owner.DELETE("/deletecompany/:id", controller.DeleteCompanyHandler)
+	owner.GET("/allusers", AppControllers.Owner.GetAllUsersHandler)
 }
