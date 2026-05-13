@@ -18,11 +18,6 @@ func NewAuthRepository(db *gorm.DB) domain.AuthRepository {
 	return &authRepository{db: db}
 }
 
-func (r *authRepository) Login(userCreds types.UserLoginCreds) (*types.TokenResponse, error) {
-	// TODO: Implement if needed
-	return nil, nil
-}
-
 func (r *authRepository) CheckUser(userCreds types.UserLoginCreds) (bool, error) {
 	var user types.User
 	err := r.db.Where("username = ?", strings.ToLower(strings.TrimSpace(userCreds.Username))).
