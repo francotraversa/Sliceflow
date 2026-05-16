@@ -31,15 +31,16 @@ func RegisterRouters(e *echo.Echo, jwtCfg echojwt.Config) {
 	user.DELETE("/delmyuser", controller.DeleteUserHandler)
 	//---------------------STOCK PRODUCTS-------------------------
 	stock := protected.Group("/stock")
-	stock.POST("/addprod", controller.CreateProductHandler)
-	stock.GET("/list", controller.GetProductsHandler)
-	stock.PATCH("/updprod/:sku", controller.UpdateByIdProductHandler)
-	stock.DELETE("/delprod/:sku", controller.DeleteIdProductHandler)
+	stock.POST("/addprod", AppControllers.Stock.CreateItem)
+	stock.GET("/list", AppControllers.Stock.GetAllItems)
+	stock.PATCH("/updprod/:sku", AppControllers.Stock.UpdateItem)
+	stock.DELETE("/delprod/:sku", AppControllers.Stock.DeleteItem)
+	stock.GET("/dashboard", AppControllers.Stock.GetDashboard)
 	//----------------------STOCK MOVEMENT-----------------------
 	movement := stock.Group("/movement")
-	movement.POST("/addmov", controller.CreateMovementHandler)
-	movement.GET("/historic", controller.GetStockHistoryHandler)
-	movement.GET("/dashboard", controller.GetDashboardHandler)
+	movement.POST("/addmov", AppControllers.StockAudit.CreateMovement)
+	movement.GET("/historic", AppControllers.StockAudit.GetAllMovements)
+	movement.GET("/get/:id", AppControllers.StockAudit.GetMovementByID)
 	//----------------------MATERIAL---------------------------
 	production := protected.Group("/materials")
 	production.POST("/addmat", AppControllers.Material.CreateMaterialHandler)
